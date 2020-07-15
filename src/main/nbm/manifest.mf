@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module-Name: CloudPlugin
+OpenIDE-Module-Display-Category: ADITO / Cloud
+OpenIDE-Module-Long-Description: Provides support for connecting to Could Systems in the Designer
+OpenIDE-Module-Short-Description: Support for Cloud Systems in the Designer
