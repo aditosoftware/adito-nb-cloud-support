@@ -27,22 +27,24 @@ folderName="de.adito.nbm.CloudPlugin"
 # folderPath="nbm/target/nbm/netbeans/extra/modules/ext/"
 folderPath="target/nbm/netbeans/extra/modules/ext/"
 
-if test -z "$jarFile" || test -z "$jarPath" || test -z "$jarTargetPath" || test -z "$folderName" || test -z "$folderPath"
-then
+if test -z "$jarFile" || test -z "$jarPath" || test -z "$jarTargetPath" || test -z "$folderName" || test -z "$folderPath"; then
   echo "Variables for the file paths not set up, aborting the job. Please fill in the variables in the script"
 
 else
-targetPathFolder="ext/"
-jarFilePath=$jarPath$jarFile
-jarFileTargetPath=$jarTargetPath$jarFile
-folderNamePath=$folderPath$folderName
-folderTargetPath=$jarTargetPath$targetPathFolder
+  targetPathFolder="ext/"
+  jarFilePath=$jarPath$jarFile
+  jarFileTargetPath=$jarTargetPath$jarFile
+  folderNamePath=$folderPath$folderName
+  folderTargetPath=$jarTargetPath$targetPathFolder
 
-JAVA_HOME="C:/Program Files/Java/open_jdk-13" mvn clean install -T 1C -P adito.m2
+  JAVA_HOME="C:/Program Files/Java/open_jdk-13" mvn clean install -T 1C -P adito.m2
 
-cp $jarFilePath $jarFileTargetPath
-# only used if the maven plugin in the POM would use "useOSGIdepencencies=false"
-#cp -r $folderNamePath $folderTargetPath
+  cp $jarFilePath $jarFileTargetPath
+  # only used if the maven plugin in the POM would use "useOSGIdepencencies=false"
+  if test -d $folderNamePath; then
+    cp -r $folderNamePath $folderTargetPath
+    else
+      echo "WARNING: Could not find the dependencies in modules/ext/${folderName}, skipping copying that directory"
+  fi
 
 fi
-

@@ -1,14 +1,18 @@
 package de.adito.nbm.cloud.telnet;
 
-import de.adito.nbm.icons.NBIconLoader;
+import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
+import de.adito.nbm.icons.MissingIcon;
 import de.adito.nbm.runconfig.api.*;
+import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
 import org.apache.commons.net.telnet.TelnetClient;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
+import org.openide.util.Lookup;
 import org.openide.windows.*;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.*;
 import java.util.Optional;
@@ -22,14 +26,15 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private final ISystemInfo systemInfo;
-  private final NBIconLoader nbIconLoader = new NBIconLoader();
   private final CancelAction cancelAction;
   private final StartAction startAction;
+  private final IVaadinIconsProvider iconsProvider;
   private Future<?> task = null;
   private InputOutput io = null;
 
   public TelnetLoggerRunConfig(ISystemInfo pSystemInfo)
   {
+    iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
     systemInfo = pSystemInfo;
     cancelAction = new CancelAction();
     startAction = new StartAction();
@@ -148,6 +153,17 @@ public class TelnetLoggerRunConfig implements IRunConfig
     return io;
   }
 
+  @NotNull
+  private static Icon _getIcon(@Nullable IVaadinIconsProvider pIconsProvider, @NotNull IVaadinIconsProvider.VaadinIcon pVaadinIcon)
+  {
+    if (pIconsProvider == null)
+      return MissingIcon.get16x16();
+    Image image = pIconsProvider.findImage(pVaadinIcon, new IconAttributes.Builder().create());
+    if (image == null)
+      return MissingIcon.get16x16();
+    else return new ImageIcon(image);
+  }
+
   /**
    * Action for cancelling the current telnet connection. Also contains a fitting icon
    */
@@ -156,7 +172,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
     public CancelAction()
     {
-      super("Cancel", nbIconLoader.getIcon("/de/adito/nbm/icons/stop.png"));
+      super("Cancel", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.STOP));
     }
 
     @Override
@@ -174,7 +190,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
     public StartAction()
     {
-      super("Start", nbIconLoader.getIcon("/de/adito/nbm/icons/start.png"));
+      super("Start", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.PLAY));
       setEnabled(false);
     }
 
