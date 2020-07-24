@@ -1,4 +1,4 @@
-package de.adito.nbm.cloud.telnet;
+package de.adito.nbm.cloud.runconfig;
 
 import de.adito.nbm.runconfig.api.*;
 import de.adito.util.reactive.ObservableCollectors;
@@ -8,7 +8,7 @@ import org.netbeans.api.project.Project;
 import org.openide.util.Pair;
 import org.openide.util.lookup.ServiceProvider;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,7 +31,8 @@ public class TelnetLoggerServiceProvider implements ISystemRunConfigProvider
             .filter(Pair::second)
             .map(Pair::first)
             // create a new TelnetLoggerRunConfig for each cloud system
-            .map(TelnetLoggerRunConfig::new)
+            .map(pSystemInfo -> List.of(new TelnetLoggerRunConfig(pSystemInfo), new WebClientRunConfig(pSystemInfo)))
+            .flatMap(Collection::stream)
             .collect(Collectors.toList()));
   }
 
