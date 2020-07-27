@@ -1,6 +1,6 @@
 package de.adito.nbm.cloud.runconfig;
 
-import de.adito.aditoweb.logging.colorsupport.IColorSupportProvider;
+import de.adito.aditoweb.logging.colorsupport.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.tunnel.*;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.icons.MissingIcon;
@@ -9,6 +9,7 @@ import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
 import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
@@ -33,12 +34,17 @@ public class TelnetLoggerRunConfig implements IRunConfig
 {
 
   private static final String SERVER_OUTPUT_COLOR_KEY = "nb.output.debug.foreground";
+  private static final String SERVER_ERROR_COLOR_KEY = "nb.output.err.foreground";
+  private static final String SERVER_OUTPUT_DEFAULT_COLOR_KEY = "nb.output.foreground";
 
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private final ISystemInfo systemInfo;
   private final CancelAction cancelAction;
   private final StartAction startAction;
+  private final ClearAction clearAction;
   private final IVaadinIconsProvider iconsProvider;
+  private final IColorSupportProvider colorSupportProvider;
+  private IColorSupport colorSupport = null;
   private Future<?> currentTask;
   private InputOutput inputOutput = null;
   private TelnetClient currentClient;
@@ -46,9 +52,11 @@ public class TelnetLoggerRunConfig implements IRunConfig
   public TelnetLoggerRunConfig(ISystemInfo pSystemInfo)
   {
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
+    colorSupportProvider = Lookup.getDefault().lookup(IColorSupportProvider.class);
     systemInfo = pSystemInfo;
     cancelAction = new CancelAction();
     startAction = new StartAction();
+    clearAction = new ClearAction();
   }
 
   @NotNull
@@ -93,6 +101,18 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pColorKey Key for the color retrieved from the UIManager. Fallback is the foreground of a disabled label
    * @throws IOException if the message cannot be printed
    */
+  private static void _printlnColored(@NotNull InputOutput pIo, @Nullable IColorSupport pColorSupport, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
+  {
+    if (pColorSupport != null)
+    {
+      pColorSupport.colorPrint(pMessage + "\n");
+    }
+    else
+    {
+      _printlnColored(pIo, pMessage, pColorKey);
+    }
+  }
+
   private static void _printlnColored(@NotNull InputOutput pIo, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
   {
     Color color = UIManager.getColor(pColorKey);
@@ -136,7 +156,13 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
       catch (IOException pE)
       {
-        pE.printStackTrace(inputOutput.getErr());
+        try
+        {
+          _printlnColored(inputOutput, colorSupport, ExceptionUtils.getStackTrace(pE), SERVER_ERROR_COLOR_KEY);
+        }
+        catch (IOException ignored)
+        {
+        }
       }
       catch (InterruptedException pE)
       {
@@ -154,7 +180,13 @@ public class TelnetLoggerRunConfig implements IRunConfig
       catch (IOException pE)
       {
         // print exception on the error stream of the io
-        pE.printStackTrace(inputOutput.getErr());
+        try
+        {
+          _printlnColored(inputOutput, colorSupport, ExceptionUtils.getStackTrace(pE), SERVER_ERROR_COLOR_KEY);
+        }
+        catch (IOException ignored)
+        {
+        }
       }
       cancelAction.setEnabled(false);
       startAction.setEnabled(true);
@@ -183,7 +215,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       {
         readLine = reader.readLine();
         if (readLine != null)
-          inputOutput.getOut().println(readLine);
+        _printlnColored(inputOutput, colorSupport, readLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY);
       }
     }
     else
@@ -201,7 +233,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     // re-use the io if it is already initialized
     if (inputOutput == null || inputOutput.isClosed())
     {
-      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, cancelAction);
+      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, cancelAction, clearAction);
     }
     else
     {
@@ -215,6 +247,10 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
     }
     inputOutput.setOutputVisible(true);
+    if (colorSupportProvider != null)
+    {
+      colorSupport = colorSupportProvider.getColorSupport(inputOutput);
+    }
   }
 
   /**
@@ -301,7 +337,13 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
       catch (IOException pE)
       {
-        pE.printStackTrace(inputOutput.getErr());
+        try
+        {
+          _printlnColored(inputOutput, colorSupport, ExceptionUtils.getStackTrace(pE), SERVER_ERROR_COLOR_KEY);
+        }
+        catch (IOException ignored)
+        {
+        }
       }
     });
     cancelAction.setEnabled(false);
@@ -349,6 +391,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     public CancelAction()
     {
       super("Cancel", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.STOP));
+      putValue(Action.SHORT_DESCRIPTION, "Stop");
     }
 
     @Override
@@ -367,6 +410,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     public StartAction()
     {
       super("Start", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.PLAY));
+      putValue(Action.SHORT_DESCRIPTION, "Start");
       setEnabled(false);
     }
 
@@ -377,6 +421,31 @@ public class TelnetLoggerRunConfig implements IRunConfig
       cancelAction.setEnabled(true);
       if (currentTask == null || currentTask.isDone())
         _startTask();
+    }
+  }
+
+  /**
+   * Action that clears the current cotent of the console
+   */
+  private class ClearAction extends AbstractAction
+  {
+    public ClearAction()
+    {
+      super("Clear", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.DATE_INPUT));
+      putValue(Action.SHORT_DESCRIPTION, "Clear console");
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e)
+    {
+      try
+      {
+        inputOutput.getOut().reset();
+      }
+      catch (IOException pE)
+      {
+        pE.printStackTrace();
+      }
     }
   }
 }
