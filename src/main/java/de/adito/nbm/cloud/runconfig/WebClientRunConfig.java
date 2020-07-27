@@ -1,10 +1,10 @@
 package de.adito.nbm.cloud.runconfig;
 
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
-import de.adito.nbm.designer.observables.*;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.category.AditoClientRunConfigCategory;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
+import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
 import org.jetbrains.annotations.NotNull;

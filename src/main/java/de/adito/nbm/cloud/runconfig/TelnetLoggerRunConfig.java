@@ -1,11 +1,12 @@
 package de.adito.nbm.cloud.runconfig;
 
+import de.adito.aditoweb.logging.colorsupport.IColorSupportProvider;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.tunnel.*;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
-import de.adito.nbm.designer.observables.*;
 import de.adito.nbm.icons.MissingIcon;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
+import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
 import org.apache.commons.net.telnet.TelnetClient;
@@ -108,7 +109,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * Get an icon from the iconsProvider. If the iconProvider is null or the icon cannot be found, return a default missingIcon icon
    *
    * @param pIconsProvider IconProvider
-   * @param pVaadinIcon Icon to retrieve
+   * @param pVaadinIcon    Icon to retrieve
    * @return Icon, or an icon representing a missing icon
    */
   @NotNull
@@ -171,7 +172,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
         systemInfo.getParameters().get(ISystemInfo.TELNET_HOST_EXTERNAL_ADRESS_KEY) != null &&
         systemInfo.getParameters().get(ISystemInfo.TELNET_PORT_KEY) != null)
     {
-      System.out.println("Server address: " + systemInfo.getParameters().get(ISystemInfo.TELNET_HOST_EXTERNAL_ADRESS_KEY));
       currentClient = new TelnetClient();
       currentClient.connect(_sanitizeAddress(systemInfo.getParameters().get(ISystemInfo.TELNET_HOST_EXTERNAL_ADRESS_KEY)),
                             Integer.parseInt(systemInfo.getParameters().get(ISystemInfo.TELNET_PORT_KEY)));
@@ -246,7 +246,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   /**
    * Checks the Status of then tunnels, and prints a message that depends on the number of failed and available tunnels
    *
-   * @param pTunnels list of all tunnels that were disconnected
+   * @param pTunnels       list of all tunnels that were disconnected
    * @param pFailedTunnels list of tunnels that failed to connect
    * @throws IOException if the message cannot be printed
    */
