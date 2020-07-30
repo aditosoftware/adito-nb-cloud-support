@@ -334,6 +334,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       try
       {
         currentClient.disconnect();
+        _printlnColored(inputOutput, "Disconnected from server", SERVER_OUTPUT_COLOR_KEY);
       }
       catch (IOException pE)
       {
@@ -391,7 +392,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     public CancelAction()
     {
       super("Cancel", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.STOP));
-      putValue(Action.SHORT_DESCRIPTION, "Stop");
+      putValue(Action.SHORT_DESCRIPTION, "Disconnect");
     }
 
     @Override
