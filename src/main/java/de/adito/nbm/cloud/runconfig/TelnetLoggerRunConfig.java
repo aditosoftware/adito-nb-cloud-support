@@ -8,7 +8,11 @@ import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
 import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
+import de.adito.util.reactive.backpressure.*;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.*;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.jetbrains.annotations.*;
@@ -44,6 +48,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private final ClearAction clearAction;
   private final IVaadinIconsProvider iconsProvider;
   private final IColorSupportProvider colorSupportProvider;
+  private final CompositeDisposable disposable = new CompositeDisposable();
   private IColorSupport colorSupport = null;
   private Future<?> currentTask;
   private InputOutput inputOutput = null;
@@ -210,13 +215,12 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
       _printlnColored(inputOutput, "Connected to server", SERVER_OUTPUT_COLOR_KEY);
       BufferedReader reader = new BufferedReader(new InputStreamReader(currentClient.getInputStream()));
-      String readLine = "";
-      while (readLine != null)
-      {
-        readLine = reader.readLine();
-        if (readLine != null)
-        _printlnColored(inputOutput, colorSupport, readLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY);
-      }
+      Flowable<String> logs = FlowableFromReader.create(reader);
+      Flowable<String> flowable = logs.onBackpressureDrop();
+      BackpressureSubscriber<String> backpressureSubscriber =
+          new BackpressureSubscriber<>(pReadLine -> _printlnColored(inputOutput, colorSupport, pReadLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY));
+      flowable.observeOn(Schedulers.computation()).subscribe(backpressureSubscriber);
+      disposable.add(backpressureSubscriber);
     }
     else
     {
@@ -330,6 +334,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private void _cancelTask()
   {
     currentTask.cancel(true);
+    disposable.dispose();
     executorService.submit(() -> {
       try
       {
