@@ -3,6 +3,7 @@ package de.adito.nbm.cloud.runconfig;
 import de.adito.aditoweb.logging.colorsupport.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.tunnel.*;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
+import de.adito.nbm.cloud.runconfig.options.CloudPluginOptionsPanel;
 import de.adito.nbm.icons.MissingIcon;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
@@ -37,6 +38,8 @@ import java.util.stream.Collectors;
 public class TelnetLoggerRunConfig implements IRunConfig
 {
 
+  public static final String BACKPRESSURE_INITIAL_SIZE = "de.adito.cloud.backpressure.buffersize";
+  public static final int BACKPRESSURE_DEFAULT_BUFFER_SIZE = 256;
   private static final String SERVER_OUTPUT_COLOR_KEY = "nb.output.debug.foreground";
   private static final String SERVER_ERROR_COLOR_KEY = "nb.output.err.foreground";
   private static final String SERVER_OUTPUT_DEFAULT_COLOR_KEY = "nb.output.foreground";
@@ -218,8 +221,12 @@ public class TelnetLoggerRunConfig implements IRunConfig
       Flowable<String> logs = FlowableFromReader.create(reader);
       Flowable<String> flowable = logs.onBackpressureDrop();
       BackpressureSubscriber<String> backpressureSubscriber =
-          new BackpressureSubscriber<>(pReadLine -> _printlnColored(inputOutput, colorSupport, pReadLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY));
-      flowable.observeOn(Schedulers.computation()).subscribe(backpressureSubscriber);
+          new BackpressureSubscriber.Builder<String>(pReadLine -> _printlnColored(inputOutput, colorSupport, pReadLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY))
+              .setInitialRequests(NbPreferences.forModule(CloudPluginOptionsPanel.class)
+                                      .getInt(BACKPRESSURE_INITIAL_SIZE, BACKPRESSURE_DEFAULT_BUFFER_SIZE))
+              .setRequestsBatchSize(1)
+              .create();
+      flowable.observeOn(Schedulers.newThread()).subscribe(backpressureSubscriber);
       disposable.add(backpressureSubscriber);
     }
     else
@@ -450,7 +457,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
       catch (IOException pE)
       {
-        pE.printStackTrace();
+        pE.printStackTrace(inputOutput.getErr());
       }
     }
   }

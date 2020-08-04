@@ -9,10 +9,14 @@
   </parent>
 
   <artifactId>CloudPlugin</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <packaging>nbm</packaging>
 
   <name>Cloud Support</name>
+
+  <properties>
+    <netbeans.version>RELEASE111</netbeans.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -23,7 +27,7 @@
     <dependency>
       <groupId>de.adito.util</groupId>
       <artifactId>reactive</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
     </dependency>
     <dependency>
       <groupId>org.reactivestreams</groupId>
@@ -48,49 +52,56 @@
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
+      <artifactId>org-openide-util-ui</artifactId>
+      <version>RELEASE111-1.4.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
       <artifactId>org-netbeans-modules-projectuiapi-base</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-netbeans-modules-projectapi</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-openide-util-lookup</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-openide-awt</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-netbeans-swing-outline</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-netbeans-api-progress</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-openide-io</artifactId>
-      <version>RELEASE111</version>
-    </dependency>
-    <dependency>
-      <groupId>org.netbeans.api</groupId>
-      <artifactId>org-openide-util-ui</artifactId>
-      <version>RELEASE111-1.4.0</version>
+      <version>${netbeans.version}</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
       <artifactId>org-openide-util</artifactId>
-      <version>RELEASE111</version>
+      <version>${netbeans.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
+      <artifactId>org-netbeans-modules-options-api</artifactId>
+      <version>${netbeans.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>

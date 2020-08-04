@@ -3,4 +3,12 @@ AutoUpdate-Show-In-Client: true
 OpenIDE-Module-Name: Cloud Support
 OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
+  <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v.1.0.1</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Adjusted the tooltip of the "cancel" button to better reflect its functionality</li>
+    <li>Added a notification on client disconnect</li>
+    <li>Logging now works with a Flowable and Backpressure to make sure the client never blocks the server  if the client cannot catch up</li>
+  </ul>
 OpenIDE-Module-Short-Description: Support for Cloud Systems in the Designer
