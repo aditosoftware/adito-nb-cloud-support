@@ -11,8 +11,8 @@
   <artifactId>CloudPlugin</artifactId>
   <version>1.0.1</version>
   <packaging>nbm</packaging>
-
   <name>Cloud Support</name>
+
 
   <properties>
     <netbeans.version>RELEASE111</netbeans.version>
@@ -43,7 +43,7 @@
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>nb-adito-interface</artifactId>
-      <version>[1.4.0-3]</version>
+      <version>1.4.0-10</version>
     </dependency>
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
@@ -123,6 +123,35 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
       <version>3.6</version>
+    </dependency>
+
+    <!-- Unirest REST -->
+    <dependency>
+      <groupId>com.mashape.unirest</groupId>
+      <artifactId>unirest-java</artifactId>
+      <version>1.4.9</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>1.12</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20160212</version>
+    </dependency>
+
+    <!-- JSON Web Tokens -->
+    <dependency>
+      <groupId>com.auth0</groupId>
+      <artifactId>java-jwt</artifactId>
+      <version>3.11.0</version>
     </dependency>
 
     <!--  NotNull/Nullable annotations  -->
