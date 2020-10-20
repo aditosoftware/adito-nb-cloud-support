@@ -13,6 +13,19 @@
   <packaging>nbm</packaging>
   <name>Cloud Support</name>
 
+  <distributionManagement>
+    <repository>
+      <id>adito.m2</id>
+      <name>releases</name>
+      <url>${repository.releases}</url>
+    </repository>
+    <snapshotRepository>
+      <id>adito.m2</id>
+      <name>snapshots</name>
+      <url>${repository.snapshots}</url>
+      <uniqueVersion>false</uniqueVersion>
+    </snapshotRepository>
+  </distributionManagement>
 
   <properties>
     <netbeans.version>RELEASE111</netbeans.version>
@@ -101,17 +114,23 @@
       <artifactId>org-netbeans-modules-options-api</artifactId>
       <version>${netbeans.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
+      <artifactId>org-openide-dialogs</artifactId>
+      <version>${netbeans.version}</version>
+    </dependency>
+
+    <!-- Keyring -->
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
+      <artifactId>org-netbeans-modules-keyring</artifactId>
+      <version>${netbeans.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>29.0-jre</version>
-    </dependency>
-
-    <dependency>
-      <groupId>de.adito.aditoweb.packages</groupId>
-      <artifactId>lwsystem</artifactId>
-      <version>6.0</version>
     </dependency>
 
     <dependency>
@@ -124,13 +143,6 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.6</version>
     </dependency>
-
-    <!-- Unirest REST -->
-    <dependency>
-      <groupId>com.mashape.unirest</groupId>
-      <artifactId>unirest-java</artifactId>
-      <version>1.4.9</version>
-    </dependency>
     <dependency>
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
@@ -139,19 +151,27 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.12</version>
+      <version>1.11</version>
+    </dependency>
+
+    <!-- Unirest REST -->
+    <dependency>
+      <groupId>de.adito.nbm.wrappers</groupId>
+      <artifactId>lwunirest</artifactId>
+      <version>1.4.9-1.2.0</version>
+    </dependency>
+
+    <!-- JSON Web Tokens -->
+    <dependency>
+      <groupId>de.adito.nbm.wrappers</groupId>
+      <artifactId>lwjwt</artifactId>
+      <version>3.11.0-1.2.0</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20160212</version>
-    </dependency>
-
-    <!-- JSON Web Tokens -->
-    <dependency>
-      <groupId>com.auth0</groupId>
-      <artifactId>java-jwt</artifactId>
-      <version>3.11.0</version>
+      <scope>provided</scope>
     </dependency>
 
     <!--  NotNull/Nullable annotations  -->
