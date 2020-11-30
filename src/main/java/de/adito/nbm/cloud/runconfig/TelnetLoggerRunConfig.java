@@ -1,5 +1,6 @@
 package de.adito.nbm.cloud.runconfig;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
 import de.adito.aditoweb.logging.colorsupport.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.tunnel.*;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
@@ -7,6 +8,9 @@ import de.adito.nbm.cloud.runconfig.options.CloudPluginOptionsPanel;
 import de.adito.nbm.icons.MissingIcon;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
+import de.adito.nbm.ssp.actions.IStopSystemAction;
+import de.adito.nbm.ssp.auth.UserCredentialsManager;
+import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
 import de.adito.util.reactive.backpressure.*;
@@ -43,12 +47,16 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private static final String SERVER_OUTPUT_COLOR_KEY = "nb.output.debug.foreground";
   private static final String SERVER_ERROR_COLOR_KEY = "nb.output.err.foreground";
   private static final String SERVER_OUTPUT_DEFAULT_COLOR_KEY = "nb.output.foreground";
+  private static final int MAX_TIME_TRIES_IN_MS = 2 * 60 * 1000;
+  private static final int TIME_BETWEEN_TRIES_IN_MS = 5000;
+  private static final int MAX_NUM_TRIES = MAX_TIME_TRIES_IN_MS / TIME_BETWEEN_TRIES_IN_MS;
 
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private final ISystemInfo systemInfo;
   private final CancelAction cancelAction;
   private final StartAction startAction;
   private final ClearAction clearAction;
+  private final StopSystemAction stopSystemAction;
   private final IVaadinIconsProvider iconsProvider;
   private final IColorSupportProvider colorSupportProvider;
   private final CompositeDisposable disposable = new CompositeDisposable();
@@ -65,6 +73,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     cancelAction = new CancelAction();
     startAction = new StartAction();
     clearAction = new ClearAction();
+    stopSystemAction = new StopSystemAction();
   }
 
   @NotNull
@@ -157,9 +166,14 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private void _startTask()
   {
     currentTask = executorService.submit(() -> {
+      DecodedJWT credentials = UserCredentialsManager.getCredentials();
+      String cloudId = systemInfo.getCloudId().blockingFirst("");
+      if (cloudId.isEmpty() || credentials == null)
+        return;
       _initIo();
       try
       {
+        _waitForSystemStart(credentials, cloudId);
         _startTunnels(systemInfo);
       }
       catch (IOException pE)
@@ -199,6 +213,24 @@ public class TelnetLoggerRunConfig implements IRunConfig
       cancelAction.setEnabled(false);
       startAction.setEnabled(true);
     });
+  }
+
+  private void _waitForSystemStart(DecodedJWT pCredentials, String pCloudId) throws InterruptedException
+  {
+    int tries = 0;
+    while (tries < MAX_NUM_TRIES && !ISSPFacade.getInstance().isSystemRunning(pCredentials.getSubject(), pCredentials, pCloudId))
+    {
+      tries++;
+      try
+      {
+        _printlnColored(inputOutput, "Waiting for the SSP system to start", SERVER_OUTPUT_COLOR_KEY);
+        Thread.sleep(TIME_BETWEEN_TRIES_IN_MS);
+      }
+      catch (IOException pE)
+      {
+        // nothing, just recheck if the system is up now
+      }
+    }
   }
 
   /**
@@ -244,7 +276,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     // re-use the io if it is already initialized
     if (inputOutput == null || inputOutput.isClosed())
     {
-      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, cancelAction, clearAction);
+      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, cancelAction, clearAction, stopSystemAction);
     }
     else
     {
@@ -459,6 +491,45 @@ public class TelnetLoggerRunConfig implements IRunConfig
       {
         pE.printStackTrace(inputOutput.getErr());
       }
+    }
+  }
+
+  private class StopSystemAction extends AbstractAction implements IStopSystemAction
+  {
+
+    public StopSystemAction()
+    {
+      super("Stop Systen", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.CLOSE));
+      putValue(Action.SHORT_DESCRIPTION, "Stops the cloud system");
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e)
+    {
+      if (systemInfo != null)
+      {
+        ISSPFacade sspFacade = ISSPFacade.getInstance();
+        DecodedJWT jwt = UserCredentialsManager.getCredentials();
+        if (jwt != null && sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst("")))
+        {
+          stopSystem(systemInfo);
+        }
+      }
+    }
+
+    @Override
+    public boolean isEnabled()
+    {
+      if (systemInfo != null)
+      {
+        ISSPFacade sspFacade = ISSPFacade.getInstance();
+        DecodedJWT jwt = UserCredentialsManager.getCredentials();
+        if (jwt != null)
+        {
+          return sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst(""));
+        }
+      }
+      return false;
     }
   }
 }

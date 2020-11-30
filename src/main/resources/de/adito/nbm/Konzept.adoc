@@ -1,0 +1,269 @@
+= Konzept Cloud-Anbindung Designer
+====
+:toc:
+
+<<<
+
+== 1 User Stories
+
+- Logging des Servers am Designer
+- Übersicht über für den Benutzer sichtbare Systeme
+- System aus SSP auschecken
+- System am Designer starten
+- System am Designer stoppen
+
+=== 1.1 Logging des Servers am Designer
+
+Als Entwickler will ich den Output der Konsole des Servers live am Designer mitverfolgen können um Fehler identifizieren zu können und um zu wissen, was falsch läuft
+
+=== 1.2 Übersicht über für den Benutzer sichtbare Systeme
+
+Als Entwickler möchte ich am Designer eine Übersicht über alle mir zur Verfügung stehenden Systeme haben damit ich das richtige auschecken kann
+
+=== 1.3 System aus SSP auschecken
+
+Als Entwickler möchte ich das in der SSP erstellte System einfach im Designer auschecken können und sofort mit dem Entwickeln anfangen können, um produktiver zu sein.
+Ich möchte dabei nichts oder so wenig wie möglich konfigurieren müssen.
+
+=== 1.4 System am Designer stoppen
+
+Als Entwickler möchte ich meine Systeme in der SSP auch am Designer stoppen können und somit nicht benötigte Ressourcen freigeben.
+
+=== 1.5 System am Designer starten
+
+Als Entwickler möchte ich etwaige gestoppte Systeme der SSP auch am Designer wieder starten können, wenn ich diese wieder benötige.
+
+<<<
+
+== 2 Technische Sicht
+
+=== 2.1 Authentifizierung
+
+Die Authentifizierung der User erfolgt über Java Web Tokens (JWT).
+Dazu wird der SSP API der Benutzername des zu authentifizierenden Benutzers zusammen mit dem Base64 enkodierten Passwort übergeben.
+Der Webservice liefert bei erfolgreicher Authentifizierung einen generierten JWT Token zurück (Wenn Token neu generiert ist der alte noch gültig).
+Dieser Token kann dann verwendet werden, um sich bei allen anderen Aufrufen zu authentifizieren.
+Der Token wird im Keyring von Netbeans abgelegt, hier ist er einfach zugänglich und doch von unbefugtem Zugriff geschützt +
+Inhalt des Tokens: +
+
+- Name des Benutzers
+- Not Before Timestamp (nbf)
+- Issuer
+- Expiration Date (exp)
+- Initial Access Time (iat)
+- Token identifier (jti)
+
+Verifikation des Tokens erfolgt durch Signieren des Tokens mit Zertifikat
+
+=== 2.2 Logging des Servers am Designer
+
+Das Logging erfolt über den bereits vorhandenen Telnet Logger.
+Hierzu muss sich der Designer nur mit einem Telnet Client auf die definierte Adresse verbinden.
+Diese Adresse, zusammen mit dem benötigten Port, ist in der \_____Configuration unter Logging zu finden. +
+Das Logging soll live und am besten mit farblicher Darstellung für bessere Übersicht erfolgen.
+Es soll möglich sein, die bisherigen Ausgaben wie in einer Konsole clearen zu können. +
+
+==== Potenzielle Fehlerquellen und Hindernisse
+
+- Verbindungsabbruch
+- Tunnel kann nicht aufgebaut werden/Server nicht erreichbar
+
+=== 2.3 Übersicht über für den Benutzer sichtbare Systeme
+
+Damit der Benutzer weiß, welche Systeme er aus dem SSP auschecken kann, muss es die Möglichkeit geben, alle Systeme, auf die der Benutzer Zugriff hat, aufzulisten. +
+Zu den Systemen sollen folgende Informationen angezeigt werden:
+
+- Name des Systems
+- Kern Stand?
+- Git Tag
+- Git Projekt
+
+Wenn viele Systeme pro Benutzer: Darstellung mit TreeTable und ordnen der Systeme durch Hierarchie in NameSpace Implementierung von QuickSearch um schnell Systeme zu finden.
+Liste der Systeme ist nur beim Auschecken eines Systems aus der SSP verfügbar, es gibt also keine eigene Action oder Menüeintrag.
+
+==== Potenzielle Fehlerquellen und Hindernisse
+
+- SSP nicht erreichbar
+
+=== 2.4 System aus SSP auschecken
+
+Der Workflow hier soll sich stark an dem des "Load Template from Server" orientieren.
+Zuerst einmal muss also die Übersicht über alle dem Benutzer zur Verfügung stehenden Systeme geladen werden, siehe 2.3. +
+Nachdem hier eine Auswahl getroffen wurde, wird noch der Name des zu erstellenden Projekts abgefragt.
+Danach wird ein neues Projekt erstellt, der Git Stand des Systems in das Projekt gecloned und die TunnelConfigs sowie die ServerConfig im Data Verzeichnis abgelegt.
+Außerdem muss im Data Verzeichnis eine Referenz auf das SSP System abgelegt werden.
+Die Anwesenheit der Referenz bildet dann auch die Information, dass das System ein CloudSystem ist (wichtig für 2.2).
+
+==== Potenzielle Fehlerquellen und Hindernisse
+
+- SSP nicht erreichbar
+- Git URI ist nicht valide
+- Git Tag ist nicht valide
+- Fehler bei Git Checkout
+- Projekt kann nicht erstellt werden
+- Name des Projekts ist kein gültiger Dateiname
+
+=== 2.5 System am Designer stoppen
+
+Neben dem "Disconnect" im Output Fenster des Server Loggings bei CloudSystemen soll es noch eine "Stop" Action geben, die den Server stoppt (Replika Count auf 0 setzt). +
+Die Action soll ebenfalls im Kontextmenü des Systems vorhanden sein, sie soll hier aber nur auftauchen oder verfügbar sein, wenn das System läuft (Abfrage über 4.6). +
+Für die Parameter, die an die API übergeben werden müssen, siehe 4.4.
+
+==== Potenzielle Fehlerquellen und Hindernisse
+
+- SSP nicht erreichbar
+- Shutdown des Servers schlägt fehl
+- Es wird eine Art Polling benötigt, um den Benutzer zu benachrichtigen, wenn das System heruntergefahren ist
+
+=== 2.6 System am Designer starten
+
+Die bisherige RunConfig für das Cloud System soll so umgebaut werden, dass das System gestartet wird, wenn es nicht bereits läuft.
+Ist 4.5 so implementiert, dass nichts passiert, wenn das System schon läuft, kann dies einfach aufgerufen werden.
+Falls dies nicht der Fall ist, muss vorher mit 4.6 abgefragt werden, ob das System bereits läuft. +
+Die Action soll ebenfalls im Kontextmenü des Systems vorhanden sein, sie soll hier aber nur auftauchen oder verfügbar sein, wenn das System nicht läuft (Abfrage über 4.6). +
+Für die Parameter, die an die API übergeben werden müssen, siehe 4.4.
+
+==== Potenzielle Fehlerquellen und Hindernisse
+
+- SSP nicht erreichbar
+- Server kann nicht gestartet werden
+- Es wird eine Art Polling benötigt, um den Benutzer zu benachrichtigen, wenn das System heruntergefahren ist
+
+
+<<<
+
+== 3 Vorgesehener Workflow
+
+=== 3.1 Von keinem System vorhanden zum Arbeiten mit dem System
+
+User wählt "New Project" und dann "Load from SSP" aus.
+Hier erhält er eine Liste an verfübaren Systemen, wenn die SSP nicht erreichbar ist, ist diese Liste leer.
+Nachdem der User ein System ausgewählt und einen Namen für das Projekt eingegeben hat, wird das Projekt erstellt und die nötigen Files geladen.
+Damit der User nun deployen kann und den Output des Servers bekommt, startet er die RunConfig "Cloud Server" für das Projekt, wodurch die Tunnel gestartet werden und die Telnet Verbindung aufgebaut wird.
+
+=== 3.2 Ein bereits vorhandenes Projekt mit einem System aus der SSP verbinden
+
+Da es sehr viele Möglichkeiten gibt, wie das Projekt nicht mit dem System aus der SSP kompatibel ist, ist es im Moment nicht vorgesehen, dass man ein vorhandenes Projekt mit einem System aus der SSP verbinden kann.
+Die Vorgehensweise wäre dann, ein neues Projekt mit dem System aus der SSP zu erstellen.
+
+=== 3.3 Vorhandenes, laufendes System wird für den Augenblick nicht mehr benötigt
+
+Hier gibt es zwei Möglichkeiten: +
+1) Rechtsklick auf das System -> "Stop System" +
+2) Öffnen des Serveroutputs über die RunConfig "Cloud Server" des Systems -> "Stop System" Button in der Toolbar
+
+=== 3.4 Von vorhandenem, nicht laufendem System zum Arbeiten mit dem System
+
+Hier muss einfach nur die RunConfig "Cloud Server" des Systems gestartet werden, es wird dann das System gestartet, die zugehörigen Tunnel geöffnet und der Telnet Logger und dessen Output angezeigt.
+
+<<<
+
+== 4 Übersicht über API Schnittstelle
+
+Kurze Übersicht über die URL, benötigte Parameter, sowie Rückgabewerte der API.
+
+=== 4.1 Login
+
+==== Url
+
+/testlogin
+
+==== Body Parameters
+
+user, password +
+Password ist mit Base64 encodiert
+
+==== Return value
+
+JWT Token
+
+=== 4.2 List of Systems
+
+==== Url
+
+/listSystems
+
+==== Body Parameters
+
+user, jwt
+
+==== Return value
+
+Liste mit System Objekten, diese enthalten:
+
+- Name
+- URL
+- RanchR Id
+- Kubernetes ID
+- Name des Systems mit Kubernetes Cluster ID kombiniert (SystemId)
+- Erstellungsdatum?
+
+=== 4.3 Details eines Systems
+
+==== Url
+
+/system
+
+==== Body Parameters
+
+user, jwt, SystemId
+
+==== Return value
+
+Enthält alle wichtigen Informationen über das System, dies beinhaltet:
+
+- Name
+- URL
+- RanchR Id
+- Kubernetes ID
+- Name mit Kubernetes ID kombiniert
+- Erstellungsdatum
+- Git Url
+- Git Tag/Branch
+- Kern Stand
+- TunnelConfigs
+- ServerConfig
+
+=== 4.4 Stoppen eines Systems
+
+==== Url
+
+/stopSystem
+
+==== Body Parameters
+
+user, jwt, SystemId
+
+==== Return value
+
+Nur StatusCode, StatusCode gibt an, ob Befehl ausgeführt wird (also quasi ob User berechtigt dazu ist).
+
+<<<
+
+=== 4.5 Starten eines Systems
+
+==== Url
+
+/startSystem
+
+==== Body Parameters
+
+user, jwt, SystemId
+
+==== Return value
+
+Nur StatusCode, StatusCode gibt an, ob Befehl ausgeführt wird (also quasi ob User berechtigt dazu ist).
+
+=== 4.6 Zustand des Systems erfragen
+
+==== Url
+
+/systemState
+
+==== Body Parameters
+
+user, jwt, SystemId
+
+==== Return value
+
+Replika Count

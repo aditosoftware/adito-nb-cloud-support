@@ -2,7 +2,6 @@ package de.adito.nbm.ssp;
 
 import com.mashape.unirest.http.HttpResponse;
 import de.adito.nbm.ssp.exceptions.*;
-import org.apache.http.HttpStatus;
 
 import java.util.*;
 
@@ -19,7 +18,7 @@ public class HttpUtil
   public static boolean isServerError(int pStatusCode)
   {
     // Server error codes range between 500 and 599
-    return pStatusCode >= 500 && pStatusCode < 600;
+    return pStatusCode >= HttpStatus.INTERNAL_SERVER_ERROR && pStatusCode < 600;
   }
 
   /**
@@ -29,7 +28,7 @@ public class HttpUtil
   public static boolean isClientError(int pStatusCode)
   {
     // Client error codes range between 400 and 499
-    return pStatusCode >= 400 && pStatusCode < 500;
+    return pStatusCode >= HttpStatus.BAD_REQUEST && pStatusCode < HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
   /**
@@ -43,9 +42,9 @@ public class HttpUtil
    */
   public static void verifyStatus(HttpResponse<?> pHttpResponse) throws AditoSSPException
   {
-    if (pHttpResponse.getStatus() == HttpStatus.SC_INTERNAL_SERVER_ERROR)
+    if (pHttpResponse.getStatus() == HttpStatus.INTERNAL_SERVER_ERROR)
       throw new AditoSSPServerException(pHttpResponse.getStatusText());
-    if (pHttpResponse.getStatus() == HttpStatus.SC_UNAUTHORIZED)
+    if (pHttpResponse.getStatus() == HttpStatus.FORBIDDEN)
       throw new AditoSSPUnauthorizedException(pHttpResponse.getStatusText());
     if (HttpUtil.isClientError(pHttpResponse.getStatus()) || HttpUtil.isServerError(pHttpResponse.getStatus()))
       throw new AditoSSPException(pHttpResponse.getStatusText(), pHttpResponse.getStatus());
@@ -60,9 +59,8 @@ public class HttpUtil
   public static Map<String, String> getDefaultHeader()
   {
     Map<String, String> headers = new HashMap<>();
-    headers.put("content-type", "application/json");
+    headers.put("Content-type", "application/json");
     headers.put("Connection", "keep-alive");
-    headers.put("Cookie", "gitlab-adito=eyJFbWFpbCI6Im0ua2FzcGVyYUBhZGl0by5kZSIsIlVzZXIiOiJtLmthc3BlcmEifQ==|1602147380|jYOino-cu6KVU38CnCoktst9VCk=");
     return headers;
   }
 }

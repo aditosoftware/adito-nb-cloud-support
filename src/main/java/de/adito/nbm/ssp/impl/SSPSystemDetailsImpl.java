@@ -1,8 +1,7 @@
 package de.adito.nbm.ssp.impl;
 
 import de.adito.nbm.ssp.exceptions.MalformedInputException;
-import de.adito.nbm.ssp.facade.ISSPSystemDetails;
-import org.apache.commons.lang3.NotImplementedException;
+import de.adito.nbm.ssp.facade.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 
@@ -11,45 +10,51 @@ import java.util.List;
 /**
  * @author m.kaspera, 08.10.2020
  */
-public class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
+class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
 {
-  public SSPSystemDetailsImpl(@NotNull JSONArray pJSONArray) throws MalformedInputException
+
+  private static final String GIT_REPO_KEY = "giturl";
+  private static final String GIT_BRANCH_KEY = "branch_tag";
+  private static final String KERNEL_VERSION_KEY = "version";
+  private final String gitRepoUrl;
+  private final String gitBranch;
+  private final String kernelVersion;
+
+  SSPSystemDetailsImpl(@NotNull ISSPSystem pSystem, @NotNull JSONArray pJSONArray) throws MalformedInputException
   {
-    super(pJSONArray);
+    super(pSystem.getName(), pSystem.getUrl(), pSystem.getClusterId(), pSystem.getSystemdId(), pSystem.getRanchRId(), pSystem.getCreationDate());
+    if (pJSONArray.length() != 1 || !pJSONArray.getJSONObject(0).keySet().containsAll(List.of(GIT_REPO_KEY, GIT_BRANCH_KEY, KERNEL_VERSION_KEY)))
+      throw new MalformedInputException(pJSONArray.toString(0));
+    gitRepoUrl = pJSONArray.getJSONObject(0).getString(GIT_REPO_KEY);
+    gitBranch = pJSONArray.getJSONObject(0).getString(GIT_BRANCH_KEY);
+    kernelVersion = pJSONArray.getJSONObject(0).getString(KERNEL_VERSION_KEY);
+
   }
 
   @NotNull
   @Override
   public String getGitRepoUrl()
   {
-    throw new NotImplementedException("");
+    return gitRepoUrl;
   }
 
   @NotNull
   @Override
   public String getGitBranch()
   {
-    throw new NotImplementedException("");
+    return gitBranch;
   }
 
   @NotNull
   @Override
   public String getKernelVersion()
   {
-    throw new NotImplementedException("");
-  }
-
-  @NotNull
-  @Override
-  public String getServerConfig()
-  {
-    throw new NotImplementedException("");
+    return kernelVersion;
   }
 
   @Override
-  @NotNull
-  public List<String> getTunnelConfigs()
+  public boolean isDesignerVersionOk()
   {
-    throw new NotImplementedException("");
+    return true;
   }
 }

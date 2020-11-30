@@ -37,7 +37,14 @@ interface ILogin
         .headers(headers)
         .body(body)
         .asString();
-    HttpUtil.verifyStatus(jsonHttpResponse);
+    try
+    {
+      HttpUtil.verifyStatus(jsonHttpResponse);
+    }
+    catch (AditoSSPException pE)
+    {
+      throw new AditoSSPAuthException(pE, pE.getStatusCode());
+    }
     return JWT.decode(jsonHttpResponse.getBody());
   }
 

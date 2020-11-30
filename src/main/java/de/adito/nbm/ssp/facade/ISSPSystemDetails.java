@@ -2,8 +2,6 @@ package de.adito.nbm.ssp.facade;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-
 /**
  * @author m.kaspera, 08.10.2020
  */
@@ -35,19 +33,7 @@ public interface ISSPSystemDetails extends ISSPSystem
   String getKernelVersion();
 
   /**
-   * Returns the ServerConfig as a String, representing the content of the server config file
-   *
-   * @return ServerConfig for the system
+   * @return true if the kernel version can be used with the current Designer
    */
-  @NotNull
-  String getServerConfig();
-
-  /**
-   * Returns the contents of the TunnelConfigs as List of Strings, where each String represents the contents of one tunnel config file
-   *
-   * @return List of TunnelConfigs as Strings
-   */
-  @NotNull
-  List<String> getTunnelConfigs();
-
+  boolean isDesignerVersionOk();
 }

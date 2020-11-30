@@ -22,9 +22,9 @@ public class TelnetLoggerServiceProvider implements ISystemRunConfigProvider
   public Observable<List<IRunConfig>> runConfigurations(List<ISystemInfo> pSystemInfos)
   {
     return pSystemInfos.stream()
-        .map(pInfo -> pInfo.isCloud()
+        .map(pInfo -> pInfo.getCloudId()
             // combine info about whether the system is a cloud system with the system itself
-            .map(pIsCloud -> Pair.of(pInfo, pIsCloud)))
+            .map(pIsCloud -> Pair.of(pInfo, !pIsCloud.isEmpty())))
         .collect(ObservableCollectors.combineToList())
         .map(pList -> pList.stream()
             // throw out all non-cloud systems

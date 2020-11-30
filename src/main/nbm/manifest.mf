@@ -2,6 +2,7 @@ Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
 OpenIDE-Module-Name: Cloud Support
 OpenIDE-Module-Display-Category: ADITO / Cloud
+OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
   <p style="font-weight: bold;">v.1.0.1</p>
