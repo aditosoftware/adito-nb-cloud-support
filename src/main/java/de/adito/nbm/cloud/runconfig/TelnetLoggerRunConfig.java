@@ -8,7 +8,7 @@ import de.adito.nbm.cloud.runconfig.options.CloudPluginOptionsPanel;
 import de.adito.nbm.icons.MissingIcon;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
-import de.adito.nbm.ssp.actions.IStopSystemAction;
+import de.adito.nbm.ssp.actions.*;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.observables.netbeans.*;
@@ -23,6 +23,7 @@ import org.apache.commons.net.telnet.TelnetClient;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.project.*;
+import org.openide.*;
 import org.openide.util.*;
 import org.openide.windows.*;
 
@@ -50,10 +51,10 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private static final int MAX_TIME_TRIES_IN_MS = 2 * 60 * 1000;
   private static final int TIME_BETWEEN_TRIES_IN_MS = 5000;
   private static final int MAX_NUM_TRIES = MAX_TIME_TRIES_IN_MS / TIME_BETWEEN_TRIES_IN_MS;
+  private static final Logger LOGGER = Logger.getLogger(TelnetLoggerRunConfig.class.getName());
 
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private final ISystemInfo systemInfo;
-  private final CancelAction cancelAction;
   private final StartAction startAction;
   private final ClearAction clearAction;
   private final StopSystemAction stopSystemAction;
@@ -70,7 +71,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
     colorSupportProvider = Lookup.getDefault().lookup(IColorSupportProvider.class);
     systemInfo = pSystemInfo;
-    cancelAction = new CancelAction();
     startAction = new StartAction();
     clearAction = new ClearAction();
     stopSystemAction = new StopSystemAction();
@@ -109,7 +109,16 @@ public class TelnetLoggerRunConfig implements IRunConfig
   public void executeAsnyc(@NotNull ProgressHandle pProgressHandle)
   {
     if (currentTask == null || currentTask.isDone())
-      _startTask();
+    {
+      DecodedJWT credentials = UserCredentialsManager.getCredentials();
+      String cloudId = systemInfo.getCloudId().blockingFirst("");
+      if (cloudId.isEmpty() || credentials == null)
+        return;
+      boolean systemRunning = ISSPFacade.getInstance().isSystemRunning(credentials.getSubject(), credentials, cloudId);
+      _initIo(systemRunning);
+      if (systemRunning)
+        _startTask(credentials, cloudId);
+    }
   }
 
   /**
@@ -132,6 +141,11 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
   private static void _printlnColored(@NotNull InputOutput pIo, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
   {
+    _printColored(pIo, pMessage + "\n", pColorKey);
+  }
+
+  private static void _printColored(@NotNull InputOutput pIo, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
+  {
     Color color = UIManager.getColor(pColorKey);
     if (color == null)
     {
@@ -139,7 +153,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       label.setEnabled(false);
       color = label.getForeground();
     }
-    IOColorPrint.print(pIo, pMessage + "\n", color);
+    IOColorPrint.print(pIo, pMessage, color);
   }
 
   /**
@@ -163,17 +177,12 @@ public class TelnetLoggerRunConfig implements IRunConfig
   /**
    * starts the tunnels and runs the client as a task submitted to the executorService
    */
-  private void _startTask()
+  private void _startTask(@NotNull DecodedJWT pCredentials, @NotNull String pCloudId)
   {
     currentTask = executorService.submit(() -> {
-      DecodedJWT credentials = UserCredentialsManager.getCredentials();
-      String cloudId = systemInfo.getCloudId().blockingFirst("");
-      if (cloudId.isEmpty() || credentials == null)
-        return;
-      _initIo();
       try
       {
-        _waitForSystemStart(credentials, cloudId);
+        _waitForSystemStart(pCredentials, pCloudId);
         _startTunnels(systemInfo);
       }
       catch (IOException pE)
@@ -210,12 +219,43 @@ public class TelnetLoggerRunConfig implements IRunConfig
         {
         }
       }
-      cancelAction.setEnabled(false);
-      startAction.setEnabled(true);
     });
   }
 
-  private void _waitForSystemStart(DecodedJWT pCredentials, String pCloudId) throws InterruptedException
+  private void _printInfo(boolean pSystemRunning)
+  {
+    try
+    {
+      Thread.sleep(50);
+    }
+    catch (InterruptedException pE)
+    {
+      // nothing, the sleep is only here so the first part
+    }
+    try
+    {
+      _printlnColored(inputOutput, colorSupport,
+                      "// ---------------------------------------------------------------------------------------------------------------------------\n" +
+                          "//       _    ____ ___ _____ ___    ____       _  __   ____                  _            ____            _        _ \n" +
+                          "//      / \\  |  _ \\_ _|_   _/ _ \\  / ___|  ___| |/ _| / ___|  ___ _ ____   _(_) ___ ___  |  _ \\ ___  _ __| |_ __ _| |\n" +
+                          "//     / _ \\ | | | | |  | || | | | \\___ \\ / _ \\ | |_  \\___ \\ / _ \\ '__\\ \\ / / |/ __/ _ \\ | |_) / _ \\| '__| __/ _` | |\n" +
+                          "//    / ___ \\| |_| | |  | || |_| |  ___) |  __/ |  _|  ___) |  __/ |   \\ V /| | (_|  __/ |  __/ (_) | |  | || (_| | |\n" +
+                          "//   /_/   \\_\\____/___| |_| \\___/  |____/ \\___|_|_|   |____/ \\___|_|    \\_/ |_|\\___\\___| |_|   \\___/|_|   \\__\\__,_|_|\n" +
+                          "//                                                                                                                   \n" +
+                          "// ---------------------------------------------------------------------------------------------------------------------------\n",
+                      SERVER_OUTPUT_COLOR_KEY);
+      _printColored(inputOutput, "//\n//   Current system status: ", SERVER_OUTPUT_COLOR_KEY);
+      IOColorPrint.print(inputOutput, pSystemRunning ? "Running" : "Stopped", pSystemRunning ? Color.GREEN : Color.RED);
+      _printlnColored(inputOutput, "\n//\n// ---------------------------------------------------------------------------------------------------------------------------",
+                      SERVER_OUTPUT_COLOR_KEY);
+    }
+    catch (IOException pE)
+    {
+      LOGGER.log(Level.WARNING, pE, () -> "Could not print system Info");
+    }
+  }
+
+  private void _waitForSystemStart(DecodedJWT pCredentials, String pCloudId) throws InterruptedException, IOException
   {
     int tries = 0;
     while (tries < MAX_NUM_TRIES && !ISSPFacade.getInstance().isSystemRunning(pCredentials.getSubject(), pCredentials, pCloudId))
@@ -223,7 +263,9 @@ public class TelnetLoggerRunConfig implements IRunConfig
       tries++;
       try
       {
-        _printlnColored(inputOutput, "Waiting for the SSP system to start", SERVER_OUTPUT_COLOR_KEY);
+        // for the first time write the waiting statement, for all the other loops just append a . so the user knows something is still happening,
+        // but it isn't too intrusive
+        _printColored(inputOutput, tries == 0 ? "// Waiting for the SSP system to start" : ".", SERVER_OUTPUT_COLOR_KEY);
         Thread.sleep(TIME_BETWEEN_TRIES_IN_MS);
       }
       catch (IOException pE)
@@ -231,6 +273,9 @@ public class TelnetLoggerRunConfig implements IRunConfig
         // nothing, just recheck if the system is up now
       }
     }
+    // add a newline so the next output starts on a fresh line and not appended to the end of the "Waiting..." line
+    if (tries > 0)
+      _printlnColored(inputOutput, "", SERVER_OUTPUT_COLOR_KEY);
   }
 
   /**
@@ -248,7 +293,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       currentClient.connect(_sanitizeAddress(systemInfo.getParameters().get(ISystemInfo.TELNET_HOST_EXTERNAL_ADRESS_KEY)),
                             Integer.parseInt(systemInfo.getParameters().get(ISystemInfo.TELNET_PORT_KEY)));
 
-      _printlnColored(inputOutput, "Connected to server", SERVER_OUTPUT_COLOR_KEY);
+      _printlnColored(inputOutput, "// Connected to server", SERVER_OUTPUT_COLOR_KEY);
       BufferedReader reader = new BufferedReader(new InputStreamReader(currentClient.getInputStream()));
       Flowable<String> logs = FlowableFromReader.create(reader);
       Flowable<String> flowable = logs.onBackpressureDrop();
@@ -263,7 +308,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     }
     else
     {
-      _printlnColored(inputOutput, "Either Telnet logging is disabled in the Instance Configuration, or the external server address or port are not set. Shutting down",
+      _printlnColored(inputOutput, "// Either Telnet logging is disabled in the Instance Configuration, or the external server address or port are not set. Shutting down",
                       SERVER_OUTPUT_COLOR_KEY);
     }
   }
@@ -271,12 +316,12 @@ public class TelnetLoggerRunConfig implements IRunConfig
   /**
    * gets an InputOutput from netbeans, if one is already in use
    */
-  private void _initIo()
+  private void _initIo(boolean pSystemRunning)
   {
     // re-use the io if it is already initialized
     if (inputOutput == null || inputOutput.isClosed())
     {
-      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, cancelAction, clearAction, stopSystemAction);
+      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, stopSystemAction, clearAction);
     }
     else
     {
@@ -286,7 +331,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
       catch (IOException pE)
       {
-        Logger.getLogger(TelnetLoggerRunConfig.class.getName()).log(Level.WARNING, pE, () -> "Could not reset IO");
+        LOGGER.log(Level.WARNING, pE, () -> "Could not reset IO");
       }
     }
     inputOutput.setOutputVisible(true);
@@ -294,6 +339,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     {
       colorSupport = colorSupportProvider.getColorSupport(inputOutput);
     }
+    _printInfo(pSystemRunning);
   }
 
   /**
@@ -304,7 +350,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    */
   private void _startTunnels(@NotNull ISystemInfo pSystemInfo) throws InterruptedException, IOException
   {
-    _printlnColored(inputOutput, "Starting all tunnels that are not running", SERVER_OUTPUT_COLOR_KEY);
+    _printlnColored(inputOutput, "// Starting all tunnels that are not running", SERVER_OUTPUT_COLOR_KEY);
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
     List<ISSHTunnel> tunnels = pSystemInfo.observeTunnelConfigs().blockingFirst(List.of())
         .stream()
@@ -333,16 +379,16 @@ public class TelnetLoggerRunConfig implements IRunConfig
   {
     if (!pFailedTunnels.isEmpty())
     {
-      pFailedTunnels.forEach(pTunnel -> inputOutput.getErr().println(String.format("Could not connect to tunnel %s, see IDE Log for details", pTunnel)));
-      _printlnColored(inputOutput, "Trying to connect to server nonetheless", SERVER_OUTPUT_COLOR_KEY);
+      pFailedTunnels.forEach(pTunnel -> inputOutput.getErr().println(String.format("// Could not connect to tunnel %s, see IDE Log for details", pTunnel)));
+      _printlnColored(inputOutput, "// Trying to connect to server nonetheless", SERVER_OUTPUT_COLOR_KEY);
     }
     else if (!pTunnels.isEmpty())
     {
-      _printlnColored(inputOutput, "Tunnels are connected, connecting to server", SERVER_OUTPUT_COLOR_KEY);
+      _printlnColored(inputOutput, "// Tunnels are connected, connecting to server", SERVER_OUTPUT_COLOR_KEY);
     }
     else
     {
-      _printlnColored(inputOutput, "No disconnected Tunnels found, connecting to server", SERVER_OUTPUT_COLOR_KEY);
+      _printlnColored(inputOutput, "// No disconnected Tunnels found, connecting to server", SERVER_OUTPUT_COLOR_KEY);
     }
   }
 
@@ -378,7 +424,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
       try
       {
         currentClient.disconnect();
-        _printlnColored(inputOutput, "Disconnected from server", SERVER_OUTPUT_COLOR_KEY);
+        _printlnColored(inputOutput, "// Disconnected from server", SERVER_OUTPUT_COLOR_KEY);
       }
       catch (IOException pE)
       {
@@ -391,8 +437,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
         }
       }
     });
-    cancelAction.setEnabled(false);
-    startAction.setEnabled(true);
   }
 
   /**
@@ -428,44 +472,48 @@ public class TelnetLoggerRunConfig implements IRunConfig
   }
 
   /**
-   * Action for cancelling the current telnet connection. Also contains a fitting icon
-   */
-  private class CancelAction extends AbstractAction
-  {
-
-    public CancelAction()
-    {
-      super("Cancel", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.STOP));
-      putValue(Action.SHORT_DESCRIPTION, "Disconnect");
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e)
-    {
-      _cancelTask();
-    }
-  }
-
-  /**
    * Action for starting up the telnet connection, contains a fitting icon
    */
-  private class StartAction extends AbstractAction
+  private class StartAction extends AbstractAction implements IStartSystemAction
   {
+    private final ISSPFacade sspFacade;
+    private final String cloudSystemId;
 
     public StartAction()
     {
       super("Start", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.PLAY));
-      putValue(Action.SHORT_DESCRIPTION, "Start");
-      setEnabled(false);
+      putValue(Action.SHORT_DESCRIPTION, "Start the cloud system");
+      sspFacade = ISSPFacade.getInstance();
+      cloudSystemId = systemInfo.getCloudId().blockingFirst("");
     }
 
     @Override
     public void actionPerformed(ActionEvent e)
     {
-      startAction.setEnabled(false);
-      cancelAction.setEnabled(true);
-      if (currentTask == null || currentTask.isDone())
-        _startTask();
+      doStartSystem(systemInfo);
+      DecodedJWT jwt = UserCredentialsManager.getCredentials();
+      if (jwt != null && (currentTask == null || currentTask.isDone()))
+      {
+        // to start the system the system has to be shut down, else the action does not make sense -> no reason to call the webservice
+        _initIo(false);
+        _startTask(jwt, cloudSystemId);
+        setEnabled(false);
+        stopSystemAction.setEnabled(true);
+      }
+    }
+
+    @Override
+    public boolean isEnabled()
+    {
+      if (systemInfo != null)
+      {
+        DecodedJWT jwt = UserCredentialsManager.getCredentials();
+        if (jwt != null)
+        {
+          return !sspFacade.isSystemRunning(jwt.getSubject(), jwt, cloudSystemId);
+        }
+      }
+      return false;
     }
   }
 
@@ -506,13 +554,27 @@ public class TelnetLoggerRunConfig implements IRunConfig
     @Override
     public void actionPerformed(ActionEvent e)
     {
-      if (systemInfo != null)
+      JButton cancelButton = new JButton("Cancel");
+      JButton stopSystem = new JButton("Stop system");
+      JButton[] buttons = new JButton[]{cancelButton, stopSystem};
+      NotifyDescriptor.Confirmation confirmation = new NotifyDescriptor.Confirmation(NbBundle.getMessage(TelnetLoggerRunConfig.class,
+                                                                                                         "TXT.TelnetLoggerRunConfig.stop.system.question"),
+                                                                                     "Stop SSP system");
+      confirmation.setOptions(buttons);
+      Object result = DialogDisplayer.getDefault().notify(confirmation);
+      if (result.equals(stopSystem))
       {
-        ISSPFacade sspFacade = ISSPFacade.getInstance();
-        DecodedJWT jwt = UserCredentialsManager.getCredentials();
-        if (jwt != null && sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst("")))
+        _cancelTask();
+        if (systemInfo != null)
         {
-          stopSystem(systemInfo);
+          ISSPFacade sspFacade = ISSPFacade.getInstance();
+          DecodedJWT jwt = UserCredentialsManager.getCredentials();
+          if (jwt != null && sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst("")))
+          {
+            stopSystem(systemInfo);
+            setEnabled(false);
+            startAction.setEnabled(true);
+          }
         }
       }
     }

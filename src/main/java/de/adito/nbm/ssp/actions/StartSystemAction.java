@@ -15,42 +15,13 @@ import org.openide.util.actions.NodeAction;
 @ActionID(category = "adito/aods", id = "de.adito.nbm.ssp.actions.StartSystemAction")
 @ActionRegistration(displayName = "")
 @ActionReference(path = "de/adito/aod/action/system", position = 524)
-public class StartSystemAction extends NodeAction implements IContextMenuAction
+public class StartSystemAction extends NodeAction implements IContextMenuAction, IStartSystemAction
 {
   @Override
   protected void performAction(Node[] activatedNodes)
   {
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
-    if (systemInfo != null)
-    {
-      ISSPFacade sspFacade = ISSPFacade.getInstance();
-      DecodedJWT jwt = UserCredentialsManager.getCredentials();
-      if (jwt != null)
-      {
-        boolean isSystemRunning = sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst(""));
-        if (!isSystemRunning)
-        {
-          boolean startedSystem = sspFacade.startSystem(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst(""));
-          if (startedSystem)
-            NotificationDisplayer.getDefault().notify(NbBundle.getMessage(StartSystemAction.class, "LBL.StartSystemAction"),
-                                                      NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                      NbBundle.getMessage(StartSystemAction.class, "TXT.StartSystemAction.notification.success"),
-                                                      null, NotificationDisplayer.Priority.NORMAL);
-          else
-            NotificationDisplayer.getDefault().notify(NbBundle.getMessage(StartSystemAction.class, "LBL.StartSystemAction"),
-                                                      NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                      NbBundle.getMessage(StartSystemAction.class, "TXT.StartSystemAction.notification.failure"),
-                                                      null, NotificationDisplayer.Priority.HIGH);
-        }
-        else
-        {
-          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(StartSystemAction.class, "LBL.StartSystemAction"),
-                                                    NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                    NbBundle.getMessage(StartSystemAction.class, "TXT.StartSystemAction.notification.running"),
-                                                    null, NotificationDisplayer.Priority.NORMAL);
-        }
-      }
-    }
+    doStartSystem(systemInfo);
   }
 
   @Override
