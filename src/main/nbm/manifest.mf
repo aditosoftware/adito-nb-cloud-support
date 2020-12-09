@@ -5,6 +5,11 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v.1.0.2</p>
+  <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
+  <ul>
+    <li>It is now possible to open ADITO Cloud Systems via File -> New Project -> Load ADITO Cloud System</li>
+  </ul>
   <p style="font-weight: bold;">v.1.0.1</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
