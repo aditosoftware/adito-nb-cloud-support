@@ -32,8 +32,18 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
 
   public SSPFacadeImpl()
   {
+    sspSystemUrl = getSSPSystemUrl();
+  }
+
+  /**
+   * Checks if a command line parameter overriding the default ssp url is set, and returns either that url or the default ssp url if no parameter is set
+   *
+   * @return the url of the SSP system to be used
+   */
+  public static String getSSPSystemUrl()
+  {
     String sspUrlProperty = System.getProperty("adito.ssp.url");
-    sspSystemUrl = sspUrlProperty == null ? DEFAULT_SSP_SYSTEM_URL : sspUrlProperty;
+    return sspUrlProperty == null ? DEFAULT_SSP_SYSTEM_URL : sspUrlProperty;
   }
 
   @NotNull

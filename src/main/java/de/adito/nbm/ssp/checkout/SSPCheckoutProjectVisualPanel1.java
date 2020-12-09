@@ -6,12 +6,14 @@ import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.exceptions.AditoSSPAuthException;
+import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.openide.util.Lookup;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
@@ -43,8 +45,12 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     setLayout(new BorderLayout());
 
+    UrlLabel urlLabel = new UrlLabel("Go to ADITO Self Service Portal", SSPFacadeImpl.getSSPSystemUrl());
+    urlLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
+
     add(userEntrys, BorderLayout.NORTH);
     add(scrollPane, BorderLayout.CENTER);
+    add(urlLabel, BorderLayout.SOUTH);
   }
 
   /**
