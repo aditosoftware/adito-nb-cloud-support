@@ -39,9 +39,11 @@ public class StopSystemAction extends NodeAction implements IContextMenuAction, 
     if (systemInfo != null)
     {
       String cloudId = systemInfo.getCloudId().blockingFirst("");
+      if (cloudId.isEmpty())
+        return false;
       ISSPFacade sspFacade = ISSPFacade.getInstance();
       DecodedJWT jwt = UserCredentialsManager.getCredentials();
-      if (jwt != null && !cloudId.isEmpty())
+      if (jwt != null)
       {
         return sspFacade.isSystemRunning(jwt.getSubject(), jwt, cloudId);
       }

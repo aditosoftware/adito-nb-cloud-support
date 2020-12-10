@@ -30,11 +30,14 @@ public class StartSystemAction extends NodeAction implements IContextMenuAction,
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
     if (systemInfo != null)
     {
+      String cloudId = systemInfo.getCloudId().blockingFirst("");
+      if (cloudId.isEmpty())
+        return false;
       ISSPFacade sspFacade = ISSPFacade.getInstance();
       DecodedJWT jwt = UserCredentialsManager.getCredentials();
       if (jwt != null)
       {
-        return !sspFacade.isSystemRunning(jwt.getSubject(), jwt, systemInfo.getCloudId().blockingFirst(""));
+        return !sspFacade.isSystemRunning(jwt.getSubject(), jwt, cloudId);
       }
     }
     return true;
