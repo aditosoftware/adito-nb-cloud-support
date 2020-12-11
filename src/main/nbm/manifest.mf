@@ -5,6 +5,11 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v.1.0.3</p>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
+  <ul>
+    <li>Fixed the Plugin asking for credentials when right-clicking on a system that is not a cloud system. This is totally unnecessary because the credentials could not be used anyways</li>
+  </ul>
   <p style="font-weight: bold;">v.1.0.2</p>
   <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
   <ul>
