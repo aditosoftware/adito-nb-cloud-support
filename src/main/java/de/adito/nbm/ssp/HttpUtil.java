@@ -4,12 +4,15 @@ import com.mashape.unirest.http.HttpResponse;
 import de.adito.nbm.ssp.exceptions.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 /**
  * @author m.kaspera, 09.10.2020
  */
 public class HttpUtil
 {
+
+  private static final Logger logger = Logger.getLogger(HttpUtil.class.getName());
 
   /**
    * @param pStatusCode status code to check
@@ -43,11 +46,20 @@ public class HttpUtil
   public static void verifyStatus(HttpResponse<?> pHttpResponse) throws AditoSSPException
   {
     if (pHttpResponse.getStatus() == HttpStatus.INTERNAL_SERVER_ERROR)
+    {
+      _logError(pHttpResponse);
       throw new AditoSSPServerException(pHttpResponse.getStatusText());
+    }
     if (pHttpResponse.getStatus() == HttpStatus.FORBIDDEN)
+    {
+      _logError(pHttpResponse);
       throw new AditoSSPUnauthorizedException(pHttpResponse.getStatusText());
+    }
     if (HttpUtil.isClientError(pHttpResponse.getStatus()) || HttpUtil.isServerError(pHttpResponse.getStatus()))
-      throw new AditoSSPException(pHttpResponse.getStatusText(), pHttpResponse.getStatus());
+    {
+      _logError(pHttpResponse);
+      throw new AditoSSPException(pHttpResponse.getStatusText() + "\n" + pHttpResponse.getBody(), pHttpResponse.getStatus());
+    }
   }
 
   /**
@@ -62,5 +74,16 @@ public class HttpUtil
     headers.put("Content-type", "application/json");
     headers.put("Connection", "keep-alive");
     return headers;
+  }
+
+  /**
+   * Logs the response details
+   *
+   * @param pHttpResponse Response whose details should be logged
+   */
+  private static void _logError(HttpResponse<?> pHttpResponse)
+  {
+    logger.log(Level.WARNING, () -> String.format("Request returned a response with error code %d:\n%s\n%s",
+                                                  pHttpResponse.getStatus(), pHttpResponse.getStatusText(), pHttpResponse.getBody()));
   }
 }
