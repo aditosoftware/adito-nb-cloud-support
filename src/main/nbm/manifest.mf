@@ -5,6 +5,15 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v.1.0.4</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>The parsing of the systems details returned by the Webservice of the SSP is now more redundant</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
+  <ul>
+    <li>Fix: Key value pairs for exception messages are in the wrong bundle - leading to actual exceptions instead of notifications</li>
+  </ul>
   <p style="font-weight: bold;">v.1.0.3</p>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
   <ul>
