@@ -7,12 +7,14 @@ import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
 import org.jetbrains.annotations.NotNull;
+import org.openide.util.NbBundle;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
+import java.util.logging.*;
 
 /**
  * List component
@@ -115,6 +117,10 @@ public class CList extends JPanel implements Scrollable
       catch (MalformedInputException | UnirestException | AditoSSPException pE)
       {
         // nothing, not added
+      }
+      catch (AditoSSPParseException pE)
+      {
+        Logger.getLogger(CList.class.getName()).log(Level.SEVERE, pE, () -> NbBundle.getMessage(CList.class, "ERR_ParseException"));
       }
     }
 

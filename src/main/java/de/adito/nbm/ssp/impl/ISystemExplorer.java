@@ -56,12 +56,18 @@ interface ISystemExplorer
                                                   },
                                                   NotificationDisplayer.Priority.NORMAL);
       }
+      catch (AditoSSPParseException pE)
+      {
+        NotificationDisplayer.getDefault().notify("Error while parsing system details", NotificationDisplayer.Priority.NORMAL.getIcon(), pE.getMessage(), e -> {
+                                                  },
+                                                  NotificationDisplayer.Priority.NORMAL);
+      }
     }
     return sspSystems;
   }
 
   default ISSPSystemDetails retrieveDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException,
-      MalformedInputException
+      MalformedInputException, AditoSSPParseException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject systemDetailsBody = new JSONObject(Map.of(USER_KEY, pUsername, TOKEN_KEY, pJWT.getToken(), SYSTEM_ID_KEY, pSystem.getSystemdId()));

@@ -49,7 +49,8 @@ public interface ISSPFacade
    * @throws MalformedInputException       if the JSON returned by the server cannot be transformed to the SystemDetails
    */
   @NotNull
-  ISSPSystemDetails getSystemDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws MalformedInputException, UnirestException, AditoSSPException;
+  ISSPSystemDetails getSystemDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws MalformedInputException, UnirestException,
+      AditoSSPException, AditoSSPParseException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued

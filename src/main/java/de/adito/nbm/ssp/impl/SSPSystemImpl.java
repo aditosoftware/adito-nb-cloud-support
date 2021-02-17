@@ -1,9 +1,9 @@
 package de.adito.nbm.ssp.impl;
 
-import de.adito.nbm.ssp.exceptions.MalformedInputException;
+import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.ISSPSystem;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
+import org.json.*;
 
 import java.text.*;
 import java.time.Instant;
@@ -23,27 +23,35 @@ class SSPSystemImpl implements ISSPSystem
   private final String ranchRId;
   private final Instant creationDate;
 
-  SSPSystemImpl(@NotNull JSONArray pJSONArray) throws MalformedInputException
+  SSPSystemImpl(@NotNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
   {
     Instant creationDateVar;
     if (pJSONArray.length() < 7)
       throw new MalformedInputException(pJSONArray.toString(0));
-    name = pJSONArray.optString(1);
-    url = pJSONArray.optString(2);
-    clusterId = pJSONArray.optString(5);
-    systemId = pJSONArray.optString(0);
-    ranchRId = pJSONArray.optString(3);
-    String creationDateString = pJSONArray.optString(6);
     try
     {
-      creationDateVar = new SimpleDateFormat("MMM dd, yyyy").parse(creationDateString).toInstant();
+      name = pJSONArray.optString(1);
+      url = pJSONArray.optString(2);
+      clusterId = pJSONArray.optString(5);
+      systemId = pJSONArray.optString(0);
+      ranchRId = pJSONArray.optString(3);
+      String creationDateString = pJSONArray.optString(6);
+      try
+      {
+        creationDateVar = new SimpleDateFormat("MMM dd, yyyy").parse(creationDateString).toInstant();
+      }
+      catch (ParseException pE)
+      {
+        logger.log(Level.WARNING, pE, () -> "Invalid date: " + creationDateString);
+        creationDateVar = Instant.MIN;
+      }
+      creationDate = creationDateVar;
     }
-    catch (ParseException pE)
+    catch (
+        JSONException pJSONException)
     {
-      logger.log(Level.WARNING, pE, () -> "Invalid date: " + creationDateString);
-      creationDateVar = Instant.MIN;
+      throw new AditoSSPParseException(pJSONException, pJSONArray);
     }
-    creationDate = creationDateVar;
   }
 
   SSPSystemImpl(String pName, String pUrl, String pClusterId, String pSystemId, String pRanchRId, Instant pCreationDate)

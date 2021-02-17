@@ -75,7 +75,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   @NotNull
   @Override
   public ISSPSystemDetails getSystemDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws MalformedInputException,
-      UnirestException, AditoSSPException
+      UnirestException, AditoSSPException, AditoSSPParseException
   {
     return retrieveDetails(pUsername, pJWT, pSystem);
   }
