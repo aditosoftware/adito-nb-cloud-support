@@ -140,7 +140,10 @@ public class CList extends JPanel implements Scrollable
 
     // disabled-Projects at the end of the list
     objectList.addAll(disabledProjects);
-    objectList.get(objectList.size() - 1).setBorder(null); // remove the border of the last entry
+    if (!objectList.isEmpty())
+    {
+      objectList.get(objectList.size() - 1).setBorder(null); // remove the border of the last entry
+    }
 
     // remove the loading panel
     _removeLoading();
