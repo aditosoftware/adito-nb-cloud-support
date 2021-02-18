@@ -9,6 +9,7 @@ import de.adito.nbm.ssp.exceptions.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
+import java.nio.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -32,7 +33,7 @@ interface ILogin
   default DecodedJWT login(@NotNull String pUsername, char[] pPassword) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
-    JSONObject body = new JSONObject(Map.of("username", pUsername, "password", getEncoder().encodeToString(new String(pPassword).getBytes(StandardCharsets.UTF_8))));
+    JSONObject body = new JSONObject(Map.of("username", pUsername, "password", encodeBase64(pPassword)));
     HttpResponse<String> jsonHttpResponse = Unirest.post(getLoginServiceUrl())
         .headers(headers)
         .body(body)
@@ -46,6 +47,25 @@ interface ILogin
       throw new AditoSSPAuthException(pE, pE.getStatusCode());
     }
     return JWT.decode(jsonHttpResponse.getBody());
+  }
+
+  /**
+   * encode a char array to a Base64-encoded String
+   *
+   * @param pChars char array to encode
+   * @return Base64-encoded String
+   */
+  default String encodeBase64(char[] pChars)
+  {
+    // To use the encodeToString method we have to transform the char array to a byte array
+    // Transform char array in ByteBuffer -> chars are written to the ByteBuffer
+    ByteBuffer buffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(pChars));
+    // Create byte array with size "Number of elements in byteBuffer" -> the get call only reads that many bytes and not more
+    byte[] bytes = new byte[buffer.remaining()];
+    // Write bytes from the byteBuffer into the byteArray
+    buffer.get(bytes);
+    Arrays.fill(pChars, '0');
+    return getEncoder().encodeToString(bytes);
   }
 
   @NotNull
