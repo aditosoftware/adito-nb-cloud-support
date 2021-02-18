@@ -32,6 +32,45 @@ public class SSPSystemImplTest
   }
 
   /**
+   * Tests if an array with wrong types works
+   *
+   * @throws MalformedInputException if the tests fails with this exeption
+   */
+  @Test
+  void testWrongType() throws MalformedInputException, AditoSSPParseException
+  {
+    JSONArray jsonArray = new JSONArray("[{asdf:null}, null, null, null, null, null, null]");
+    SSPSystemImpl sspSystem = new SSPSystemImpl(jsonArray);
+    assertEquals("{\"asdf\":null}", sspSystem.getSystemdId());
+    assertEquals("", sspSystem.getName());
+    assertEquals("", sspSystem.getClusterId());
+    assertEquals(Instant.MIN, sspSystem.getCreationDate());
+    assertEquals("", sspSystem.getUrl());
+  }
+
+  /**
+   * Tests if an array with wrong types works
+   *
+   * @throws MalformedInputException if the tests fails with this exeption
+   */
+  @Test
+  void testWrongTypeDetails() throws MalformedInputException, AditoSSPParseException
+  {
+    JSONArray jsonArray = new JSONArray("[null, null, null, null, null, null, null]");
+    SSPSystemImpl sspSystem = new SSPSystemImpl(jsonArray);
+    JSONArray detailsArray = new JSONArray("[{giturl: {asdf:null}, branch_tag: null, version: null}]");
+    SSPSystemDetailsImpl sspSystemDetails = new SSPSystemDetailsImpl(sspSystem, detailsArray);
+    assertEquals("", sspSystemDetails.getSystemdId());
+    assertEquals("", sspSystemDetails.getName());
+    assertEquals("", sspSystemDetails.getClusterId());
+    assertEquals(Instant.MIN, sspSystemDetails.getCreationDate());
+    assertEquals("", sspSystemDetails.getUrl());
+    assertEquals("", sspSystemDetails.getGitBranch());
+    assertEquals("{\"asdf\":null}", sspSystemDetails.getGitRepoUrl());
+    assertEquals("", sspSystemDetails.getKernelVersion());
+  }
+
+  /**
    * Tests if an array with only null values works for the SSPSystemDetailsImpl (it should)
    *
    * @throws MalformedInputException if the tests fails with this exeption
@@ -41,13 +80,13 @@ public class SSPSystemImplTest
   {
     JSONArray jsonArray = new JSONArray("[null, null, null, null, null, null, null]");
     SSPSystemImpl sspSystem = new SSPSystemImpl(jsonArray);
-    assertEquals("", sspSystem.getSystemdId());
-    assertEquals("", sspSystem.getName());
-    assertEquals("", sspSystem.getClusterId());
-    assertEquals(Instant.MIN, sspSystem.getCreationDate());
-    assertEquals("", sspSystem.getUrl());
     JSONArray detailsArray = new JSONArray("[{giturl: null, branch_tag: null, version: null}]");
     SSPSystemDetailsImpl sspSystemDetails = new SSPSystemDetailsImpl(sspSystem, detailsArray);
+    assertEquals("", sspSystemDetails.getSystemdId());
+    assertEquals("", sspSystemDetails.getName());
+    assertEquals("", sspSystemDetails.getClusterId());
+    assertEquals(Instant.MIN, sspSystemDetails.getCreationDate());
+    assertEquals("", sspSystemDetails.getUrl());
     assertEquals("", sspSystemDetails.getGitBranch());
     assertEquals("", sspSystemDetails.getGitRepoUrl());
     assertEquals("", sspSystemDetails.getKernelVersion());
