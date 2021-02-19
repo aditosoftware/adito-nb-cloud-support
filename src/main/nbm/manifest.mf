@@ -5,7 +5,17 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
-  <p style="font-weight: bold;">v.1.0.4</p>
+  <p style="font-weight: bold;">v1.0.5</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Reworked the error treatment when parsing the system details returned by the SSP: The list of systems always shows the systems that could be parsed and only logs the systems that cannot be parsed</li>
+    <li>Reworded the error message if authentication fails when retrieving the list of SSP systems<li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
+  <ul>
+    <li>Fix: IndexOutOfBoundsException when the list of SSP systems is empty</li>
+  </ul>
+  <p style="font-weight: bold;">v1.0.4</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
     <li>The parsing of the systems details returned by the Webservice of the SSP is now more redundant</li>
@@ -14,17 +24,17 @@ OpenIDE-Module-Long-Description: Provides support for connecting to Cloud System
   <ul>
     <li>Fix: Key value pairs for exception messages are in the wrong bundle - leading to actual exceptions instead of notifications</li>
   </ul>
-  <p style="font-weight: bold;">v.1.0.3</p>
+  <p style="font-weight: bold;">v1.0.3</p>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
   <ul>
     <li>Fixed the Plugin asking for credentials when right-clicking on a system that is not a cloud system. This is totally unnecessary because the credentials could not be used anyways</li>
   </ul>
-  <p style="font-weight: bold;">v.1.0.2</p>
+  <p style="font-weight: bold;">v1.0.2</p>
   <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
   <ul>
     <li>It is now possible to open ADITO Cloud Systems via File -> New Project -> Load ADITO Cloud System</li>
   </ul>
-  <p style="font-weight: bold;">v.1.0.1</p>
+  <p style="font-weight: bold;">v1.0.1</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
     <li>Adjusted the tooltip of the "cancel" button to better reflect its functionality</li>
