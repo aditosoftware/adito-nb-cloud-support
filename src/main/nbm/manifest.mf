@@ -9,7 +9,7 @@ OpenIDE-Module-Long-Description: Provides support for connecting to Cloud System
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
     <li>Reworked the error treatment when parsing the system details returned by the SSP: The list of systems always shows the systems that could be parsed and only logs the systems that cannot be parsed</li>
-    <li>Reworded the error message if authentication fails when retrieving the list of SSP systems<li>
+    <li>Reworded the error message if authentication fails when retrieving the list of SSP systems</li>
   </ul>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIXES</p>
   <ul>
