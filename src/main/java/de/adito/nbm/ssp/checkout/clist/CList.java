@@ -206,7 +206,7 @@ public class CList extends JPanel implements Scrollable
    *
    * @param pSelected The newly selected object
    */
-  public void setSelected(CListObject pSelected)
+  public void setSelected(@NotNull CListObject pSelected)
   {
     if (!pSelected.getSystemDetails().isDesignerVersionOk())
       return;

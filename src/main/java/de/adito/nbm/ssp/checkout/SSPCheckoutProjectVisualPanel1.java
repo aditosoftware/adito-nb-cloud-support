@@ -6,10 +6,12 @@ import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.exceptions.AditoSSPAuthException;
+import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.jetbrains.annotations.*;
 import org.openide.util.Lookup;
 
 import javax.swing.*;
@@ -19,6 +21,7 @@ import java.awt.datatransfer.*;
 import java.awt.event.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Panel for the wizard, shows the list of available projects
@@ -27,6 +30,9 @@ import java.util.*;
  */
 public class SSPCheckoutProjectVisualPanel1 extends JPanel
 {
+  private final List<IStateChangeListener> validListeners = new ArrayList<>();
+  private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+  private Future<?> future;
   private final IVaadinIconsProvider iconsProvider;
   private JPanel userEntrys;
   private JButton refreshButton;
@@ -51,6 +57,21 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     add(userEntrys, BorderLayout.NORTH);
     add(scrollPane, BorderLayout.CENTER);
     add(urlLabel, BorderLayout.SOUTH);
+  }
+
+  public void addStateChangeListener(@NotNull IStateChangeListener pListener)
+  {
+    validListeners.add(pListener);
+  }
+
+  public void removeStateChangeListener(@NotNull IStateChangeListener pListener)
+  {
+    validListeners.remove(pListener);
+  }
+
+  private void fireStateChanged(@NotNull IStateChangeListener.State pState)
+  {
+    validListeners.forEach(pListener -> pListener.changedValidity(pState));
   }
 
   /**
@@ -144,6 +165,10 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     userEntrys.add(leftPanel, BorderLayout.WEST);
     userEntrys.add(midPanel, BorderLayout.CENTER);
     userEntrys.add(rightPanel, BorderLayout.EAST);
+    txtUser.addFocusListener(new FocusListenerRepositoryData());
+    txtPasswd.addFocusListener(new FocusListenerRepositoryData());
+    refreshButton.addActionListener(e -> _comboBoxChangeAction(null));
+    cList.addKeyListener(new ClistKeyListener());
   }
 
   /**
@@ -157,12 +182,17 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     });
   }
 
+  public void reloadList()
+  {
+    _comboBoxChangeAction(null);
+  }
+
   /**
    * Creates the clist
    *
    * @param pToken JWT used to auth with the SSP system
    */
-  public void loadList(DecodedJWT pToken)
+  private void loadList(@NotNull DecodedJWT pToken)
   {
     cList.fillListBasedOnURL(pToken);
     refreshShowPanel();
@@ -175,30 +205,12 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pSelected The object to set as selected
    * @param pDoScroll represents if the view should scroll to the CListObject
    */
-  public void setSelected(CListObject pSelected, boolean pDoScroll)
+  private void setSelected(@NotNull CListObject pSelected, boolean pDoScroll)
   {
     cList.setSelected(pSelected);
     if (pDoScroll)
-      setScroll(cList.getScrollValue());
-  }
-
-  /**
-   * Sets the value to which the ScrollPane should scroll/show
-   * Only passes that information to the verticalScrollbar
-   *
-   * @param pScrollValue Scroll-Wert
-   */
-  public void setScroll(int pScrollValue)
-  {
-    scrollPane.getVerticalScrollBar().setValue(pScrollValue);
-  }
-
-  /**
-   * Passes the setLoading request to the CList
-   */
-  public void setLoading()
-  {
-    cList.setLoading();
+      scrollPane.getVerticalScrollBar().setValue(cList.getScrollValue());
+    refreshShowPanel();
   }
 
   /**
@@ -236,7 +248,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   /**
    * Sets "oldDefaultButton" on the new DefaultButton, that lies on the RootPane of the wizard
    */
-  public void setOldDefaultButton()
+  private void setOldDefaultButton()
   {
     SwingUtilities.invokeLater(() -> {
       if (oldDefaultButton == null && getRootPane() != null)
@@ -249,7 +261,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    *
    * @param pPanelToShow JPanel that serves as ViewPort for the JScrollPane. NULL, if only the CList should be shown
    */
-  public void setPanel(JPanel pPanelToShow)
+  public void setPanel(@Nullable JPanel pPanelToShow)
   {
     if (pPanelToShow != null)
     {
@@ -275,11 +287,6 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   public List<CListObject> getObjects()
   {
     return cList.getObjectList();
-  }
-
-  public JButton getRefreshButton()
-  {
-    return refreshButton;
   }
 
   public JPasswordField getTxtPasswd()
@@ -311,7 +318,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pActionOnRetry ButtonAction in form of a Runnable. This action is assigned to the "Retry..." button
    *                       If NULL no "Retry..." is shown
    */
-  public void showErrorPanel(NotificationPanel.NotificationType pType, final Exception pException, final Runnable pActionOnRetry)
+  private void showErrorPanel(@NotNull NotificationPanel.NotificationType pType, @NotNull final Exception pException, @Nullable final Runnable pActionOnRetry)
   {
     String errorMessage = ExceptionUtils.getRootCauseMessage(pException);
     if (pException instanceof AditoSSPAuthException)
@@ -358,10 +365,163 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pErrorMessage The error message
    * @param pActions      optional actions
    */
-  public void showErrorPanel(NotificationPanel.NotificationType pType, String pErrorMessage, Action... pActions)
+  private void showErrorPanel(NotificationPanel.NotificationType pType, String pErrorMessage, Action... pActions)
   {
     NotificationPanel panel = new NotificationPanel(pType.toIcon(), pErrorMessage, pActions);
     panel.setBackground(SSPCheckoutProjectWizardIterator.getCallback().getDefaultBackgroundColor());
     setPanel(panel);
+  }
+
+  /**
+   * Executes the whole reload process of the list
+   *
+   * @param pSelected the ID of the object that should be selected
+   */
+  private void _comboBoxChangeAction(@Nullable final CListObject pSelected)
+  {
+    // Deactivate the "Next" button while the list is loading
+    fireStateChanged(IStateChangeListener.State.ISINVALID);
+    // In case there are still details shown
+    setPanel(null);
+
+    // Cancel the old loading process if still active
+    if (future != null)
+      future.cancel(true);
+    future = executorService.submit(() -> {
+      // Emtpy the Clist and show the "loading" text
+      cList.setLoading();
+      _updateComponent(pSelected);
+      // Re-enable "Next" button
+      fireStateChanged(IStateChangeListener.State.ISVALID);
+    });
+  }
+
+  /**
+   * Triggers the reload of the list with the data from the WizardDescriptor
+   * Selects the passed Project and sets the focus on the list so the user can navigate via the arrow keys
+   */
+  private void _updateComponent(@Nullable CListObject pSelected)
+  {
+    _reload();
+
+    if (!getObjects().isEmpty() && pSelected != null)
+    {
+      setSelected(pSelected, true);
+    }
+    fireStateChanged(IStateChangeListener.State.CHANGED);
+    if (!getObjects().isEmpty())
+    {
+      setOldDefaultButton();
+      setDefaultButtonToRefreshButton(false);
+
+    }
+    else
+      setDefaultButtonToRefreshButton(true);
+  }
+
+  /**
+   * Passes on the order to reload the Clist
+   * The exceptions that may occur are caught and passed on to the ErrorPanel
+   * This method also sets the listeners for the detailsButtons and the ClistObjects
+   */
+  private void _reload()
+  {
+    try
+    {
+      DecodedJWT jwt = ISSPFacade.getInstance().getJWT(getTxtUser().getText(), getTxtPasswd().getPassword());
+      UserCredentialsManager.saveToken(jwt);
+      UserCredentialsManager.saveLastUser(jwt.getSubject());
+      loadList(jwt);
+    }
+    catch (final Exception e)
+    {
+      getCList().clearList();
+      Runnable retry = () -> {
+        // On retry -> reload list again
+        _comboBoxChangeAction(null);
+      };
+      showErrorPanel(NotificationPanel.NotificationType.ERROR, e, retry);
+      return;
+    }
+    _setListeners();
+    focusClist();
+  }
+
+  /**
+   * Sets the listener for the CListObjects and the detail buttons
+   * For this purpose custom classes are used, these are implemented further down
+   */
+  private void _setListeners()
+  {
+    for (final CListObject object : getObjects())
+    {
+      CListObjectMouseAdapter mouseAdapter = new CListObjectMouseAdapter();
+      object.addMouseAdapter(mouseAdapter);
+      object.addMouseAdapterOnTextField(new MouseAdapter()
+      {
+        @Override
+        public void mousePressed(MouseEvent e)
+        {
+          object.dispatchEvent(new MouseEvent(object, e.getID(), e.getWhen(), e.getModifiers(), 0, 0, e.getClickCount(),
+                                              false));
+        }
+      });
+    }
+  }
+
+  /**
+   * A MouseAdapter, to process the clicks on a CListObject (= selection)
+   */
+  private class CListObjectMouseAdapter extends MouseAdapter
+  {
+    @Override
+    public void mousePressed(MouseEvent e)
+    {
+      CListObject objectClicked;
+      objectClicked = (CListObject) e.getComponent();
+      if (objectClicked != null)
+      {
+        setSelected(objectClicked, false);
+        // Check for doubleclick, if yes, proceed one step further
+        if (e.getClickCount() > 1)
+        {
+          fireStateChanged(IStateChangeListener.State.FINISHED);
+        }
+        else
+        {
+          focusClist();
+          setDefaultButtonToRefreshButton(false);
+          fireStateChanged(IStateChangeListener.State.CHANGED);
+        }
+      }
+    }
+  }
+
+  /**
+   * A FocusAdapter for the ComboBox and the textfields to manage focus
+   */
+  private class FocusListenerRepositoryData extends FocusAdapter
+  {
+    @Override
+    public void focusGained(FocusEvent e)
+    {
+      setDefaultButtonToRefreshButton(true);
+    }
+
+  }
+
+  private class ClistKeyListener extends KeyAdapter
+  {
+    @Override
+    public void keyPressed(KeyEvent e)
+    {
+      List<CListObject> objects = getObjects();
+      int indexOfSelectedObject = objects.indexOf(getSelected());
+      if (e.getKeyCode() == KeyEvent.VK_UP && indexOfSelectedObject > 0)
+        setSelected(objects.get(indexOfSelectedObject - 1), true);
+      else if (e.getKeyCode() == KeyEvent.VK_DOWN)
+        if (indexOfSelectedObject < (getCList().getObjectList().size() - 1))
+          setSelected(objects.get(indexOfSelectedObject + 1), true);
+    }
   }
 }
