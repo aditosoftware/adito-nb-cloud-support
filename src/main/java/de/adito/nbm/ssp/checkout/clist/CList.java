@@ -104,7 +104,7 @@ public class CList extends JPanel implements Scrollable
     // clear old list
     clearList();
 
-    java.util.List<ISSPSystemDetails> systemDetailsList = new ArrayList<>();
+    List<ISSPSystemDetails> systemDetailsList = new ArrayList<>();
     ISSPFacade sspFacade = ISSPFacade.getInstance();
     List<ISSPSystem> systemList = sspFacade.getSystems(pToken.getSubject(), pToken);
     for (ISSPSystem system : systemList)
@@ -123,6 +123,8 @@ public class CList extends JPanel implements Scrollable
         Logger.getLogger(CList.class.getName()).log(Level.SEVERE, pE, () -> NbBundle.getMessage(CList.class, "ERR_ParseException"));
       }
     }
+    // we want the latest system on top -> inverse sorting
+    systemDetailsList.sort(Comparator.comparing(ISSPSystem::getCreationDate).reversed());
 
     ArrayList<CListObject> disabledProjects = new ArrayList<>();
     for (ISSPSystemDetails project : systemDetailsList)
