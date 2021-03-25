@@ -103,6 +103,7 @@ public class SSPCheckoutExecutor
                                                                                       ExceptionUtils.getStackTrace(pE)));
     }
     NbPreferences.forModule(ISystemInfo.class).put(ISystemInfo.CLOUD_ID_PREF_KEY_PEFIX + "default." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getSystemdId());
+    NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getUrl());
   }
 
   private static void _storeSSHPasswords(@NotNull ISSPSystemDetails pPSystemDetails, @NotNull ISSPFacade pSspFacade, @NotNull DecodedJWT pCurrentCredentials,
