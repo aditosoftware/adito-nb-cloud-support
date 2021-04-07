@@ -34,6 +34,8 @@ import java.util.logging.*;
 public class SSPCheckoutExecutor
 {
 
+  public static final String DEFAULT_SERVER_CONFIG_PATH = "data/config/serverconfig_default.xml";
+  public static final String DEFAULT_TUNNEL_CONFIG_PATH = "data/config/tunnelConfig.xml";
   private static final Logger logger = Logger.getLogger(SSPCheckoutExecutor.class.getName());
   private static IGitVersioningSupport gitSupport;
   private static Future<?> future = null;
@@ -76,10 +78,24 @@ public class SSPCheckoutExecutor
     ISSPFacade sspFacade = ISSPFacade.getInstance();
     DecodedJWT currentCredentials = UserCredentialsManager.getCredentials();
     pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.fetch.serverConfig"));
+    storeConfigs(pHandle, pSystemDetails, pTarget, sspFacade, currentCredentials);
+    NbPreferences.forModule(ISystemInfo.class).put(ISystemInfo.CLOUD_ID_PREF_KEY_PEFIX + "default." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getSystemdId());
+    NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getUrl());
+  }
+
+  /**
+   * @param pHandle            ProgressHandle to set the progress messages according to which file is being worked on at the moment
+   * @param pSystemDetails     ISSPSystemDetails for knowing which configs to load
+   * @param pTargetDir         Directory of the project
+   * @param sspFacade          ISSPFacade for calling the functions to retrieve the config file contents
+   * @param currentCredentials Credentials for authentication
+   */
+  public static void storeConfigs(ProgressHandle pHandle, ISSPSystemDetails pSystemDetails, File pTargetDir, ISSPFacade sspFacade, DecodedJWT currentCredentials)
+  {
     try
     {
       String serverConfigContents = sspFacade.getServerConfig(currentCredentials.getSubject(), currentCredentials, pSystemDetails);
-      FileObject fileObject = FileUtil.createData(new File(pTarget, "data/config/serverconfig_default.xml"));
+      FileObject fileObject = FileUtil.createData(new File(pTargetDir, DEFAULT_SERVER_CONFIG_PATH));
       pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.write.serverConfig"));
       fileObject.getOutputStream().write(serverConfigContents.getBytes(StandardCharsets.UTF_8));
     }
@@ -92,7 +108,7 @@ public class SSPCheckoutExecutor
     try
     {
       String tunnelConfigContents = sspFacade.getTunnelConfig(currentCredentials.getSubject(), currentCredentials, pSystemDetails);
-      FileObject fileObject = FileUtil.createData(new File(pTarget, "data/config/tunnelConfig.xml"));
+      FileObject fileObject = FileUtil.createData(new File(pTargetDir, DEFAULT_TUNNEL_CONFIG_PATH));
       pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.write.tunnelConfig"));
       fileObject.getOutputStream().write(tunnelConfigContents.getBytes(StandardCharsets.UTF_8));
       _storeSSHPasswords(pSystemDetails, sspFacade, currentCredentials, tunnelConfigContents);
@@ -102,8 +118,6 @@ public class SSPCheckoutExecutor
       logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.error.tunnelConfig",
                                                                                       ExceptionUtils.getStackTrace(pE)));
     }
-    NbPreferences.forModule(ISystemInfo.class).put(ISystemInfo.CLOUD_ID_PREF_KEY_PEFIX + "default." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getSystemdId());
-    NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getUrl());
   }
 
   private static void _storeSSHPasswords(@NotNull ISSPSystemDetails pPSystemDetails, @NotNull ISSPFacade pSspFacade, @NotNull DecodedJWT pCurrentCredentials,
