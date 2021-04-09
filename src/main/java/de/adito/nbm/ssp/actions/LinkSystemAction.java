@@ -32,6 +32,15 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
 
   private static final String PROGRESS_BUNDLE_KEY = "TXT.LinkSystemAction.progress";
 
+  private enum CONFIG_RESULTS
+  {
+    DO_NOT_WRITE,
+    WRITTEN,
+    OVERRIDDEN,
+    NOT_OVERRIDDEN,
+    CANCELLED
+  }
+
   @Override
   protected void performAction(Node[] activatedNodes)
   {
@@ -80,17 +89,41 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     BaseProgressUtils.showProgressDialogAndRun(() -> {
       String result = pSystemDetails.getSystemdId();
       File projectDir = FileUtil.toFile(pSystemInfo.getProject().getProjectDirectory());
-      // only do this if the user wants to also get the config files
-      if (pIsLoadConfigs && _handleConfigFiles(pSystemDetails, progressHandle, projectDir))
+      CONFIG_RESULTS configResults;
+      if (!pIsLoadConfigs)
       {
-        return;
+        configResults = CONFIG_RESULTS.DO_NOT_WRITE;
       }
-      pSystemInfo.setCloudId(result);
-      NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + projectDir.getPath().replace("\\", "/"), pSystemDetails.getUrl());
+      else
+      {
+        configResults = _handleConfigFiles(pSystemDetails, progressHandle, projectDir);
+      }
+      if (configResults == CONFIG_RESULTS.CANCELLED)
+      {
+        NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                                  NotificationDisplayer.Priority.NORMAL.getIcon(),
+                                                  NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.aborted"), null);
+      }
+      else
+      {
+        pSystemInfo.setCloudId(result);
+        NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + projectDir.getPath().replace("\\", "/"), pSystemDetails.getUrl());
+        if (configResults == CONFIG_RESULTS.NOT_OVERRIDDEN)
+        {
+          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                                    NotificationDisplayer.Priority.NORMAL.getIcon(),
+                                                    NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.successWithoutOverride"), null);
+        }
+        else
+        {
+          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                                    NotificationDisplayer.Priority.NORMAL.getIcon(),
+                                                    NbBundle.getMessage(LinkSystemAction.class,
+                                                                        pIsLoadConfigs ? "TXT.LinkSystemAction.successWithConfigs" : "TXT.LinkSystemAction.success"),
+                                                    null);
+        }
+      }
     }, progressHandle, true);
-    NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
-                                              NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                              NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.success"), null);
   }
 
   /**
@@ -99,7 +132,7 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
    * @param pProjectDir     ProjectDirectory
    * @return true if the link should be cancelled, false if the link should be finished
    */
-  private boolean _handleConfigFiles(ISSPSystemDetails pSelectedSystem, ProgressHandle pProgressHandle, File pProjectDir)
+  private CONFIG_RESULTS _handleConfigFiles(ISSPSystemDetails pSelectedSystem, ProgressHandle pProgressHandle, File pProjectDir)
   {
     Object pressedButton = null;
     // If any of the config files already exist, ask the user if they should be overridden. If no, stop the link
@@ -107,18 +140,20 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
         new File(pProjectDir, SSPCheckoutExecutor.DEFAULT_TUNNEL_CONFIG_PATH).exists())
     {
       pressedButton = DialogDisplayer.getDefault()
-          .notify(new NotifyDescriptor.Confirmation(NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.overrideQuestion")));
+          .notify(new NotifyDescriptor.Confirmation(NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.overrideQuestion"),
+                                                    NbBundle.getMessage(LinkSystemAction.class, "TITLE.LinkSystemAction.overrideQuestion")));
     }
-    if (!NotifyDescriptor.YES_OPTION.equals(pressedButton))
+    if (NotifyDescriptor.CANCEL_OPTION.equals(pressedButton))
     {
-      NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
-                                                NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.aborted"), null);
-      return true;
+      return CONFIG_RESULTS.CANCELLED;
     }
-    SSPCheckoutExecutor.storeConfigs(pProgressHandle, pSelectedSystem, pProjectDir,
-                                     ISSPFacade.getInstance(), UserCredentialsManager.getCredentials());
-    return false;
+    if (pressedButton == null || pressedButton.equals(NotifyDescriptor.YES_OPTION))
+    {
+      SSPCheckoutExecutor.storeConfigs(pProgressHandle, pSelectedSystem, pProjectDir,
+                                       ISSPFacade.getInstance(), UserCredentialsManager.getCredentials());
+      return pressedButton == null ? CONFIG_RESULTS.WRITTEN : CONFIG_RESULTS.OVERRIDDEN;
+    }
+    return CONFIG_RESULTS.NOT_OVERRIDDEN;
   }
 
   @Override
