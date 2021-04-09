@@ -5,6 +5,13 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.0.6</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>The list of Cloud Systems is now sorted</li>
+    <li>The plugin offers an action on a System that connects that System with a Cloud System that can be selected by the user</li>
+    <li>Changed the ascii art of the logger to "ADITO Cloud System"</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.5</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
