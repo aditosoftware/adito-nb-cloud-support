@@ -20,6 +20,7 @@ import org.openide.util.*;
 import javax.xml.transform.TransformerException;
 import java.awt.*;
 import java.io.*;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
@@ -80,7 +81,15 @@ public class SSPCheckoutExecutor
     pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.fetch.serverConfig"));
     storeConfigs(pHandle, pSystemDetails, pTarget, sspFacade, currentCredentials);
     NbPreferences.forModule(ISystemInfo.class).put(ISystemInfo.CLOUD_ID_PREF_KEY_PEFIX + "default." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getSystemdId());
-    NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getUrl());
+    try
+    {
+      NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + pTarget.getPath().replace("\\", "/"), getUrlWithoutProtocol(pSystemDetails.getUrl()));
+    }
+    catch (MalformedURLException pE)
+    {
+      logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.error.serverAddress",
+                                                                                      ExceptionUtils.getStackTrace(pE)));
+    }
   }
 
   /**
@@ -118,6 +127,16 @@ public class SSPCheckoutExecutor
       logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.error.tunnelConfig",
                                                                                       ExceptionUtils.getStackTrace(pE)));
     }
+  }
+
+  @NotNull
+  public static String getUrlWithoutProtocol(@NotNull String pUrl) throws MalformedURLException
+  {
+    URL serverAddressURL = new URL(pUrl);
+    String serverAddressWithoutProtocol = pUrl.replace(serverAddressURL.getProtocol() + ":", "");
+    if (serverAddressWithoutProtocol.startsWith("//"))
+      serverAddressWithoutProtocol = serverAddressWithoutProtocol.substring(2);
+    return serverAddressWithoutProtocol;
   }
 
   private static void _storeSSHPasswords(@NotNull ISSPSystemDetails pPSystemDetails, @NotNull ISSPFacade pSspFacade, @NotNull DecodedJWT pCurrentCredentials,

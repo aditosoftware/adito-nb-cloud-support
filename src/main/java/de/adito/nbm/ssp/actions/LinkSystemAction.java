@@ -5,6 +5,7 @@ import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.*;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.*;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.netbeans.api.progress.*;
 import org.openide.*;
 import org.openide.awt.*;
@@ -17,7 +18,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
+import java.net.MalformedURLException;
 import java.util.Optional;
+import java.util.logging.*;
 
 /**
  * Connect an existing system with a cloud system
@@ -107,7 +110,18 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
       else
       {
         pSystemInfo.setCloudId(result);
-        NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + projectDir.getPath().replace("\\", "/"), pSystemDetails.getUrl());
+        try
+        {
+          NbPreferences.forModule(ISystemInfo.class).put("serverAddressDefault." + projectDir.getPath().replace("\\", "/"),
+                                                         SSPCheckoutExecutor.getUrlWithoutProtocol(pSystemDetails.getUrl()));
+        }
+        catch (MalformedURLException pE)
+        {
+          Logger.getLogger(LinkSystemAction.class.getName()).log(Level.WARNING, pE,
+                                                                 () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class,
+                                                                                                                   "TXT.SSPCheckoutExecutor.update.error.serverAddress",
+                                                                                                                   ExceptionUtils.getStackTrace(pE)));
+        }
         if (configResults == CONFIG_RESULTS.NOT_OVERRIDDEN)
         {
           NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
