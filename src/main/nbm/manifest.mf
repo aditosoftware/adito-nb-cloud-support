@@ -5,6 +5,11 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.0.7</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>The ServerAddress property is now set without the protocol as part of its value</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.6</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
