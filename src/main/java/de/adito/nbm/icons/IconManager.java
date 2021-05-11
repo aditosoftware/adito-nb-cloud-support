@@ -14,7 +14,7 @@ import java.awt.*;
 public class IconManager
 {
 
-  private static IconManager INSTANCE;
+  private static IconManager instance;
   private final IVaadinIconsProvider iconsProvider;
   private ImageIcon errorIcon;
 
@@ -27,9 +27,9 @@ public class IconManager
   @NotNull
   public static IconManager getInstance()
   {
-    if (INSTANCE == null)
-      INSTANCE = new IconManager();
-    return INSTANCE;
+    if (instance == null)
+      instance = new IconManager();
+    return instance;
   }
 
   @Nullable
@@ -38,6 +38,24 @@ public class IconManager
     if (errorIcon == null && iconsProvider != null)
     {
       Image image = iconsProvider.findImage(IVaadinIconsProvider.VaadinIcon.STOP, new IconAttributes.Builder().create());
+      if (image != null)
+        errorIcon = new ImageIcon(image);
+    }
+    return errorIcon;
+  }
+
+  /**
+   * @return Icon for marking a warning
+   */
+  @Nullable
+  public ImageIcon getWarningIcon()
+  {
+    if (errorIcon == null && iconsProvider != null)
+    {
+      Image image = iconsProvider.findImage(IVaadinIconsProvider.VaadinIcon.WARNING, new IconAttributes.Builder()
+          .setColor(Color.YELLOW)
+          .setSize(12f)
+          .create());
       if (image != null)
         errorIcon = new ImageIcon(image);
     }

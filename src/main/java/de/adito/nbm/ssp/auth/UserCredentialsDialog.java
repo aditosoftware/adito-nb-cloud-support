@@ -1,7 +1,9 @@
 package de.adito.nbm.ssp.auth;
 
+import de.adito.nbm.ssp.WarningPanel;
+import de.adito.nbm.ssp.checkout.UsernameEmailDocumentListener;
 import de.adito.swing.TableLayoutUtil;
-import info.clearthought.layout.TableLayout;
+import info.clearthought.layout.*;
 import org.jetbrains.annotations.*;
 import org.openide.util.NbBundle;
 
@@ -17,6 +19,7 @@ public class UserCredentialsDialog extends JPanel
   private static final int PW_FIELD_NUM_CHARS = 30;
   private static final String USERNAME_FIELD_LABEL = NbBundle.getMessage(UserCredentialsDialog.class, "LBL.UserCredentialsDialog.username");
   private static final String PASSWORD_FIELD_LABEL = NbBundle.getMessage(UserCredentialsDialog.class, "LBL.UserCredentialsDialog.password");
+  private static final WarningPanel WARNING_PANEL = new WarningPanel();
   private final JTextField usernameField = new JTextField();
   private final JPasswordField passwordField = new JPasswordField(PW_FIELD_NUM_CHARS);
   private final JCheckBox rememberPasswordCheckbox = new JCheckBox(NbBundle.getMessage(UserCredentialsDialog.class, "LBL.UserCredentialsDialog.password.store"));
@@ -35,11 +38,13 @@ public class UserCredentialsDialog extends JPanel
 
   private void _initGui()
   {
-    double fill = TableLayout.FILL;
-    double pref = TableLayout.PREFERRED;
+    double fill = TableLayoutConstants.FILL;
+    double pref = TableLayoutConstants.PREFERRED;
     final double gap = 15;
     double[] cols = {gap, pref, gap, fill, gap};
     double[] rows = {gap,
+                     pref,
+                     gap,
                      pref,
                      gap,
                      pref,
@@ -56,6 +61,8 @@ public class UserCredentialsDialog extends JPanel
     tlu.add(1, 5, new JLabel(PASSWORD_FIELD_LABEL));
     tlu.add(3, 5, passwordField);
     tlu.add(3, 7, rememberPasswordCheckbox);
+    tlu.add(1, 9, 3, 9, WARNING_PANEL);
+    usernameField.getDocument().addDocumentListener(new UsernameEmailDocumentListener(WARNING_PANEL));
   }
 
   @NotNull

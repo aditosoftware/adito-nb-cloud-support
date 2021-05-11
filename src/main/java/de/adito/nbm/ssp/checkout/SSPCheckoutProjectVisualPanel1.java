@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Throwables;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
+import de.adito.nbm.ssp.WarningPanel;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.exceptions.*;
@@ -35,11 +36,12 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private Future<?> future;
   private final IVaadinIconsProvider iconsProvider;
+  private final WarningPanel warningPanel = new WarningPanel();
   private JPanel userEntrys;
   private JButton refreshButton;
   private JButton oldDefaultButton;
-  private JTextField txtUser;
-  private JPasswordField txtPasswd;
+  private JTextField usernameTextField;
+  private JPasswordField passwordTextField;
   private JScrollPane scrollPane;
   private CList cList;
 
@@ -127,14 +129,14 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     c.weightx = 0.0;
     c.gridx = 0;
     c.gridy = 0;
-    txtUser = new JTextField(UserCredentialsManager.getLastUser());
+    usernameTextField = new JTextField();
     c.fill = GridBagConstraints.HORIZONTAL;
     c.insets = new Insets(0, 0, 0, 0);
     c.gridwidth = 1;
     c.weightx = 0.5;
     c.gridx = 0;
     c.gridy = 1;
-    midPanel.add(txtUser, c);
+    midPanel.add(usernameTextField, c);
     JLabel lblPasswd = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.passwordLabel"));
     lblPasswd.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
     c.fill = GridBagConstraints.HORIZONTAL;
@@ -144,14 +146,14 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     c.gridx = 1;
     c.gridy = 1;
     midPanel.add(lblPasswd, c);
-    txtPasswd = new JPasswordField(new String(UserCredentialsManager.getLastUserPass()));
+    passwordTextField = new JPasswordField(new String(UserCredentialsManager.getLastUserPass()));
     c.fill = GridBagConstraints.HORIZONTAL;
     c.gridwidth = 1;
     c.insets = new Insets(0, 0, 0, 0);
     c.weightx = 0.5;
     c.gridx = 2;
     c.gridy = 1;
-    midPanel.add(txtPasswd, c);
+    midPanel.add(passwordTextField, c);
 
     /*Right Panel*/
     JPanel rightPanel = new JPanel();
@@ -166,8 +168,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     userEntrys.add(leftPanel, BorderLayout.WEST);
     userEntrys.add(midPanel, BorderLayout.CENTER);
     userEntrys.add(rightPanel, BorderLayout.EAST);
-    txtUser.addFocusListener(new FocusListenerRepositoryData());
-    txtPasswd.addFocusListener(new FocusListenerRepositoryData());
+    userEntrys.add(warningPanel, BorderLayout.SOUTH);
+    usernameTextField.addFocusListener(new FocusListenerRepositoryData());
+    usernameTextField.getDocument().addDocumentListener(new UsernameEmailDocumentListener(warningPanel));
+    usernameTextField.setText(UserCredentialsManager.getLastUser());
+    passwordTextField.addFocusListener(new FocusListenerRepositoryData());
     refreshButton.addActionListener(e -> _comboBoxChangeAction(null));
     cList.addKeyListener(new ClistKeyListener());
   }
@@ -292,14 +297,14 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     return cList.getObjectList();
   }
 
-  public JPasswordField getTxtPasswd()
+  public JPasswordField getPasswordTextField()
   {
-    return txtPasswd;
+    return passwordTextField;
   }
 
-  public JTextField getTxtUser()
+  public JTextField getUsernameTextField()
   {
-    return txtUser;
+    return usernameTextField;
   }
 
   public CList getCList()
@@ -431,7 +436,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   {
     try
     {
-      DecodedJWT jwt = ISSPFacade.getInstance().getJWT(getTxtUser().getText(), getTxtPasswd().getPassword());
+      DecodedJWT jwt = ISSPFacade.getInstance().getJWT(getUsernameTextField().getText(), getPasswordTextField().getPassword());
       UserCredentialsManager.saveToken(jwt);
       UserCredentialsManager.saveLastUser(jwt.getSubject());
       loadList(jwt);
@@ -463,7 +468,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
         @Override
         public void mousePressed(MouseEvent e)
         {
-          object.dispatchEvent(new MouseEvent(object, e.getID(), e.getWhen(), e.getModifiers(), 0, 0, e.getClickCount(),
+          object.dispatchEvent(new MouseEvent(object, e.getID(), e.getWhen(), e.getModifiersEx(), 0, 0, e.getClickCount(),
                                               false));
         }
       });
