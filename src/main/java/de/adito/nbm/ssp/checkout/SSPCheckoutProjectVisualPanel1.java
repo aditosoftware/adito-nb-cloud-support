@@ -2,10 +2,11 @@ package de.adito.nbm.ssp.checkout;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.base.Throwables;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
-import de.adito.nbm.ssp.exceptions.AditoSSPAuthException;
+import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
@@ -95,7 +96,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    */
   private void _initScrollPane()
   {
-    scrollPane = new JScrollPane(cList, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    scrollPane = new JScrollPane(cList, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
     scrollPane.getViewport().setBackground(SSPCheckoutProjectWizardIterator.getCallback().getDefaultBackgroundColor());
   }
 
@@ -191,8 +192,10 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * Creates the clist
    *
    * @param pToken JWT used to auth with the SSP system
+   * @throws UnirestException  if an error occurs during the rest call when loading the systems for the list
+   * @throws AditoSSPException if the response of the server contains an error status when loading the systems for the list
    */
-  private void loadList(@NotNull DecodedJWT pToken)
+  private void loadList(@NotNull DecodedJWT pToken) throws UnirestException, AditoSSPException
   {
     cList.fillListBasedOnURL(pToken);
     refreshShowPanel();
@@ -436,10 +439,8 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     catch (final Exception e)
     {
       getCList().clearList();
-      Runnable retry = () -> {
         // On retry -> reload list again
-        _comboBoxChangeAction(null);
-      };
+      Runnable retry = () -> _comboBoxChangeAction(null);
       showErrorPanel(NotificationPanel.NotificationType.ERROR, e, retry);
       return;
     }

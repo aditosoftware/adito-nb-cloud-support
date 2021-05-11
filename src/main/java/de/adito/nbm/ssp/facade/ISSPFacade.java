@@ -33,9 +33,11 @@ public interface ISSPFacade
    * @param pUsername name of the user for which the JWT was issued
    * @param pJWT      JSON Web Token for authentication purposes
    * @return List with ISSPSystems that the user has access to. The information in the ISSPSystem can be used to request more detailed information for each system
+   * @throws UnirestException  if an error occurs during the rest call
+   * @throws AditoSSPException if the response of the server contains an error status
    */
   @NotNull
-  List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT);
+  List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws UnirestException, AditoSSPException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued

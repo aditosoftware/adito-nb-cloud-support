@@ -55,7 +55,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
 
   @NotNull
   @Override
-  public List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT)
+  public List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws AditoSSPException, UnirestException
   {
     try
     {
@@ -65,11 +65,10 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     {
       NotificationDisplayer.getDefault().notify(SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.getSystems.error"),
                                                 NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.getSystems.error",
-                                                                                            ExceptionUtils.getStackTrace(pE)),
+                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.getSystems.error"),
                                                 null, NotificationDisplayer.Priority.HIGH);
+      throw pE;
     }
-    return List.of();
   }
 
   @NotNull

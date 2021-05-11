@@ -98,8 +98,10 @@ public class CList extends JPanel implements Scrollable
    * Fills the CList based on the data from the SSP
    *
    * @param pToken JWT used to auth with the SSP system
+   * @throws UnirestException  if an error occurs during the rest call when retrieving the systems
+   * @throws AditoSSPException if the response of the server contains an error status when retrieving the systems
    */
-  public void fillListBasedOnURL(@NotNull DecodedJWT pToken)
+  public void fillListBasedOnURL(@NotNull DecodedJWT pToken) throws UnirestException, AditoSSPException
   {
     // clear old list
     clearList();
