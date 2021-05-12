@@ -5,6 +5,13 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.0.8</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Added a warning if the user uses an email as user name, since this is not fully supported yet</li>
+    <li>Improved error handling in case the retrieval of the systems list fails</li>
+    <li>Rearranged the order of the "Retry" and "Copy to Clipboard" buttons</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.7</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
