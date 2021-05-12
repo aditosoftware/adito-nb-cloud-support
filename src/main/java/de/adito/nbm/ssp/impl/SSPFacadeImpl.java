@@ -57,18 +57,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   @Override
   public List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws AditoSSPException, UnirestException
   {
-    try
-    {
-      return retrieveSystems(pUsername, pJWT);
-    }
-    catch (UnirestException | AditoSSPException pE)
-    {
-      NotificationDisplayer.getDefault().notify(SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.getSystems.error"),
-                                                NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.getSystems.error"),
-                                                null, NotificationDisplayer.Priority.HIGH);
-      throw pE;
-    }
+    return retrieveSystems(pUsername, pJWT);
   }
 
   @NotNull
