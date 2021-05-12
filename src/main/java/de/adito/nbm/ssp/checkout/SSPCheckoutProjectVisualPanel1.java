@@ -363,7 +363,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     if (pActionOnRetry == null)
       showErrorPanel(pType, errorMessage, copyClipboardAction);
     else
-      showErrorPanel(pType, errorMessage, copyClipboardAction, retry);
+      showErrorPanel(pType, errorMessage, retry, copyClipboardAction);
   }
 
   /**
