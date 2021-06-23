@@ -48,6 +48,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private static final String SERVER_OUTPUT_COLOR_KEY = "nb.output.debug.foreground";
   private static final String SERVER_ERROR_COLOR_KEY = "nb.output.err.foreground";
   private static final String SERVER_OUTPUT_DEFAULT_COLOR_KEY = "nb.output.foreground";
+  private static final String TUNNEL_TIMEOUT_PROPERTY = "de.adito.cloud.tunnel.timeout";
   private static final int MAX_TIME_TRIES_IN_MS = 2 * 60 * 1000;
   private static final int TIME_BETWEEN_TRIES_IN_MS = 5000;
   private static final int MAX_NUM_TRIES = MAX_TIME_TRIES_IN_MS / TIME_BETWEEN_TRIES_IN_MS;
@@ -402,16 +403,28 @@ public class TelnetLoggerRunConfig implements IRunConfig
    */
   private static void _awaitFinish(@NotNull List<Pair<ISSHTunnel, Future<String>>> pTunnelTaskPairs, @NotNull List<ISSHTunnel> failedTunnels) throws InterruptedException
   {
+    List<CompletableFuture<?>> futureFutureList = new ArrayList<>();
     for (Pair<ISSHTunnel, Future<String>> tunnelTaskPair : pTunnelTaskPairs)
     {
-      try
-      {
-        tunnelTaskPair.second().get();
-      }
-      catch (ExecutionException ignored)
-      {
-        failedTunnels.add(tunnelTaskPair.first());
-      }
+      futureFutureList.add(CompletableFuture.runAsync(() -> {
+        try
+        {
+          tunnelTaskPair.second().get(Integer.parseInt(System.getProperty(TUNNEL_TIMEOUT_PROPERTY, "30000")), TimeUnit.MILLISECONDS);
+        }
+        catch (ExecutionException | TimeoutException | InterruptedException ignored)
+        {
+          if (!tunnelTaskPair.first().isConnected())
+            failedTunnels.add(tunnelTaskPair.first());
+        }
+      }));
+    }
+    try
+    {
+      CompletableFuture.allOf(futureFutureList.toArray(new CompletableFuture[0])).get();
+    }
+    catch (ExecutionException pE)
+    {
+      LOGGER.log(Level.WARNING, "Error while waiting for the tunnels to establish their connection", pE);
     }
   }
 
