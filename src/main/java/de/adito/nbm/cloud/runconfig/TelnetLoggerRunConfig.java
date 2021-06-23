@@ -411,7 +411,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
         {
           tunnelTaskPair.second().get(Integer.parseInt(System.getProperty(TUNNEL_TIMEOUT_PROPERTY, "30000")), TimeUnit.MILLISECONDS);
         }
-        catch (ExecutionException | TimeoutException | InterruptedException ignored)
+        catch (Exception ignored)
         {
           if (!tunnelTaskPair.first().isConnected())
             failedTunnels.add(tunnelTaskPair.first());
