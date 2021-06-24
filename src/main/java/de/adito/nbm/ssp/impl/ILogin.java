@@ -46,7 +46,14 @@ interface ILogin
     {
       throw new AditoSSPAuthException(pE, pE.getStatusCode());
     }
-    return JWT.decode(jsonHttpResponse.getBody());
+    try
+    {
+      return JWT.decode(jsonHttpResponse.getBody());
+    }
+    catch (NoClassDefFoundError pE)
+    {
+      throw new AditoSSPException("Deocde Error due to missing Class:\n" + pE.getMessage(), 200);
+    }
   }
 
   /**
