@@ -170,7 +170,7 @@ public class CList extends JPanel implements Scrollable
   public void setLoading()
   {
     removeAll();
-    _showMessageOnList(SSPCheckoutProjectWizardIterator.getMessage(this, "CList.loading"));
+    _showMessageOnList(SSPCheckoutProjectWizardIterator.getMessage(CList.class, "CList.loading"));
   }
 
   /**

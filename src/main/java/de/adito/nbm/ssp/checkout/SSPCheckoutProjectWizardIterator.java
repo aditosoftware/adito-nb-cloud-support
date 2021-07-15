@@ -240,25 +240,12 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   /**
    * Reads a text from the Bundle.properties
    *
-   * @param pObject The caller
-   * @param pMsg    The name of the property
-   * @param params  Optional parameters
-   * @return The text as string
-   */
-  public static String getMessage(Object pObject, String pMsg, Object... params)
-  {
-    return getMessage(pObject.getClass(), pMsg, params);
-  }
-
-  /**
-   * Reads a text from the Bundle.properties
-   *
    * @param pClass The Caller-class
    * @param pMsg   The name of the property
    * @param params Optional parameters
    * @return The text as string
    */
-  public static String getMessage(Class pClass, String pMsg, Object... params)
+  public static String getMessage(Class<?> pClass, String pMsg, Object... params)
   {
     return NbBundle.getMessage(pClass, pMsg, params);
   }
