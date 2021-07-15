@@ -199,11 +199,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     String errorMessge = "";
     if (pProjName == null || pProjPath == null)
     {
-      errorMessge = SSPCheckoutProjectWizardIterator.getMessage(this, "TXT.SSPCheckoutProjectWizardPanel2.noPath.error");
+      errorMessge = SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectWizardPanel2.class, "TXT.SSPCheckoutProjectWizardPanel2.noPath.error");
     }
     else if (new File(SSPCheckoutProjectWizardIterator.getProjectPath(pProjName, pProjPath)).exists())
     {
-      errorMessge = SSPCheckoutProjectWizardIterator.getMessage(this, "TXT.SSPCheckoutProjectWizardPanel2.alreadyExists.error");
+      errorMessge = SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectWizardPanel2.class, "TXT.SSPCheckoutProjectWizardPanel2.alreadyExists.error");
     }
     wd.putProperty(WizardDescriptor.PROP_ERROR_MESSAGE, errorMessge.isEmpty() ? null : errorMessge);
     return errorMessge.isEmpty();

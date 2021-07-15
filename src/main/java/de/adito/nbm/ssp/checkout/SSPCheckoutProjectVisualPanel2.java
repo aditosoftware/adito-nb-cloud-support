@@ -42,11 +42,15 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     projectLocationTextField = new JTextField();
     projectNameTextField = new JTextField();
 
-    projectNameLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel2.projectNameLabel.text"));
-    projectLocationLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel2.projectLocationLabel.text"));
+    projectNameLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                              "SSPCheckoutProjectVisualPanel2.projectNameLabel.text"));
+    projectLocationLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                                  "SSPCheckoutProjectVisualPanel2.projectLocationLabel.text"));
 
-    projectLocationBrowseButton = new JButton(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel2.projectLocationBrowseButton.text"));
-    projectLocationTextField.setText(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel2.projectLocationTextField.text"));
+    projectLocationBrowseButton = new JButton(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                                          "SSPCheckoutProjectVisualPanel2.projectLocationBrowseButton.text"));
+    projectLocationTextField.setText(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                                 "SSPCheckoutProjectVisualPanel2.projectLocationTextField.text"));
 
     GroupLayout layout = new GroupLayout(this);
     this.setLayout(layout);
@@ -91,7 +95,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   @Override
   public String getName()
   {
-    return SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel2.stepName.text");
+    return SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class, "SSPCheckoutProjectVisualPanel2.stepName.text");
   }
 
   public JButton getProjectLocationBrowseButton()

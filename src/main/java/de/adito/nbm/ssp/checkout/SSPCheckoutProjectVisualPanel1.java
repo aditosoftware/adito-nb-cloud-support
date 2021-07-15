@@ -14,7 +14,7 @@ import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
-import org.openide.util.Lookup;
+import org.openide.util.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -116,19 +116,13 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     /*Linkes Panel*/
     JPanel leftPanel = new JPanel();
     leftPanel.setLayout(new BorderLayout());
-    JLabel lblUser = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.userNameLabel"));
+    JLabel lblUser = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.userNameLabel"));
     leftPanel.add(lblUser, BorderLayout.CENTER);
 
     /*Middle Panel*/
     JPanel midPanel = new JPanel();
     midPanel.setLayout(new GridBagLayout());
     midPanel.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 10));
-    c.fill = GridBagConstraints.HORIZONTAL;
-    c.insets = new Insets(0, 0, 5, 0);
-    c.gridwidth = 3;
-    c.weightx = 0.0;
-    c.gridx = 0;
-    c.gridy = 0;
     usernameTextField = new JTextField();
     c.fill = GridBagConstraints.HORIZONTAL;
     c.insets = new Insets(0, 0, 0, 0);
@@ -137,7 +131,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     c.gridx = 0;
     c.gridy = 1;
     midPanel.add(usernameTextField, c);
-    JLabel lblPasswd = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.passwordLabel"));
+    JLabel lblPasswd = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.passwordLabel"));
     lblPasswd.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
     c.fill = GridBagConstraints.HORIZONTAL;
     c.gridwidth = 1;
@@ -315,7 +309,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   @Override
   public String getName()
   {
-    return SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.stepName.text");
+    return SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.stepName.text");
   }
 
   /**
@@ -331,7 +325,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     String errorMessage = ExceptionUtils.getRootCauseMessage(pException);
     if (pException instanceof AditoSSPAuthException)
     {
-      errorMessage = SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.errorPanel.auth.failure");
+      errorMessage = SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.errorPanel.auth.failure");
     }
     AbstractAction retry = null;
 
@@ -348,7 +342,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     if (pActionOnRetry != null)
     {
-      retry = new AbstractAction(SSPCheckoutProjectWizardIterator.getMessage(this, "SSPCheckoutProjectVisualPanel1.retryButton.name"))
+      retry = new AbstractAction(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.retryButton.name"))
       {
 
         @Override
