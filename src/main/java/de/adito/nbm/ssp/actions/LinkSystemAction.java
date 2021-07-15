@@ -51,7 +51,14 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
     if (systemInfo != null)
     {
-      SSPCheckoutProjectVisualPanel1 panel = new SSPCheckoutProjectVisualPanel1();
+      SSPCheckoutProjectVisualPanel1 panel = new SSPCheckoutProjectVisualPanel1()
+      {
+        @Override
+        protected List<IOptionsProvider> getAdditionalOptionsProviders()
+        {
+          return List.of();
+        }
+      };
       new Thread(panel::reloadList).start();
       JPanel borderPanel = new JPanel(new BorderLayout());
       borderPanel.setBorder(new EmptyBorder(10, 10, 5, 10));
@@ -74,7 +81,7 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
       dialog.setVisible(true);
 
       CListObject selectedObject = panel.getSelected();
-      if (dialogDescriptor.getValue() == DialogDescriptor.OK_OPTION && selectedObject != null)
+      if (dialogDescriptor.getValue() == NotifyDescriptor.OK_OPTION && selectedObject != null)
       {
         _performLink(systemInfo, selectedObject.getSystemDetails(), loadConfigsCB.isSelected());
       }

@@ -79,6 +79,7 @@ public class SSPCheckoutProjectWizardPanel1 implements WizardDescriptor.Panel<Wi
   {
     //Save current selection
     wd.putProperty(SSPCheckoutProjectWizardIterator.SELECTED, comp.getSelected());
+    comp.getAdditionalOptions().forEach((pKey, pValue) -> wd.putProperty(pKey, pValue));
   }
 
   /**
