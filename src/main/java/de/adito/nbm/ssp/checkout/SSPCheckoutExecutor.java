@@ -163,7 +163,9 @@ public class SSPCheckoutExecutor
         List<ISSHTunnel> failedTunnels = TelnetLoggerRunConfig.startTunnels(sshTunnels);
         if (!failedTunnels.isEmpty())
         {
-          // TODO print error messages for tunnels
+          failedTunnels.forEach(pTunnel -> logger.log(Level.WARNING, SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class,
+                                                                                                                 "TXT.SSPCheckoutExecutor.tunnel.start.failed"),
+                                                      SSPCheckoutExecutor._tunnelToString(pTunnel)));
         }
         return failedTunnels.size() != sshTunnels.size();
       }
@@ -362,6 +364,11 @@ public class SSPCheckoutExecutor
         return true;
       });
     }
+  }
+
+  private static String _tunnelToString(ISSHTunnel pTunnel)
+  {
+    return pTunnel.getLocalTarget() + ":" + pTunnel.getRemoteTargetPort() + ":" + pTunnel.getRemoteTarget() + "@" + pTunnel.getTunnelHost() + ":" + pTunnel.getPort();
   }
 
 }
