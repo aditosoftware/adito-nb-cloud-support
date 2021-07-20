@@ -361,6 +361,17 @@ public class TelnetLoggerRunConfig implements IRunConfig
         .map(tunnelProvider::createTunnel)
         .filter(pSSHTunnel -> !pSSHTunnel.isConnected())
         .collect(Collectors.toList());
+    List<ISSHTunnel> failedTunnels = startTunnels(tunnels);
+    _checkTunnelStatus(tunnels, failedTunnels);
+  }
+
+  /**
+   * @param tunnels list of tunnels to start
+   * @return list of tunnels that failed to properly start
+   * @throws InterruptedException if the thread is interrupted while waiting for the tunnels to start
+   */
+  public static List<ISSHTunnel> startTunnels(List<ISSHTunnel> tunnels) throws InterruptedException
+  {
     List<ISSHTunnel> failedTunnels = new ArrayList<>();
     List<Pair<ISSHTunnel, Future<String>>> tunnelTasks = new ArrayList<>();
     for (ISSHTunnel tunnel : tunnels)
@@ -368,7 +379,8 @@ public class TelnetLoggerRunConfig implements IRunConfig
       tunnelTasks.add(Pair.of(tunnel, tunnel.connect()));
     }
     _awaitFinish(tunnelTasks, failedTunnels);
-    _checkTunnelStatus(tunnels, failedTunnels);
+    return failedTunnels;
+
   }
 
   /**

@@ -4,7 +4,7 @@ import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.*;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
-import de.adito.nbm.ssp.facade.*;
+import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.netbeans.api.progress.*;
 import org.openide.*;
@@ -171,8 +171,12 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     }
     if (pressedButton == null || pressedButton.equals(NotifyDescriptor.YES_OPTION))
     {
-      SSPCheckoutExecutor.storeConfigs(pProgressHandle, pSelectedSystem, pProjectDir,
-                                       ISSPFacade.getInstance(), UserCredentialsManager.getCredentials());
+      SSPCheckoutExecutor.getServerConfigContents(pProgressHandle, pSelectedSystem, UserCredentialsManager.getCredentials())
+          .ifPresent(pServerConfigContents -> SSPCheckoutExecutor.writeServerConfig(pProgressHandle, pProjectDir, pServerConfigContents));
+
+      SSPCheckoutExecutor.getTunnelConfigContents(pProgressHandle, pSelectedSystem)
+          .ifPresent(pTunnelConfigContents -> SSPCheckoutExecutor.writeTunnelConfig(pProgressHandle, pSelectedSystem, pProjectDir,
+                                                                                    UserCredentialsManager.getCredentials(), pTunnelConfigContents));
       return pressedButton == null ? CONFIG_RESULTS.WRITTEN : CONFIG_RESULTS.OVERRIDDEN;
     }
     return CONFIG_RESULTS.NOT_OVERRIDDEN;

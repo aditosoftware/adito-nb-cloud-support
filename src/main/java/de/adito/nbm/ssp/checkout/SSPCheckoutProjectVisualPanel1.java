@@ -65,7 +65,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     BoxLayout boxLayout = new BoxLayout(addtionalComponentsPanel, BoxLayout.Y_AXIS);
     addtionalComponentsPanel.setLayout(boxLayout);
     additionalOptionsProviders = getAdditionalOptionsProviders();
-    additionalOptionsProviders.forEach(pOptionsProvider -> add(pOptionsProvider.getComponent()));
+    additionalOptionsProviders.forEach(pOptionsProvider -> addtionalComponentsPanel.add(pOptionsProvider.getComponent()));
     centerPanel.add(addtionalComponentsPanel, BorderLayout.SOUTH);
     add(centerPanel, BorderLayout.CENTER);
     add(urlLabel, BorderLayout.SOUTH);
@@ -308,7 +308,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
       @Override
       public void addOptions(@NotNull Map<String, Object> pOptionsMap)
       {
-        pOptionsMap.put(SSPCheckoutProjectWizardIterator.CHECKOUT_DEPLOYED, loadConfigsCB.isSelected());
+        pOptionsMap.put(SSPCheckoutProjectWizardIterator.CHECKOUT_DEPLOYED_STATE, loadConfigsCB.isSelected());
       }
     };
     return List.of(optionsProvider);

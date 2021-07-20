@@ -27,7 +27,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   public static final String PROJECT_NAME = "de.adito.ssp.new.project.name";
   public static final String PROJECT_PATH = "de.adito.ssp.new.project.path";
   public static final String SELECTED = "de.adito.ssp.new.selected";
-  public static final String CHECKOUT_DEPLOYED = "de.adito.ssp.new.checkout.deployed";
+  public static final String CHECKOUT_DEPLOYED_STATE = "de.adito.ssp.new.checkout.deployed";
 
   // Callback object for default settings
   private static final IDefaultSettingsCallback defaultSettings = new DefaultSettingsCallback();
@@ -100,7 +100,8 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     if (projectPath != null)
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
-      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath));
+      boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
+      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath), isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }
