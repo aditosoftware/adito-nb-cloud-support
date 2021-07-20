@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import java.util.stream.Collectors;
+import java.util.stream.*;
 
 /**
  * Performs the git checkout and writes the config files
@@ -47,6 +47,10 @@ public class SSPCheckoutExecutor
   private static IGitVersioningSupport gitSupport;
   private static Future<?> future = null;
   private static boolean isLoading = false;
+
+  private SSPCheckoutExecutor()
+  {
+  }
 
   /**
    * @param pHandle                  ProgressHandle that should be used to indicate the current progress
@@ -128,10 +132,13 @@ public class SSPCheckoutExecutor
     {
       for (File toDelete : filesFoldersToDelete)
       {
-        Files.walk(toDelete.toPath())
-            .sorted(Comparator.reverseOrder())
-            .map(Path::toFile)
-            .forEach(File::delete);
+        try (Stream<Path> fileStream = Files.walk(toDelete.toPath()))
+        {
+          fileStream
+              .sorted(Comparator.reverseOrder())
+              .map(Path::toFile)
+              .forEach(File::delete);
+        }
       }
     }
   }
