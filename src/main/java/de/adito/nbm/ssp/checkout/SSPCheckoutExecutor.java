@@ -157,7 +157,7 @@ public class SSPCheckoutExecutor
       IMetaInfo metaInfo = deployMetaInfoFacade.getInfos(pServerConfigFile);
       if (metaInfo != null)
       {
-        return Optional.ofNullable(metaInfo.getAll().get("branchActualName"));
+        return Optional.ofNullable(metaInfo.getAll().get("GitDeployMetaInfoProvider.branchActualName"));
       }
     }
     return Optional.empty();
