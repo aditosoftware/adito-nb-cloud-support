@@ -44,7 +44,7 @@ public class SSPCheckoutExecutor
 {
 
   public static final String DEFAULT_SERVER_CONFIG_PATH = "data/config/serverconfig_default.xml";
-  public static final String DEFAULT_TUNNEL_CONFIG_PATH = "data/config/tunnelConfig.xml";
+  public static final String DEFAULT_TUNNEL_CONFIG_PATH = "data/config/tunnelconfig.xml";
   private static final Logger logger = Logger.getLogger(SSPCheckoutExecutor.class.getName());
   private static IGitVersioningSupport gitSupport;
   private static Future<?> future = null;
@@ -361,7 +361,7 @@ public class SSPCheckoutExecutor
   }
 
   /**
-   * Start an asnyc process that loads the IGitVersioningSupport (if not already loaded)
+   * Start an async process that loads the IGitVersioningSupport (if not already loaded)
    */
   static void preloadGitSupport()
   {
