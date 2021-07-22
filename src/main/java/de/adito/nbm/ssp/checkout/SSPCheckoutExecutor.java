@@ -5,6 +5,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IGitVersioningSupport;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.IMetaInfo;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.deploy.IDeployMetaInfoFacade;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.model.IModelFacade;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.project.IProjectCreationManager;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.tunnel.*;
 import de.adito.nbm.cloud.runconfig.TelnetLoggerRunConfig;
@@ -13,6 +14,7 @@ import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
@@ -127,20 +129,23 @@ public class SSPCheckoutExecutor
 
   static void _cleanTargetDirectory(@NotNull File pTarget) throws IOException
   {
-    File[] filesFoldersToDelete = pTarget.listFiles((dir, name) -> !name.equalsIgnoreCase(".git"));
+    IModelFacade facade = Lookup.getDefault().lookup(IModelFacade.class);
+    File[] filesFoldersToDelete;
+    if (facade != null)
+      filesFoldersToDelete = facade.getMajorModelTypes().stream()
+          .map(facade::getModelGroupNameForType)
+          .filter(Objects::nonNull)
+          .map(pChild -> new File(pTarget, pChild))
+          .toArray(File[]::new);
+    else
+      filesFoldersToDelete = pTarget.listFiles((dir, name) -> !name.equalsIgnoreCase(".git"));
+
     if (filesFoldersToDelete != null)
-    {
-      for (File toDelete : filesFoldersToDelete)
+      for (File pFile : filesFoldersToDelete)
       {
-        try (Stream<Path> fileStream = Files.walk(toDelete.toPath()))
-        {
-          fileStream
-              .sorted(Comparator.reverseOrder())
-              .map(Path::toFile)
-              .forEach(File::delete);
-        }
+        if (pFile.exists())
+          FileUtils.deleteDirectory(pFile);
       }
-    }
   }
 
   @NotNull
