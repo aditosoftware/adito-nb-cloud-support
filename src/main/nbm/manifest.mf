@@ -5,6 +5,20 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.1.0</p>
+  <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
+  <ul>
+    <li>Added checkbox to checkout currently delpoyed state of a project</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Added missing translations</li>
+    <li>Improved logging if tunnel creation failed</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
+  <ul>
+    <li>Fix: Wrong default spelling of tunnelConfig.xml</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.9</p>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
   <ul>
