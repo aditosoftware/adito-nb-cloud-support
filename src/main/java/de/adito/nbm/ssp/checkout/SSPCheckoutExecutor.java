@@ -53,7 +53,14 @@ public class SSPCheckoutExecutor
     try
     {
       pHandle.start();
-      boolean cloneSuccess = performGitClone(pHandle, pSystemDetails.getGitRepoUrl(), pSystemDetails.getGitBranch(), null, "origin", pTarget);
+      DecodedJWT currentCredentials = UserCredentialsManager.getCredentials();
+      if (currentCredentials == null)
+      {
+        logger.log(Level.WARNING, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.fetch.noCredentials"));
+        return null;
+      }
+      boolean cloneSuccess = performGitClone(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
+                                             pSystemDetails.getGitBranch(), null, "origin", pTarget);
       if (cloneSuccess)
         writeConfigs(pHandle, pSystemDetails, pTarget);
       else
@@ -151,6 +158,27 @@ public class SSPCheckoutExecutor
                                 Keyring.save(pTunnelConfig.getUser() + "@" + pTunnelConfig.getTunnelHostAddress() + ":" + pTunnelConfig.getTunnelHostPort(),
                                              pass.toCharArray(), ""));
     }
+  }
+
+  /**
+   * @param pSspFacade          ISSPFacade that contains the methods for interacting with the SSP
+   * @param pSystemDetails      ISSPSystemDetails that contain the information about the selected SSP system
+   * @param pCurrentCredentials JWT containing the credentials for authenticating with the SSP
+   * @return the git repository to use for cloning
+   */
+  private static String _getGitProject(@NotNull ISSPFacade pSspFacade, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials)
+  {
+    Map<String, String> configMap = null;
+    try
+    {
+      configMap = pSspFacade.getConfigMap(pCurrentCredentials.getSubject(), pCurrentCredentials, pSystemDetails);
+    }
+    catch (UnirestException | AditoSSPException pE)
+    {
+      logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.error.configMap",
+                                                                                      ExceptionUtils.getStackTrace(pE)));
+    }
+    return Optional.ofNullable(configMap).map(pConfigMap -> pConfigMap.get("linked_git_project")).orElseGet(pSystemDetails::getGitRepoUrl);
   }
 
   /**
