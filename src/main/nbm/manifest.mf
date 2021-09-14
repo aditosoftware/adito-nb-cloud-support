@@ -5,6 +5,11 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.1.1</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Added support for the new property "Git Project" of the ADITO SSP that creates a new Git Repository for the specific SSP system</li>
+  </ul>
   <p style="font-weight: bold;">v1.1.0</p>
   <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
   <ul>
