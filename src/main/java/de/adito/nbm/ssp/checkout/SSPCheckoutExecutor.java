@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.logging.*;
-import java.util.stream.*;
+import java.util.stream.Collectors;
 
 /**
  * Performs the git checkout and writes the config files
@@ -76,11 +76,13 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        _checkoutDeployedState(pHandle, pSystemDetails, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get());
+        _checkoutDeployedState(pHandle, pSystemDetails, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
+                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get());
       }
       else
       {
-        boolean cloneSuccess = performGitClone(pHandle, pSystemDetails.getGitRepoUrl(), pSystemDetails.getGitBranch(), null, "origin", pTarget);
+        boolean cloneSuccess = performGitClone(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
+                                               pSystemDetails.getGitBranch(), null, "origin", pTarget);
         if (cloneSuccess)
           writeConfigs(pHandle, pSystemDetails, pTarget, currentCredentials);
         else
@@ -97,8 +99,8 @@ public class SSPCheckoutExecutor
     return FileUtil.toFileObject(pTarget);
   }
 
-  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget,
-                                             @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents)
+  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull String pGitProjectUrl,
+                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents)
   {
     pHandle.setDisplayName("Starting tunnels");
     boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
@@ -109,7 +111,7 @@ public class SSPCheckoutExecutor
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        boolean cloneSuccess = performGitClone(pHandle, pSystemDetails.getGitRepoUrl(), deployedBranchName.orElse(pSystemDetails.getGitBranch()), null,
+        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pSystemDetails.getGitBranch()), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {
@@ -161,6 +163,27 @@ public class SSPCheckoutExecutor
       }
     }
     return Optional.empty();
+  }
+
+  /**
+   * @param pSspFacade          ISSPFacade that contains the methods for interacting with the SSP
+   * @param pSystemDetails      ISSPSystemDetails that contain the information about the selected SSP system
+   * @param pCurrentCredentials JWT containing the credentials for authenticating with the SSP
+   * @return the git repository to use for cloning
+   */
+  private static String _getGitProject(@NotNull ISSPFacade pSspFacade, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials)
+  {
+    Map<String, String> configMap = null;
+    try
+    {
+      configMap = pSspFacade.getConfigMap(pCurrentCredentials.getSubject(), pCurrentCredentials, pSystemDetails);
+    }
+    catch (UnirestException | AditoSSPException pE)
+    {
+      logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.error.configMap",
+                                                                                      ExceptionUtils.getStackTrace(pE)));
+    }
+    return Optional.ofNullable(configMap).map(pConfigMap -> pConfigMap.get("linked_git_project")).orElseGet(pSystemDetails::getGitRepoUrl);
   }
 
   private static boolean _startTunnels(@NotNull String pTunnelConfigContents)
