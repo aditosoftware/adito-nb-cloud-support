@@ -5,6 +5,11 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.0.11</p>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
+  <ul>
+    <li>If the requested branch or tag is missing in the remote repository when checking out a project the checkout fails</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.10</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
