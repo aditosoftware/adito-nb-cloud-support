@@ -373,13 +373,35 @@ public class SSPCheckoutExecutor
       if (pRemoteName != null)
         options.put("remote", pRemoteName);
       pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.git"));
-      return gitSupport.performClone(pRemotePath, pTarget, options);
+      return _checkoutProject(pRemotePath, pTarget, options);
     }
     catch (Exception pException)
     {
       logger.log(Level.WARNING, pException, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.git.error",
                                                                                               ExceptionUtils.getStackTrace(pException)));
       return false;
+    }
+  }
+
+  private static boolean _checkoutProject(@NotNull String pRemotePath, @NotNull File pTarget, Map<String, String> options) throws Exception
+  {
+    try
+    {
+      return gitSupport.performClone(pRemotePath, pTarget, options);
+    }
+    catch (Exception pE)
+    {
+      // If an exception was thrown because the project did not contain the requested branch or tag, try to checkout the project with the default branch
+      if (pE.getClass().getSimpleName().equals("AditoGitException") && pE.getCause().getClass().getSimpleName().equals("TransportException"))
+      {
+        options.remove("branch");
+        options.remove("tag");
+        return gitSupport.performClone(pRemotePath, pTarget, options);
+      }
+      else
+      {
+        throw pE;
+      }
     }
   }
 
