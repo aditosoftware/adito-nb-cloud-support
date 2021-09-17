@@ -1,13 +1,14 @@
 package de.adito.nbm.ssp.actions;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import de.adito.actions.AbstractAsyncNodeAction;
 import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.ISSPFacade;
+import org.jetbrains.annotations.NotNull;
 import org.openide.awt.*;
 import org.openide.nodes.Node;
 import org.openide.util.*;
-import org.openide.util.actions.NodeAction;
 
 /**
  * @author m.kaspera, 21.10.2020
@@ -15,7 +16,7 @@ import org.openide.util.actions.NodeAction;
 @ActionID(category = "adito/aods", id = "de.adito.nbm.ssp.actions.StopSystemAction")
 @ActionRegistration(displayName = "")
 @ActionReference(path = "de/adito/aod/action/system", position = 525)
-public class StopSystemAction extends NodeAction implements IContextMenuAction, IStopSystemAction
+public class StopSystemAction extends AbstractAsyncNodeAction implements IContextMenuAction, IStopSystemAction
 {
   @Override
   protected void performAction(Node[] activatedNodes)
@@ -33,7 +34,7 @@ public class StopSystemAction extends NodeAction implements IContextMenuAction, 
   }
 
   @Override
-  protected boolean enable(Node[] activatedNodes)
+  protected boolean enable0(@NotNull Node[] activatedNodes)
   {
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
     if (systemInfo != null)
