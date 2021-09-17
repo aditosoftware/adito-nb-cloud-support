@@ -1,7 +1,6 @@
 package de.adito.nbm.ssp.facade;
 
-import com.google.inject.*;
-import de.adito.nbm.ssp.impl.ImplModule;
+import de.adito.nbm.ssp.impl.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -16,8 +15,7 @@ public interface INotificationFacade
 
   static INotificationFacade getInstance()
   {
-    Injector INJECTOR = Guice.createInjector(new ImplModule());
-    return INJECTOR.getInstance(INotificationFacade.class);
+    return InjectorCache.getInjector(new ImplModule()).getInstance(INotificationFacade.class);
   }
 
   /**
