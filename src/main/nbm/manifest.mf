@@ -5,6 +5,12 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.0.12</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Added a warning dialog before actually performing the "Stop System" action, giving the user the ability to abort the action if desired</li>
+    <li>The "Start System" and "Stop System" actions now determine their status asynchronously</li>
+  </ul>
   <p style="font-weight: bold;">v1.0.11</p>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
   <ul>
