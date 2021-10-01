@@ -13,5 +13,6 @@ public class ImplModule extends AbstractModule
   {
     bind(ISSPFacade.class).to(SSPFacadeImpl.class);
     bind(INotificationFacade.class).to(NotificationFacadeImpl.class);
+    bind(ISystemStatusFacade.class).to(SystemStatusFacadeImpl.class);
   }
 }
