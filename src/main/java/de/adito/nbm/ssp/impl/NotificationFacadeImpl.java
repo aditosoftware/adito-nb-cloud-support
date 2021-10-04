@@ -1,5 +1,6 @@
 package de.adito.nbm.ssp.impl;
 
+import com.google.inject.Singleton;
 import de.adito.nbm.ssp.facade.INotificationFacade;
 import org.jetbrains.annotations.NotNull;
 import org.openide.*;
@@ -12,6 +13,7 @@ import java.util.List;
 /**
  * @author m.kaspera, 16.09.2021
  */
+@Singleton
 public class NotificationFacadeImpl implements INotificationFacade
 {
   @NotNull
