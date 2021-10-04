@@ -2,65 +2,64 @@ package de.adito.nbm.ssp.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.common.cache.*;
+import com.google.inject.Singleton;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.*;
-import de.adito.util.reactive.cache.ObservableCache;
+import de.adito.util.reactive.cache.*;
 import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.*;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Optional;
 import java.util.concurrent.*;
 
 /**
  * @author m.kaspera, 21.09.2021
  */
-public class SystemStatusFacadeImpl implements ISystemStatusFacade
+@Singleton
+public class SystemStatusFacadeImpl implements ISystemStatusFacade, Disposable
 {
 
   private static final ExecutorService backgroundThread = Executors.newSingleThreadExecutor();
-  private static final Cache<String, Subject<String>> SUBJECT_CACHE = CacheBuilder.newBuilder().build();
-  private static final Cache<String, Observable<Boolean>> OBS_CACHE = CacheBuilder.newBuilder().build();
-  private static final ObservableCache OBSERVABLE_CACHE = new ObservableCache();
+  private final Cache<String, Subject<String>> subjectCache = CacheBuilder.newBuilder().build();
+  private final ObservableCache observableCache = new ObservableCache();
+  private final ObservableCacheDisposable observableCacheDisposable = new ObservableCacheDisposable(observableCache);
 
   @NotNull
   @Override
   public Observable<Boolean> getIsSystemRunningObservable(@NotNull String pCloudId)
   {
-    try
-    {
-      OBSERVABLE_CACHE.calculate(pCloudId, () -> _createSubjectAndObs(pCloudId).right);
-      return OBS_CACHE.get(pCloudId, () -> _createSubjectAndObs(pCloudId).right);
-    }
-    catch (ExecutionException pE)
-    {
-      pE.printStackTrace();
-      return Observable.just(Boolean.FALSE);
-    }
+    return observableCache.calculate(pCloudId, () -> _createSubjectAndObs(pCloudId).right);
   }
 
   @NotNull
   @Override
   public Boolean triggerIsSystemRunningUpdate(@NotNull String pCloudId)
   {
-    Subject<String> triggerUpdateSubject = SUBJECT_CACHE.getIfPresent(pCloudId);
+    Subject<String> triggerUpdateSubject = subjectCache.getIfPresent(pCloudId);
     if (triggerUpdateSubject == null)
     {
       triggerUpdateSubject = _createSubjectAndObs(pCloudId).left;
     }
     triggerUpdateSubject.onNext(pCloudId);
-    return Optional.ofNullable(OBS_CACHE.getIfPresent(pCloudId))
-        .map(pObs -> pObs.blockingFirst(Boolean.FALSE))
-        .orElse(Boolean.FALSE);
+    return observableCache.calculate(pCloudId, () -> _createSubjectAndObs(pCloudId).right)
+        .blockingFirst(Boolean.FALSE);
   }
 
   private ImmutablePair<Subject<String>, Observable<Boolean>> _createSubjectAndObs(@NotNull String pCloudId)
   {
     Subject<String> triggerUpdateSubject;
-    triggerUpdateSubject = BehaviorSubject.createDefault(pCloudId);
-    SUBJECT_CACHE.put(pCloudId, triggerUpdateSubject);
+    try
+    {
+      triggerUpdateSubject = subjectCache.get(pCloudId, () -> BehaviorSubject.createDefault(pCloudId));
+    }
+    catch (ExecutionException pE)
+    {
+      triggerUpdateSubject = BehaviorSubject.createDefault(pCloudId);
+      subjectCache.put(pCloudId, triggerUpdateSubject);
+    }
     Observable<Boolean> isRunningObs = triggerUpdateSubject.observeOn(Schedulers.from(backgroundThread))
         .throttleFirst(5, TimeUnit.SECONDS)
         .map(pId -> {
@@ -72,7 +71,21 @@ public class SystemStatusFacadeImpl implements ISystemStatusFacade
           }
           return false;
         }).publish().autoConnect();
-    OBS_CACHE.put(pCloudId, isRunningObs);
+    observableCache.calculate(pCloudId, () -> isRunningObs);
     return new ImmutablePair<>(triggerUpdateSubject, isRunningObs);
+  }
+
+  @Override
+  public void dispose()
+  {
+    if (!observableCacheDisposable.isDisposed())
+      observableCacheDisposable.dispose();
+    subjectCache.invalidateAll();
+  }
+
+  @Override
+  public boolean isDisposed()
+  {
+    return observableCacheDisposable.isDisposed();
   }
 }

@@ -16,7 +16,7 @@ public interface ISSPFacade
 
   static ISSPFacade getInstance()
   {
-    return InjectorCache.getInjector(new ImplModule()).getInstance(ISSPFacade.class);
+    return InjectorCache.getInjector(ImplModule.getInstance()).getInstance(ISSPFacade.class);
   }
 
   /**

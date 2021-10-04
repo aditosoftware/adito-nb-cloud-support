@@ -15,7 +15,7 @@ public interface INotificationFacade
 
   static INotificationFacade getInstance()
   {
-    return InjectorCache.getInjector(new ImplModule()).getInstance(INotificationFacade.class);
+    return InjectorCache.getInjector(ImplModule.getInstance()).getInstance(INotificationFacade.class);
   }
 
   /**

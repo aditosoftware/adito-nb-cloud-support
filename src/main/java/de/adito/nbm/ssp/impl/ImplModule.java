@@ -8,6 +8,20 @@ import de.adito.nbm.ssp.facade.*;
  */
 public class ImplModule extends AbstractModule
 {
+
+  private static ImplModule INSTANCE;
+
+  private ImplModule()
+  {
+  }
+
+  public static ImplModule getInstance()
+  {
+    if (INSTANCE == null)
+      INSTANCE = new ImplModule();
+    return INSTANCE;
+  }
+
   @Override
   protected void configure()
   {

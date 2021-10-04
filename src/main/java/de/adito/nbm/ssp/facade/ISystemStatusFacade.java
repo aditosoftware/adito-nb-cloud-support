@@ -14,7 +14,7 @@ public interface ISystemStatusFacade
 
   static ISystemStatusFacade getInstance()
   {
-    return InjectorCache.getInjector(new ImplModule()).getInstance(ISystemStatusFacade.class);
+    return InjectorCache.getInjector(ImplModule.getInstance()).getInstance(ISystemStatusFacade.class);
   }
 
   /**
