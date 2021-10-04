@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.impl;
 
 import com.google.common.cache.*;
+import com.google.inject.Module;
 import com.google.inject.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,16 +15,16 @@ public class InjectorCache
   {
   }
 
-  private static final LoadingCache<AbstractModule, Injector> cache = CacheBuilder.newBuilder().build(new CacheLoader<>()
+  private static final LoadingCache<Class<? extends AbstractModule>, Injector> cache = CacheBuilder.newBuilder().build(new CacheLoader<>()
   {
     @Override
-    public Injector load(@NotNull AbstractModule pKey)
+    public Injector load(@NotNull Class<? extends AbstractModule> pKey) throws Exception
     {
-      return Guice.createInjector(pKey);
+      return Guice.createInjector((Module) Class.forName(pKey.getName()).getDeclaredConstructor().newInstance());
     }
   });
 
-  public static Injector getInjector(@NotNull AbstractModule pModule)
+  public static Injector getInjector(@NotNull Class<? extends AbstractModule> pModule)
   {
     return cache.getUnchecked(pModule);
   }
