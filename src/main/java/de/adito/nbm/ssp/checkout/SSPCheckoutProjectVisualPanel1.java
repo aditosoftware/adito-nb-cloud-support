@@ -8,7 +8,7 @@ import de.adito.nbm.ssp.WarningPanel;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.exceptions.*;
-import de.adito.nbm.ssp.facade.ISSPFacade;
+import de.adito.nbm.ssp.facade.*;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
@@ -17,10 +17,14 @@ import org.jetbrains.annotations.*;
 import org.openide.util.*;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
+import javax.swing.event.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
+import java.time.ZoneId;
+import java.time.format.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
@@ -38,6 +42,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private final IVaadinIconsProvider iconsProvider;
   private final WarningPanel warningPanel = new WarningPanel();
   private JPanel userEntrys;
+  private SearchBox searchBox;
   private JButton refreshButton;
   private JButton oldDefaultButton;
   private JTextField usernameTextField;
@@ -45,10 +50,12 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private JScrollPane scrollPane;
   private CList cList;
   private final List<IOptionsProvider> additionalOptionsProviders;
+  private String pattern = "(.*)";
 
   public SSPCheckoutProjectVisualPanel1()
   {
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
+    _initSearchBox();
     _initCList();
     _initScrollPane();
     _initEntries();
@@ -86,6 +93,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     validListeners.forEach(pListener -> pListener.changedValidity(pState));
   }
 
+  private void _initSearchBox()
+  {
+    searchBox = new SearchBox();
+  }
+
   /**
    * Initiates the clist
    */
@@ -118,7 +130,9 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private void _initEntries()
   {
     userEntrys = new JPanel();
-    userEntrys.setLayout(new BorderLayout());
+    BorderLayout borderLayout = new BorderLayout();
+    borderLayout.setVgap(8);
+    userEntrys.setLayout(borderLayout);
     userEntrys.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
     GridBagConstraints c = new GridBagConstraints();
 
@@ -168,10 +182,15 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     refreshButton = new JButton(refreshIcon);
     rightPanel.add(refreshButton, BorderLayout.CENTER);
 
+    JPanel bottomPanel = new JPanel();
+    bottomPanel.setLayout(new BorderLayout());
+    bottomPanel.add(warningPanel, BorderLayout.NORTH);
+    bottomPanel.add(searchBox, BorderLayout.SOUTH);
+
     userEntrys.add(leftPanel, BorderLayout.WEST);
     userEntrys.add(midPanel, BorderLayout.CENTER);
     userEntrys.add(rightPanel, BorderLayout.EAST);
-    userEntrys.add(warningPanel, BorderLayout.SOUTH);
+    userEntrys.add(bottomPanel, BorderLayout.SOUTH);
     usernameTextField.addFocusListener(new FocusListenerRepositoryData());
     usernameTextField.getDocument().addDocumentListener(new UsernameEmailDocumentListener(warningPanel));
     usernameTextField.setText(UserCredentialsManager.getLastUser());
@@ -580,5 +599,130 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     void addOptions(@NotNull Map<String, Object> pOptionsMap);
 
+  }
+
+  private void _filter(String diff)
+  {
+    boolean isFirst = true;
+    boolean valid = false;
+    String fullPattern = pattern + diff + pattern;
+
+    if(searchBox.getComboBox().getSelectedItem() != null){
+      for(int i = 0; i < cList.getObjectList().size(); i++){
+        String toCompare = _filterBy(i);
+        if(searchBox.getComboBox().getSelectedItem().equals("Date of Creation"))
+          fullPattern = diff + pattern;
+        if(!toCompare.matches(fullPattern))
+          cList.getComponent(i).setVisible(false);
+        else{
+          valid = true;
+          cList.getComponent(i).setVisible(true);
+          if(isFirst){
+            cList.setSelected(cList.getObjectList().get(i));
+            isFirst = false;
+          }
+        }
+      }
+      cList.revalidate();
+      cList.repaint();
+      if(valid)
+        fireStateChanged(IStateChangeListener.State.ISVALID);
+      else
+        fireStateChanged(IStateChangeListener.State.ISINVALID);
+    }
+  }
+
+  private String _filterBy(int i)
+  {
+    DateTimeFormatter formatter =
+        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT )
+            .withLocale(Locale.GERMANY)
+            .withZone(ZoneId.systemDefault());
+
+    switch ((String)searchBox.getComboBox().getSelectedItem()){
+      case "ADITO-Version":
+        return cList.getObjectList().get(i).getSystemDetails().getKernelVersion();
+      case "Project-Name":
+        return cList.getObjectList().get(i).getSystemDetails().getName();
+      case "Git-Repository":
+        return cList.getObjectList().get(i).getSystemDetails().getGitRepoUrl();
+      case "Git-Branch":
+        return cList.getObjectList().get(i).getSystemDetails().getGitBranch();
+      case "Date of Creation":
+        String date = formatter.format(cList.getObjectList().get(i).getSystemDetails().getCreationDate());
+        return date;
+    }
+    return null;
+  }
+
+  private class SearchBox extends JPanel
+  {
+    private final JTextField searchable = new JTextField(30);
+    private final JComboBox<String> comboBox;
+
+    private SearchBox() throws HeadlessException
+    {
+      super();
+      String[] comboBoxContent = {"Project-Name", "Git-Branch", "Git-Repository", "ADITO-Version", "Date of Creation"};
+      comboBox = new JComboBox<>(comboBoxContent);
+      setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+      JLabel search = new JLabel("Filter by:");
+      add(search);
+      add(Box.createRigidArea(new Dimension(5, 0)));
+      add(comboBox);
+      add(Box.createRigidArea(new Dimension(5, 0)));
+      add(searchable);
+      searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
+    }
+
+
+    public JComboBox<String> getComboBox(){
+      return comboBox;
+    }
+  }
+
+
+
+  @FunctionalInterface
+  public interface SimpleDocumentListener extends DocumentListener
+  {
+    void update(DocumentEvent e) throws BadLocationException;
+
+    @Override
+    default void insertUpdate(DocumentEvent e)
+    {
+      try
+      {
+        update(e);
+      }
+      catch (BadLocationException pE)
+      {
+        pE.printStackTrace();
+      }
+    }
+    @Override
+    default void removeUpdate(DocumentEvent e)
+    {
+      try
+      {
+        update(e);
+      }
+      catch (BadLocationException pE)
+      {
+        pE.printStackTrace();
+      }
+    }
+    @Override
+    default void changedUpdate(DocumentEvent e)
+    {
+      try
+      {
+        update(e);
+      }
+      catch (BadLocationException pE)
+      {
+        pE.printStackTrace();
+      }
+    }
   }
 }
