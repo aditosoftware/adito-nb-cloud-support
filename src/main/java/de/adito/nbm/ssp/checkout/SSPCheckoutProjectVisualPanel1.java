@@ -19,11 +19,11 @@ import org.openide.util.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
-import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
-import java.time.ZoneId;
+import java.text.SimpleDateFormat;
+import java.time.*;
 import java.time.format.*;
 import java.util.List;
 import java.util.*;
@@ -130,9 +130,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private void _initEntries()
   {
     userEntrys = new JPanel();
-    BorderLayout borderLayout = new BorderLayout();
-    borderLayout.setVgap(8);
-    userEntrys.setLayout(borderLayout);
+    userEntrys.setLayout(new BorderLayout(0, 8));
     userEntrys.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
     GridBagConstraints c = new GridBagConstraints();
 
@@ -601,18 +599,16 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
   }
 
-  private void _filter(String diff)
+  private void _filter(String pSearchText)
   {
     boolean isFirst = true;
     boolean valid = false;
-    String fullPattern = pattern + diff + pattern;
 
     if(searchBox.getComboBox().getSelectedItem() != null){
       for(int i = 0; i < cList.getObjectList().size(); i++){
-        String toCompare = _filterBy(i);
-        if(searchBox.getComboBox().getSelectedItem().equals("Date of Creation"))
-          fullPattern = diff + pattern;
-        if(!toCompare.matches(fullPattern))
+        FilterBy filter = (FilterBy) searchBox.getComboBox().getSelectedItem();
+        boolean matches = filter.filter(pSearchText, cList.getObjectList().get(i).getSystemDetails());
+        if(!matches)
           cList.getComponent(i).setVisible(false);
         else{
           valid = true;
@@ -632,97 +628,238 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     }
   }
 
-  private String _filterBy(int i)
-  {
-    DateTimeFormatter formatter =
-        DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT )
-            .withLocale(Locale.GERMANY)
-            .withZone(ZoneId.systemDefault());
-
-    switch ((String)searchBox.getComboBox().getSelectedItem()){
-      case "ADITO-Version":
-        return cList.getObjectList().get(i).getSystemDetails().getKernelVersion();
-      case "Project-Name":
-        return cList.getObjectList().get(i).getSystemDetails().getName();
-      case "Git-Repository":
-        return cList.getObjectList().get(i).getSystemDetails().getGitRepoUrl();
-      case "Git-Branch":
-        return cList.getObjectList().get(i).getSystemDetails().getGitBranch();
-      case "Date of Creation":
-        String date = formatter.format(cList.getObjectList().get(i).getSystemDetails().getCreationDate());
-        return date;
-    }
-    return null;
-  }
-
   private class SearchBox extends JPanel
   {
     private final JTextField searchable = new JTextField(30);
-    private final JComboBox<String> comboBox;
+    private final JComboBox<FilterBy> comboBox;
 
     private SearchBox() throws HeadlessException
     {
       super();
-      String[] comboBoxContent = {"Project-Name", "Git-Branch", "Git-Repository", "ADITO-Version", "Date of Creation"};
+      FilterBy[] comboBoxContent = {new FilterByName(), new FilterByGitURL(), new FilterByGitBranch(), new FilterByKernelVersion(),
+                                    new FilterByAfterDate(), new FilterByBeforeDate()};
       comboBox = new JComboBox<>(comboBoxContent);
+      comboBox.setRenderer(createListRenderer());
       setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
       JLabel search = new JLabel("Filter by:");
       add(search);
-      add(Box.createRigidArea(new Dimension(5, 0)));
+      add(Box.createRigidArea(new Dimension(22, 0)));
       add(comboBox);
       add(Box.createRigidArea(new Dimension(5, 0)));
       add(searchable);
       searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
     }
 
-
-    public JComboBox<String> getComboBox(){
+    public JComboBox<FilterBy> getComboBox(){
       return comboBox;
     }
   }
 
+  public abstract class FilterBy {
 
+    protected final String pattern = ".*";
+
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected){
+      return false;
+    }
+
+    @Override
+    public String toString()
+    {
+      return "should not be shown";
+    }
+  }
+
+  private static ListCellRenderer<? super FilterBy> createListRenderer() {
+    return new DefaultListCellRenderer() {
+      private final Color background = new Color(0, 100, 255, 15);
+      private final Color defaultBackground = (Color) UIManager.get("List.background");
+
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus)
+      {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+        FilterBy filter = (FilterBy) value;
+        this.setText(filter.toString());
+        if (!isSelected) {
+          this.setBackground(index % 2 == 0 ? background : defaultBackground);
+        }
+        return this;
+      }
+    };
+  }
+
+  public class FilterByName extends FilterBy{
+    public final static String FILTERNAME = "Project-Name";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      String fullPattern = pattern + pToCompare + pattern;
+      return pSelected.getName().matches(fullPattern);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  public class FilterByGitURL extends FilterBy{
+    public final static String FILTERNAME = "Git-URL";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      String fullPattern = pattern + pToCompare + pattern;
+      return  pSelected.getGitRepoUrl().matches(fullPattern);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  public class FilterByKernelVersion extends FilterBy{
+    public final static String FILTERNAME = "ADITO-Version";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      String fullPattern = pattern + pToCompare + pattern;
+      return pSelected.getKernelVersion().matches(fullPattern);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  public class FilterByGitBranch extends FilterBy{
+    public final static String FILTERNAME = "Git-Branch";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      String fullPattern = pattern + pToCompare + pattern;
+      return pSelected.getGitBranch().matches(fullPattern);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  public class FilterByAfterDate extends FilterBy{
+    public final static String FILTERNAME = "After";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      Instant toCompare = _getInstantFromString(pToCompare);
+      if(toCompare != null)
+        return pSelected.getCreationDate().isAfter(toCompare);
+      else
+        return pSelected.getCreationDate().isAfter(Instant.MIN);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  public class FilterByBeforeDate extends FilterBy{
+    public final static String FILTERNAME = "Before";
+
+    @Override
+    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
+    {
+      Instant toCompare = _getInstantFromString(pToCompare);
+      if(toCompare != null)
+        return pSelected.getCreationDate().isBefore(toCompare);
+      else
+        return pSelected.getCreationDate().isBefore(Instant.MAX);
+    }
+
+    @Override
+    public String toString(){
+      return FILTERNAME;
+    }
+  }
+
+  @Nullable
+  private Instant _getInstantFromString(String pToConvert){
+    String patternYear = "(19|2[0-9])[0-9]{2}";
+    String patternMonthYear = "(0[1-9]|1[012]).((19|2[0-9])[0-9]{2})";
+    String patternYearMonth = "((19|2[0-9])[0-9]{2}).(0[1-9]|1[012])";
+
+    String patternFullDateCorrect = "((2000|2400|2800|(19|2[0-9](0[48]|[2468][048]|[13579][26]))).02.29)"
+        + "|(((19|2[0-9])[0-9]{2}).02.(0[1-9]|1[0-9]|2[0-8]))"
+        + "|(((19|2[0-9])[0-9]{2}).(0[13578]|10|12).(0[1-9]|[12][0-9]|3[01]))"
+        + "|(((19|2[0-9])[0-9]{2}).(0[469]|11).(0[1-9]|[12][0-9]|30))";
+
+    String patternFullDateWrong= "29.02.(2000|2400|2800|(19|2[0-9](0[48]|[2468][048]|[13579][26])))"
+        + "|((0[1-9]|1[0-9]|2[0-8]).02.((19|2[0-9])[0-9]{2}))"
+        + "|((0[1-9]|[12][0-9]|3[01]).(0[13578]|10|12).((19|2[0-9])[0-9]{2}))"
+        + "|((0[1-9]|[12][0-9]|30).(0[469]|11).((19|2[0-9])[0-9]{2}))";
+
+    Instant test = null;
+
+    if(pToConvert.matches(patternYear))
+    {
+      String toParse = pToConvert + "-01-01T00:00:00.00Z";
+      test = Instant.parse(toParse);
+    }
+    if(pToConvert.matches(patternMonthYear))
+    {
+      String[] stringArray = pToConvert.split("\\D");
+      String toParse = stringArray[1] + "-" + stringArray[0] + "-01T00:00:00.00Z";
+      test = Instant.parse(toParse);
+    }
+    if(pToConvert.matches(patternYearMonth))
+    {
+      String toParse = pToConvert.replaceAll("\\D", "-") + "-00T00:00:00.00Z";
+      test = Instant.parse(toParse);
+    }
+    if(pToConvert.matches(patternFullDateCorrect))
+    {
+      String toParse = pToConvert.replaceAll("\\D", "-") + "T00:00:00.00Z";
+      test = Instant.parse(toParse);
+    }
+    if(pToConvert.matches(patternFullDateWrong))
+    {
+      String[] stringArray = pToConvert.split("\\D");
+      String toParse = stringArray[2] + "-" + stringArray[1] + "-" + stringArray[0] + "T00:00:00.00Z";
+      test = Instant.parse(toParse);
+    }
+    return test;
+  }
 
   @FunctionalInterface
   public interface SimpleDocumentListener extends DocumentListener
   {
-    void update(DocumentEvent e) throws BadLocationException;
+    void update(DocumentEvent e);
 
     @Override
     default void insertUpdate(DocumentEvent e)
     {
-      try
-      {
-        update(e);
-      }
-      catch (BadLocationException pE)
-      {
-        pE.printStackTrace();
-      }
+      update(e);
     }
     @Override
     default void removeUpdate(DocumentEvent e)
     {
-      try
-      {
-        update(e);
-      }
-      catch (BadLocationException pE)
-      {
-        pE.printStackTrace();
-      }
+      update(e);
     }
     @Override
     default void changedUpdate(DocumentEvent e)
     {
-      try
-      {
-        update(e);
-      }
-      catch (BadLocationException pE)
-      {
-        pE.printStackTrace();
-      }
+      update(e);
     }
   }
 }
