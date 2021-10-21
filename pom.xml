@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>CloudPlugin</artifactId>
-  <version>1.1.2</version>
+  <version>1.2.0</version>
   <packaging>nbm</packaging>
   <name>Cloud Support</name>
 
@@ -56,12 +56,12 @@
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>nb-adito-interface</artifactId>
-      <version>1.7.1</version>
+      <version>1.7.2-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>de-adito-netbeans-utilities</artifactId>
-      <version>RELEASE111-1.5.0</version>
+      <version>RELEASE122-1.6.2-4</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
