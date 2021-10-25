@@ -126,7 +126,7 @@ public class CList extends JPanel implements Scrollable
       }
     }
     // we want the latest system on top -> inverse sorting
-    systemDetailsList.sort(Comparator.comparing(ISSPSystem::getCreationDate).reversed());
+    systemDetailsList.sort(Comparator.comparing(ISSPSystem::getName));
 
     ArrayList<CListObject> disabledProjects = new ArrayList<>();
     for (ISSPSystemDetails project : systemDetailsList)
