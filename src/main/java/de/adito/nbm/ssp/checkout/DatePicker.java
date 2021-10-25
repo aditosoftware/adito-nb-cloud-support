@@ -3,7 +3,12 @@ package de.adito.nbm.ssp.checkout;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Calendar;
-
+/**
+ * A small Panel used to pick a date consisting of 3 Cmoboboxes for the day, month and year.
+ * Used for the FilterByBeforeDate and FilterByAfterDate.
+ *
+ * @author p.rosenthal , b.huf
+ */
 public class DatePicker extends JPanel
 {
   private static final int MIN_YEAR = 1950;
@@ -62,6 +67,10 @@ public class DatePicker extends JPanel
     return yearCombobox;
   }
 
+  /**
+   * Returns the current selected day as an int.
+   * @return selected day.
+   */
   public int getCurrentDay()
   {
     if(dayCombobox.getSelectedItem() != null)
@@ -70,6 +79,10 @@ public class DatePicker extends JPanel
       return -1;
   }
 
+  /**
+   * Returns the current selected month as an int.
+   * @return selected month.
+   */
   public int getCurrentMonth()
   {
     if(monthCombobox.getSelectedItem() != null)
@@ -78,6 +91,10 @@ public class DatePicker extends JPanel
       return -1;
   }
 
+  /**
+   * Returns the current selected year as an int.
+   * @return selected year.
+   */
   public int getCurrentYear()
   {
     if(yearCombobox.getSelectedItem() != null)

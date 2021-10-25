@@ -598,6 +598,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
   }
 
+  /**
+   * Filters the clistobjects and only shows the ones that match the given String. If filtered by a date, an empty String
+   * will be handed over.
+   * @param pSearchText The String that the clist needs to match.
+   */
   private void _filter(String pSearchText)
   {
     boolean isFirst = true;
@@ -633,6 +638,9 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     }
   }
 
+  /**
+   * The Searchbox that will be shown below the username and password, so the user can filter the clistobjects.
+   */
   private class SearchBox extends JPanel
   {
     private final JTextField searchable = new JTextField(30);
@@ -649,13 +657,19 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     private SearchBox() throws HeadlessException
     {
       super();
-      initializeModels();
+      _initializeModels();
 
       datePicker = new DatePicker();
 
       //ItemListener for when a date is changed
-      datePicker.getDayCombobox().addItemListener(e -> _filter(""));
-      datePicker.getYearCombobox().addItemListener(e -> _filter(""));
+      datePicker.getDayCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED)
+          _filter("");
+      });
+      datePicker.getYearCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED)
+          _filter("");
+      });
       datePicker.getMonthCombobox().addItemListener(e -> {
         if(e.getStateChange() == ItemEvent.SELECTED){
           boolean setSelected = false;
@@ -708,7 +722,10 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
       });
     }
 
-    private void initializeModels(){
+    /**
+     * Initializing the Defaultmodels, so that we can dynamically change the options for the combobox.
+     */
+    private void _initializeModels(){
       for(int i = 1; i <= 28; i++){
         nonLeapYearFeb.addElement(i);
       }
@@ -743,6 +760,10 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     }
   }
 
+  /**
+   * Returns a ListCellRenderer for the Combobox used in the Searchbox.
+   * @return ListCellRenderer
+   */
   private static ListCellRenderer<? super FilterBy> createListRenderer() {
     return new DefaultListCellRenderer() {
 
@@ -759,6 +780,9 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     };
   }
 
+  /**
+   * Functional Interface to see if a Document gets changed.
+   */
   @FunctionalInterface
   public interface SimpleDocumentListener extends DocumentListener
   {

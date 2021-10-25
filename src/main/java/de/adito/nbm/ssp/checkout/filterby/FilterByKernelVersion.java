@@ -2,6 +2,11 @@ package de.adito.nbm.ssp.checkout.filterby;
 
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 
+/**
+ * Filters the clist objects by their Adito-Version.
+ *
+ * @author p.rosenthal , b.huf
+ */
 public class FilterByKernelVersion extends FilterBy
 {
   public final static String FILTERNAME = "ADITO-Version";

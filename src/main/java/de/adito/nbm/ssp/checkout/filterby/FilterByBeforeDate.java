@@ -4,6 +4,12 @@ import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 
 import java.time.Instant;
 
+/**
+ * Filters the clist objects by their date.
+ * Shows systems, that are created before a certain date.
+ *
+ * @author p.rosenthal , b.huf
+ */
 public class FilterByBeforeDate extends FilterBy
 {
   public final static String FILTERNAME = "Created Before";

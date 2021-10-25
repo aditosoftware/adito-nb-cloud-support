@@ -2,6 +2,11 @@ package de.adito.nbm.ssp.checkout.filterby;
 
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 
+/**
+ * Filters the clist objects by their projectname.
+ *
+ * @author p.rosenthal , b.huf
+ */
 public class FilterByProjectName extends FilterBy
 {
   public final static String FILTERNAME = "Project-Name";
