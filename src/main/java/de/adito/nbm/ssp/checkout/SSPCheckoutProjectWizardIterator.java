@@ -26,6 +26,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   // Property names for the WizardDescriptor
   public static final String PROJECT_NAME = "de.adito.ssp.new.project.name";
   public static final String PROJECT_PATH = "de.adito.ssp.new.project.path";
+  public static final String PROJECT_GIT_BRANCH = "de.adito.ssp.new.project.gitbranch";
   public static final String SELECTED = "de.adito.ssp.new.selected";
   public static final String CHECKOUT_DEPLOYED_STATE = "de.adito.ssp.new.checkout.deployed";
 

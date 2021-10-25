@@ -1,6 +1,8 @@
 package de.adito.nbm.ssp.checkout;
 
 
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.exceptions.AditoVersioningException;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.swing.IFileChooserProvider;
@@ -10,7 +12,9 @@ import org.openide.util.*;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import java.awt.event.*;
 import java.io.File;
+import java.util.List;
 
 /**
  * Wizard-Panel for checking out a SSP project
@@ -24,6 +28,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private JFileChooser fileChooser;
   private SSPCheckoutProjectVisualPanel2 comp;
   private WizardDescriptor wd;
+  private IRemoteBranch toSet;
 
   public SSPCheckoutProjectWizardPanel2()
   {
@@ -32,7 +37,15 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   public SSPCheckoutProjectVisualPanel2 getComponent()
   {
     if (comp == null)
-      _createComponent();
+    {
+      try
+      {
+        _createComponent();
+      }
+      catch (AditoVersioningException pE)
+      {
+      }
+    }
     return comp;
   }
 
@@ -77,7 +90,13 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     String projectPath = SSPCheckoutProjectWizardIterator.getCallback().getDefaultProjectPath();
     if (projectPath != null && !projectPath.isEmpty())
       wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, projectPath);
-    _updateComponent();
+    try
+    {
+      _updateComponent();
+    }
+    catch (AditoVersioningException pE)
+    {
+    }
   }
 
   /**
@@ -95,14 +114,21 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Sets the listener of all visual components
    */
-  private void _createComponent()
+  private void _createComponent() throws AditoVersioningException
   {
     _loadFileChooserAsync();
+
     comp = new SSPCheckoutProjectVisualPanel2();
     //Listener for the ProjectPath button
     comp.getProjectLocationBrowseButton().addActionListener(e -> {
       _applyFileChooser(comp.getProjectLocationTextField());
-      _updateComponent();
+      try
+      {
+        _updateComponent();
+      }
+      catch (AditoVersioningException pE)
+      {
+      }
     });
 
     //DocumentListener for the two textFields
@@ -124,6 +150,19 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         if (wd != null)
           wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, _getProjectPath());
         cs.fireChange();
+      }
+    });
+    comp.getGitBranchComboBox().addItemListener(new ItemListener()
+    {
+      @Override
+      public void itemStateChanged(ItemEvent e)
+      {
+        if (e.getStateChange() == ItemEvent.SELECTED)
+        {
+          if (wd != null)
+            wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, e.getItem());
+          cs.fireChange();
+        }
       }
     });
   }
@@ -148,7 +187,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Writes the name and paths as they are in the WizardDescriptor to the fields
    */
-  private void _updateComponent()
+  private void _updateComponent() throws AditoVersioningException
   {
     if (wd == null || comp == null)
       return;
@@ -165,7 +204,16 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     Object projectPath = wd.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH);
     if (projectPath != null)
       comp.getProjectLocationTextField().setText(projectPath.toString());
+
+    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    if (cListObject != null)
+    {
+      comp.getGitBranchComboBox().setModel(new DefaultComboBoxModel<>(_getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl())));
+      if(toSet != null)
+        comp.getGitBranchComboBox().setSelectedItem(toSet);
+    }
   }
+
 
   /**
    * Sets the FileChooser for a JTextField
@@ -241,6 +289,24 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       return ((CListObject) selectedObj).getSystemDetails();
 
     return null;
+  }
+
+  private IRemoteBranch[] _getAvailableGitBranches(String pGitUrl) throws AditoVersioningException
+  {
+    IRemoteBranch[] gitBranches = new IRemoteBranch[]{};
+    if(pGitUrl != null)
+    {
+      List<IRemoteBranch> branches = Lookup.getDefault().lookup(IGitVersioningSupport.class).getBranchesInRepository(pGitUrl);
+      gitBranches = branches.toArray(new IRemoteBranch[0]);
+    }
+    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    String pattern = ".*" + cListObject.getSystemDetails().getGitBranch();
+    for (IRemoteBranch pAvailableBranch : gitBranches)
+    {
+      if (pAvailableBranch.getName().matches(pattern))
+        toSet = pAvailableBranch;
+    }
+    return gitBranches;
   }
 
   private abstract static class DocumentUpdateListener implements DocumentListener
