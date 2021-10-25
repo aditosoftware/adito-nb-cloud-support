@@ -7,6 +7,7 @@ import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.ssp.WarningPanel;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
+import de.adito.nbm.ssp.checkout.filterby.*;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
@@ -19,13 +20,10 @@ import org.openide.util.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.event.*;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
-import java.text.*;
 import java.time.*;
-import java.time.format.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
@@ -605,12 +603,13 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     boolean isFirst = true;
     boolean valid = false;
     boolean matches;
+    DatePicker dp = searchBox.getDatePicker();
 
     if(searchBox.getComboBox().getSelectedItem() != null){
       for(int i = 0; i < cList.getObjectList().size(); i++){
         FilterBy filter = (FilterBy) searchBox.getComboBox().getSelectedItem();
         if(filter.getClass() == FilterByAfterDate.class || filter.getClass() == FilterByBeforeDate.class)
-          matches = filter.filterDate(searchBox.getCurrentDay(), searchBox.getCurrentMonth(), searchBox.getCurrentYear(),
+          matches = filter.filterDate(dp.getCurrentDay(), dp.getCurrentMonth(), dp.getCurrentYear(),
                                       cList.getObjectList().get(i).getSystemDetails());
         else
           matches = filter.filter(pSearchText, cList.getObjectList().get(i).getSystemDetails());
@@ -636,15 +635,9 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
   private class SearchBox extends JPanel
   {
-    private static final int MAX_YEAR = 2100;
-    private static final int MIN_YEAR = 1950;
-
     private final JTextField searchable = new JTextField(30);
     private final JComboBox<FilterBy> comboBox;
-    private final JComboBox<Integer> day;
-    private final JComboBox<Integer> month;
-    private final JComboBox<Integer> year;
-    private final JPanel datePicker;
+    private final DatePicker datePicker;
 
     private final DefaultComboBoxModel<Integer> leapYear = new DefaultComboBoxModel<>();
     private final DefaultComboBoxModel<Integer> nonLeapYearFeb = new DefaultComboBoxModel<>();
@@ -656,10 +649,66 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     private SearchBox() throws HeadlessException
     {
       super();
-      datePicker = new JPanel();
-      datePicker.setLayout(new BoxLayout(datePicker, BoxLayout.X_AXIS));
+      initializeModels();
 
-      //Initializine the 4 Models to change the entries of the day combobox dynamically
+      datePicker = new DatePicker();
+
+      //ItemListener for when a date is changed
+      datePicker.getDayCombobox().addItemListener(e -> _filter(""));
+      datePicker.getYearCombobox().addItemListener(e -> _filter(""));
+      datePicker.getMonthCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED){
+          boolean setSelected = false;
+          Integer selectedOld = null;
+          if(datePicker.getDayCombobox().getSelectedItem() != null)
+            selectedOld = (Integer) datePicker.getDayCombobox().getSelectedItem();
+          if(datePicker.getYearCombobox().getSelectedItem() != null){
+            YearMonth yearMonthObject = YearMonth.of((Integer) datePicker.getYearCombobox().getSelectedItem(), (int) e.getItem());
+            int daysInMonth = yearMonthObject.lengthOfMonth();
+            if(selectedOld != null && selectedOld > daysInMonth)
+              setSelected = true;
+            datePicker.getDayCombobox().setModel(intToArray.get(daysInMonth));
+            if(setSelected)
+              datePicker.getDayCombobox().setSelectedItem(daysInMonth);
+            else
+              datePicker.getDayCombobox().setSelectedItem(selectedOld);
+
+            _filter("");
+          }
+        }
+      });
+
+      FilterBy[] comboBoxContent = {new FilterByProjectName(), new FilterByGitURL(), new FilterByGitBranch(), new FilterByKernelVersion(),
+                                    new FilterByBeforeDate(), new FilterByAfterDate()};
+      comboBox = new JComboBox<>(comboBoxContent);
+      comboBox.setRenderer(createListRenderer());
+      setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+      JLabel search = new JLabel("Filter by:");
+      add(search);
+      add(Box.createRigidArea(new Dimension(22, 0)));
+      add(comboBox);
+      add(Box.createRigidArea(new Dimension(5, 0)));
+      add(datePicker);
+      add(searchable);
+
+      searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
+      comboBox.addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED){
+          if(e.getItem().getClass() == FilterByAfterDate.class || e.getItem().getClass() == FilterByBeforeDate.class){
+            searchable.setVisible(false);
+            datePicker.setVisible(true);
+            _filter("");
+          }
+          else{
+            datePicker.setVisible(false);
+            searchable.setVisible(true);
+            _filter(searchable.getText());
+          }
+        }
+      });
+    }
+
+    private void initializeModels(){
       for(int i = 1; i <= 28; i++){
         nonLeapYearFeb.addElement(i);
       }
@@ -683,118 +732,14 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
         put(30, thirtyDays);
         put(31, thirtyOneDays);
       }};
-
-      //Initializing the first entries for the DatePicker
-      day = new JComboBox<>();
-      day.setModel(thirtyOneDays);
-
-      month = new JComboBox<>();
-      for(int i = 1; i<= 12; i++){
-        month.addItem(i);
-      }
-
-      year = new JComboBox<>();
-      for(int i = MIN_YEAR; i <= MAX_YEAR; i++){
-        year.addItem(i);
-      }
-      year.setSelectedItem(Calendar.getInstance().get(Calendar.YEAR));
-
-      //ItemListener for when a date is changed
-      day.addItemListener(e -> _filter(""));
-      year.addItemListener(e -> _filter(""));
-      month.addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED){
-          boolean setSelected = false;
-          Integer selectedOld = null;
-          if(day.getSelectedItem() != null)
-            selectedOld = (Integer) day.getSelectedItem();
-          if(year.getSelectedItem() != null){
-            YearMonth yearMonthObject = YearMonth.of((Integer) year.getSelectedItem(), (int) e.getItem());
-            int daysInMonth = yearMonthObject.lengthOfMonth();
-            if(selectedOld != null && selectedOld > daysInMonth)
-              setSelected = true;
-            day.setModel(intToArray.get(daysInMonth));
-            if(setSelected)
-              day.setSelectedItem(daysInMonth);
-            else
-              day.setSelectedItem(selectedOld);
-
-            _filter("");
-          }
-        }
-      });
-
-      day.setPreferredSize(new Dimension(5, 0));
-      month.setPreferredSize(new Dimension(5, 0));
-      year.setPreferredSize(new Dimension(10, 0));
-
-      datePicker.add(new JLabel("Day:"));
-      datePicker.add(Box.createRigidArea(new Dimension(5, 0)));
-      datePicker.add(day);
-      datePicker.add(Box.createRigidArea(new Dimension(5, 0)));
-      datePicker.add(new JLabel("Month:"));
-      datePicker.add(Box.createRigidArea(new Dimension(5, 0)));
-      datePicker.add(month);
-      datePicker.add(Box.createRigidArea(new Dimension(5, 0)));
-      datePicker.add(new JLabel("Year:"));
-      datePicker.add(Box.createRigidArea(new Dimension(5, 0)));
-      datePicker.add(year);
-      datePicker.setVisible(false);
-
-      FilterBy[] comboBoxContent = {new FilterByName(), new FilterByGitURL(), new FilterByGitBranch(), new FilterByKernelVersion(),
-                                    new FilterByBeforeDate(), new FilterByAfterDate()};
-      comboBox = new JComboBox<>(comboBoxContent);
-      comboBox.setRenderer(createListRenderer());
-      setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-      JLabel search = new JLabel("Filter by:");
-      add(search);
-      add(Box.createRigidArea(new Dimension(22, 0)));
-      add(comboBox);
-      add(Box.createRigidArea(new Dimension(5, 0)));
-      add(datePicker);
-      add(searchable);
-
-      searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
-      comboBox.addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED){
-          if(e.getItem().getClass() == FilterByAfterDate.class || e.getItem().getClass() == FilterByBeforeDate.class){
-            searchable.setVisible(false);
-            datePicker.setVisible(true);
-          }
-          else{
-            datePicker.setVisible(false);
-            searchable.setVisible(true);
-          }
-        }
-      });
     }
 
     public JComboBox<FilterBy> getComboBox(){
       return comboBox;
     }
 
-    public int getCurrentDay()
-    {
-      if(day.getSelectedItem() != null)
-        return (Integer) day.getSelectedItem();
-      else
-        return -1;
-    }
-
-    public int getCurrentMonth()
-    {
-      if(month.getSelectedItem() != null)
-        return (Integer) month.getSelectedItem();
-      else
-        return -1;
-    }
-
-    public int getCurrentYear()
-    {
-      if(year.getSelectedItem() != null)
-        return (Integer) year.getSelectedItem();
-      else
-        return -1;
+    public DatePicker getDatePicker(){
+      return datePicker;
     }
   }
 
@@ -812,156 +757,6 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
         return this;
       }
     };
-  }
-
-  public abstract class FilterBy {
-    protected final String pattern = ".*";
-
-    abstract boolean filter(String pToCompare, ISSPSystemDetails pSelected);
-
-    abstract boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected);
-    @Override
-    abstract public String toString();
-  }
-
-  public class FilterByName extends FilterBy{
-    public final static String FILTERNAME = "Project-Name";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      String fullPattern = pattern + pToCompare + pattern;
-      return pSelected.getName().matches(fullPattern);
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
-  }
-
-  public class FilterByGitURL extends FilterBy{
-    public final static String FILTERNAME = "Git-URL";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      String fullPattern = pattern + pToCompare + pattern;
-      return  pSelected.getGitRepoUrl().matches(fullPattern);
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
-  }
-
-  public class FilterByKernelVersion extends FilterBy{
-    public final static String FILTERNAME = "ADITO-Version";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      String fullPattern = pattern + pToCompare + pattern;
-      return pSelected.getKernelVersion().matches(fullPattern);
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
-  }
-
-  public class FilterByGitBranch extends FilterBy{
-    public final static String FILTERNAME = "Git-Branch";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      String fullPattern = pattern + pToCompare + pattern;
-      return pSelected.getGitBranch().matches(fullPattern);
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
-  }
-
-  public class FilterByAfterDate extends FilterBy{
-    public final static String FILTERNAME = "Created After";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      String day = String.format("%02d", pDay);
-      String month = String.format("%02d", pMonth);
-      String toParse = pYear + "-" + month + "-" + day + "T00:00:00.00Z";
-      Instant toCompare = Instant.parse(toParse);
-
-      return pSelected.getCreationDate().isAfter(toCompare);
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
-  }
-
-  public class FilterByBeforeDate extends FilterBy{
-    public final static String FILTERNAME = "Created Before";
-
-    @Override
-    boolean filter(String pToCompare, ISSPSystemDetails pSelected)
-    {
-      return false;
-    }
-
-    @Override
-    boolean filterDate(int pDay, int pMonth, int pYear, ISSPSystemDetails pSelected)
-    {
-      String day = String.format("%02d", pDay);
-      String month = String.format("%02d", pMonth);
-      String toParse = pYear + "-" + month + "-" + day + "T00:00:00.00Z";
-      Instant toCompare = Instant.parse(toParse);
-
-      return pSelected.getCreationDate().isBefore(toCompare);
-    }
-
-    @Override
-    public String toString(){
-      return FILTERNAME;
-    }
   }
 
   @FunctionalInterface
