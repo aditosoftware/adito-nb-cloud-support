@@ -102,7 +102,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
       boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
-      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath), isCheckoutDeployedState);
+      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath), wizard, isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }
@@ -251,5 +251,9 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   public static String getMessage(Class<?> pClass, String pMsg, Object... params)
   {
     return NbBundle.getMessage(pClass, pMsg, params);
+  }
+
+  public WizardDescriptor getWizardDescriptor(){
+    return wizard;
   }
 }

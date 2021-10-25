@@ -60,6 +60,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
 
     GroupLayout layout = new GroupLayout(this);
     this.setLayout(layout);
+    this.setPreferredSize(new Dimension(700, 300));
     layout.setHorizontalGroup(
         layout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
