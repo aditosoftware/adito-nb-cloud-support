@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.checkout;
 
 import com.google.common.collect.Sets;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IRemoteBranch;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
@@ -102,7 +103,8 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
       boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
-      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath), wizard, isCheckoutDeployedState);
+      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
+                                                 (IRemoteBranch) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH), isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }
@@ -251,9 +253,5 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   public static String getMessage(Class<?> pClass, String pMsg, Object... params)
   {
     return NbBundle.getMessage(pClass, pMsg, params);
-  }
-
-  public WizardDescriptor getWizardDescriptor(){
-    return wizard;
   }
 }

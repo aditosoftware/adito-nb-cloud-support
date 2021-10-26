@@ -62,7 +62,7 @@ public class SSPCheckoutExecutor
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, WizardDescriptor wizard, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull IRemoteBranch pBranch, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -78,13 +78,12 @@ public class SSPCheckoutExecutor
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
         _checkoutDeployedState(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
-                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), wizard);
+                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
       }
       else
       {
-        IRemoteBranch toSet = (IRemoteBranch) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
         boolean cloneSuccess = performGitClone(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
-                                               toSet.getName(), null, "origin", pTarget);
+                                               pBranch.getName(), null, "origin", pTarget);
         if (cloneSuccess)
           writeConfigs(pHandle, pSystemDetails, pTarget, currentCredentials);
         else
@@ -102,7 +101,7 @@ public class SSPCheckoutExecutor
   }
 
   private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull String pGitProjectUrl,
-                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, WizardDescriptor wizard)
+                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull IRemoteBranch pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
@@ -113,8 +112,7 @@ public class SSPCheckoutExecutor
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        IRemoteBranch toSet = (IRemoteBranch) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
-        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(toSet.getName()), null,
+        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch.getName()), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {

@@ -126,7 +126,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     return projectNameTextField;
   }
 
-  private static ListCellRenderer<? super IRemoteBranch> createListRenderer() {
+  private static DefaultListCellRenderer createListRenderer() {
     return new DefaultListCellRenderer() {
 
       @Override

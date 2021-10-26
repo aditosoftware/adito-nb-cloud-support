@@ -3,10 +3,10 @@ package de.adito.nbm.ssp.checkout;
 
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.exceptions.AditoVersioningException;
-import de.adito.nbm.ssp.checkout.clist.CListObject;
+import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.swing.IFileChooserProvider;
-import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.*;
 import org.openide.WizardDescriptor;
 import org.openide.util.*;
 
@@ -14,7 +14,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 import java.io.File;
-import java.util.List;
+import java.util.*;
+import java.util.logging.*;
 
 /**
  * Wizard-Panel for checking out a SSP project
@@ -29,6 +30,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private SSPCheckoutProjectVisualPanel2 comp;
   private WizardDescriptor wd;
   private IRemoteBranch toSet;
+  private final DefaultComboBoxModel<IRemoteBranch> model = new DefaultComboBoxModel<>();
 
   public SSPCheckoutProjectWizardPanel2()
   {
@@ -38,13 +40,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   {
     if (comp == null)
     {
-      try
-      {
         _createComponent();
-      }
-      catch (AditoVersioningException pE)
-      {
-      }
     }
     return comp;
   }
@@ -90,13 +86,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     String projectPath = SSPCheckoutProjectWizardIterator.getCallback().getDefaultProjectPath();
     if (projectPath != null && !projectPath.isEmpty())
       wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, projectPath);
-    try
-    {
       _updateComponent();
-    }
-    catch (AditoVersioningException pE)
-    {
-    }
   }
 
   /**
@@ -114,7 +104,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Sets the listener of all visual components
    */
-  private void _createComponent() throws AditoVersioningException
+  private void _createComponent()
   {
     _loadFileChooserAsync();
 
@@ -122,13 +112,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     //Listener for the ProjectPath button
     comp.getProjectLocationBrowseButton().addActionListener(e -> {
       _applyFileChooser(comp.getProjectLocationTextField());
-      try
-      {
         _updateComponent();
-      }
-      catch (AditoVersioningException pE)
-      {
-      }
     });
 
     //DocumentListener for the two textFields
@@ -187,7 +171,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Writes the name and paths as they are in the WizardDescriptor to the fields
    */
-  private void _updateComponent() throws AditoVersioningException
+  private void _updateComponent()
   {
     if (wd == null || comp == null)
       return;
@@ -208,7 +192,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     if (cListObject != null)
     {
-      comp.getGitBranchComboBox().setModel(new DefaultComboBoxModel<>(_getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl())));
+      model.removeAllElements();
+      IRemoteBranch[] test = _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl());
+
+      for (IRemoteBranch pIRemoteBranch : test) model.addElement(pIRemoteBranch);
+      comp.getGitBranchComboBox().setModel(model);
       if(toSet != null)
         comp.getGitBranchComboBox().setSelectedItem(toSet);
     }
@@ -291,21 +279,28 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return null;
   }
 
-  private IRemoteBranch[] _getAvailableGitBranches(String pGitUrl) throws AditoVersioningException
+  @NotNull
+  private IRemoteBranch[] _getAvailableGitBranches(@NotNull String pGitUrl)
   {
-    IRemoteBranch[] gitBranches = new IRemoteBranch[]{};
-    if(pGitUrl != null)
+    IRemoteBranch[] gitBranches;
+    List<IRemoteBranch> branches = new ArrayList<>();
+    try
     {
-      List<IRemoteBranch> branches = Lookup.getDefault().lookup(IGitVersioningSupport.class).getBranchesInRepository(pGitUrl);
-      gitBranches = branches.toArray(new IRemoteBranch[0]);
+      branches = Lookup.getDefault().lookup(IGitVersioningSupport.class).getBranchesInRepository(pGitUrl);
     }
+    catch(AditoVersioningException pE)
+    {
+      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING, pE, () -> NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "AditoVersioningException"));
+    }
+    gitBranches = branches.toArray(new IRemoteBranch[0]);
+
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    String pattern = ".*" + cListObject.getSystemDetails().getGitBranch();
     for (IRemoteBranch pAvailableBranch : gitBranches)
     {
-      if (pAvailableBranch.getName().matches(pattern))
+      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
         toSet = pAvailableBranch;
     }
+
     return gitBranches;
   }
 
