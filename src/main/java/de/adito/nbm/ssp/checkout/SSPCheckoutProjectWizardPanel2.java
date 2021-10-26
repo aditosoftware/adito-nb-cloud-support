@@ -193,9 +193,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     if (cListObject != null)
     {
       model.removeAllElements();
-      IRemoteBranch[] test = _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl());
-
-      for (IRemoteBranch pIRemoteBranch : test) model.addElement(pIRemoteBranch);
+      for (IRemoteBranch pIRemoteBranch : _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl())) model.addElement(pIRemoteBranch);
       comp.getGitBranchComboBox().setModel(model);
       if(toSet != null)
         comp.getGitBranchComboBox().setSelectedItem(toSet);
