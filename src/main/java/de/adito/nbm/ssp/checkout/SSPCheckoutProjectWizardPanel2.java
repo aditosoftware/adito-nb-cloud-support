@@ -29,7 +29,6 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private JFileChooser fileChooser;
   private SSPCheckoutProjectVisualPanel2 comp;
   private WizardDescriptor wd;
-  private IRemoteBranch toSet;
   private final DefaultComboBoxModel<IRemoteBranch> model = new DefaultComboBoxModel<>();
 
   public SSPCheckoutProjectWizardPanel2()
@@ -193,8 +192,10 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     if (cListObject != null)
     {
       model.removeAllElements();
-      for (IRemoteBranch pIRemoteBranch : _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl())) model.addElement(pIRemoteBranch);
+      IRemoteBranch[] getAvailableGitBranches = _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl());
+      Arrays.stream(getAvailableGitBranches).forEach(model::addElement);
       comp.getGitBranchComboBox().setModel(model);
+      IRemoteBranch toSet = _getCurrentRemoteBranch(getAvailableGitBranches);
       if(toSet != null)
         comp.getGitBranchComboBox().setSelectedItem(toSet);
     }
@@ -288,18 +289,24 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     }
     catch(AditoVersioningException pE)
     {
-      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING, pE, () -> NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "AditoVersioningException"));
+      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING,"AditoVersioningException: couldn't find key");
     }
     gitBranches = branches.toArray(new IRemoteBranch[0]);
 
-    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    for (IRemoteBranch pAvailableBranch : gitBranches)
-    {
-      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
-        toSet = pAvailableBranch;
-    }
-
     return gitBranches;
+  }
+
+  @Nullable
+  private IRemoteBranch _getCurrentRemoteBranch(@NotNull IRemoteBranch[] pRemoteBranches)
+  {
+    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    for (int i = 0; i < pRemoteBranches.length; i++)
+    {
+      IRemoteBranch pAvailableBranch = pRemoteBranches[i];
+      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
+        return pAvailableBranch;
+    }
+    return null;
   }
 
   private abstract static class DocumentUpdateListener implements DocumentListener
