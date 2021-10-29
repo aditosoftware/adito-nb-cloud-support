@@ -134,6 +134,16 @@
       <artifactId>org-openide-filesystems</artifactId>
       <version>${netbeans.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
+      <artifactId>org-openide-windows</artifactId>
+      <version>${netbeans.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.netbeans.api</groupId>
+      <artifactId>org-openide-modules</artifactId>
+      <version>${netbeans.version}</version>
+    </dependency>
 
     <!-- Keyring -->
     <dependency>
@@ -153,6 +163,12 @@
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
       <version>4.2.3_adito</version>
+    </dependency>
+
+    <dependency>
+      <groupId>info.clearthought</groupId>
+      <artifactId>table-layout</artifactId>
+      <version>4.3.0</version>
     </dependency>
 
     <dependency>
