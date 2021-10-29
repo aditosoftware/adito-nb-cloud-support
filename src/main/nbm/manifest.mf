@@ -5,6 +5,17 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.2.0</p>
+  <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
+  <ul>
+    <li>The Start and Stop actions now determine their status asynchronously which avoids potential deadlocks/freezes</li>
+    <li>Added a way to filter the list of available SSP Systems by name, date, kernel version, git branch or git repository</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>Added a warning dialog before actually stopping a running cloud system</li>
+    <li>Improved logging for the Telnet Client</li>
+  </ul>
   <p style="font-weight: bold;">v1.1.2</p>
   <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
   <ul>
