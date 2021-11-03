@@ -136,22 +136,17 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         cs.fireChange();
       }
     });
-    comp.getGitBranchComboBox().addItemListener(new ItemListener()
-    {
-      @Override
-      public void itemStateChanged(ItemEvent e)
+    comp.getGitBranchComboBox().addItemListener(e -> {
+      if (e.getStateChange() == ItemEvent.SELECTED)
       {
-        if (e.getStateChange() == ItemEvent.SELECTED)
+        if (wd != null)
         {
-          if (wd != null)
-          {
-            if (e.getItem() instanceof ITag)
-              wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((ITag) e.getItem()).getName());
-            if (e.getItem() instanceof IRemoteBranch)
-              wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((IRemoteBranch) e.getItem()).getName());
-          }
-          cs.fireChange();
+          if (e.getItem() instanceof ITag)
+            wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((ITag) e.getItem()).getName());
+          if (e.getItem() instanceof IRemoteBranch)
+            wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((IRemoteBranch) e.getItem()).getName());
         }
+        cs.fireChange();
       }
     });
   }
