@@ -30,7 +30,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private JFileChooser fileChooser;
   private SSPCheckoutProjectVisualPanel2 comp;
   private WizardDescriptor wd;
-  private final DefaultComboBoxModel<IRemoteBranch> model = new DefaultComboBoxModel<>();
+  private final DefaultComboBoxModel<Object> model = new DefaultComboBoxModel<>();
 
   public SSPCheckoutProjectWizardPanel2()
   {
@@ -136,12 +136,22 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         cs.fireChange();
       }
     });
-    comp.getGitBranchComboBox().addItemListener(e -> {
-      if (e.getStateChange() == ItemEvent.SELECTED)
+    comp.getGitBranchComboBox().addItemListener(new ItemListener()
+    {
+      @Override
+      public void itemStateChanged(ItemEvent e)
       {
-        if (wd != null)
-          wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, e.getItem());
-        cs.fireChange();
+        if (e.getStateChange() == ItemEvent.SELECTED)
+        {
+          if (wd != null)
+          {
+            if (e.getItem() instanceof ITag)
+              wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((ITag) e.getItem()).getName());
+            if (e.getItem() instanceof IRemoteBranch)
+              wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH, ((IRemoteBranch) e.getItem()).getName());
+          }
+          cs.fireChange();
+        }
       }
     });
   }
@@ -189,11 +199,25 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     {
       model.removeAllElements();
       IRemoteBranch[] getAvailableGitBranches = _getAvailableGitBranches(cListObject.getSystemDetails().getGitRepoUrl());
-      Arrays.stream(getAvailableGitBranches).forEach(model::addElement);
+      ITag[] getAvailableTags = _getAvailableTags(cListObject.getSystemDetails().getGitRepoUrl());
+      for (IRemoteBranch getAvailableGitBranch : getAvailableGitBranches)
+      {
+        model.addElement(getAvailableGitBranch);
+      }
+      for (ITag getAvailableTag : getAvailableTags)
+      {
+        model.addElement(getAvailableTag);
+      }
       comp.getGitBranchComboBox().setModel(model);
-      IRemoteBranch toSet = _getCurrentRemoteBranch(getAvailableGitBranches);
-      if(toSet != null)
-        comp.getGitBranchComboBox().setSelectedItem(toSet);
+      IRemoteBranch toSetBranch = _getCurrentRemoteBranch(getAvailableGitBranches);
+      if(toSetBranch != null)
+        comp.getGitBranchComboBox().setSelectedItem(toSetBranch);
+      else
+      {
+        ITag toSetTag = _getCurrentTag(getAvailableTags);
+        if(toSetTag != null)
+          comp.getGitBranchComboBox().setSelectedItem(toSetTag);
+      }
     }
   }
 
@@ -295,11 +319,39 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return gitBranches;
   }
 
+  private ITag[] _getAvailableTags(@NotNull String pGitUrl)
+  {
+    ITag[] gitTags;
+    List<ITag> tags = new ArrayList<>();
+    try
+    {
+      tags = Lookup.getDefault().lookup(IGitVersioningSupport.class).getTagsInRepository(pGitUrl);
+    }
+    catch(AditoVersioningException pE)
+    {
+      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING,"AditoVersioningException: couldn't find key");
+    }
+    gitTags = tags.toArray(new ITag[0]);
+
+    return gitTags;
+  }
+
   @Nullable
   private IRemoteBranch _getCurrentRemoteBranch(@NotNull IRemoteBranch[] pRemoteBranches)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     for (IRemoteBranch pAvailableBranch : pRemoteBranches)
+    {
+      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
+        return pAvailableBranch;
+    }
+    return null;
+  }
+  @Nullable
+  private ITag _getCurrentTag(@NotNull ITag[] pRemoteTag)
+  {
+    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    for (ITag pAvailableBranch : pRemoteTag)
     {
       if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
         return pAvailableBranch;

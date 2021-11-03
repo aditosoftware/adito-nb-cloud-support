@@ -104,7 +104,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
       boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
       instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
-                                                 (IRemoteBranch) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH), isCheckoutDeployedState);
+                                                 (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH), isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }

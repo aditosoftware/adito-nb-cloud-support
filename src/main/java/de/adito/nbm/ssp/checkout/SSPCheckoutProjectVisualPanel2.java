@@ -16,7 +16,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   private JTextField projectNameTextField;
   private JTextField projectLocationTextField;
   private JLabel projectNameLabel;
-  private JComboBox<IRemoteBranch> gitBranchComboBox;
+  private JComboBox<Object> gitBranchComboBox;
 
   public SSPCheckoutProjectVisualPanel2()
   {
@@ -135,15 +135,23 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
       {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
         if(value != null){
-          IRemoteBranch branch = (IRemoteBranch) value;
-          this.setText(branch.getName());
+          if(value instanceof ITag)
+          {
+            ITag tag = (ITag) value;
+            this.setText("Tag: " + tag.getName());
+          }
+          if (value instanceof IRemoteBranch)
+          {
+            IRemoteBranch branch = (IRemoteBranch) value;
+            this.setText("Branch: " + branch.getName());
+          }
         }
         return this;
       }
     };
   }
 
-  public JComboBox<IRemoteBranch> getGitBranchComboBox()
+  public JComboBox<Object> getGitBranchComboBox()
   {
     return gitBranchComboBox;
   }

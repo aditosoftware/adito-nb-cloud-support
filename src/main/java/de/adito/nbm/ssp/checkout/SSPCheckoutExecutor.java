@@ -62,7 +62,7 @@ public class SSPCheckoutExecutor
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull IRemoteBranch pBranch, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull String pBranch, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -83,7 +83,7 @@ public class SSPCheckoutExecutor
       else
       {
         boolean cloneSuccess = performGitClone(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
-                                               pBranch.getName(), null, "origin", pTarget);
+                                               pBranch, null, "origin", pTarget);
         if (cloneSuccess)
           writeConfigs(pHandle, pSystemDetails, pTarget, currentCredentials);
         else
@@ -101,7 +101,7 @@ public class SSPCheckoutExecutor
   }
 
   private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull String pGitProjectUrl,
-                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull IRemoteBranch pBranch)
+                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull String pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
@@ -112,7 +112,7 @@ public class SSPCheckoutExecutor
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch.getName()), null,
+        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {
