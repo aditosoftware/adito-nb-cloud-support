@@ -16,7 +16,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   private JTextField projectNameTextField;
   private JTextField projectLocationTextField;
   private JLabel projectNameLabel;
-  private JComboBox<Object> gitBranchComboBox;
+  private JComboBox<IRef> gitBranchComboBox;
 
   public SSPCheckoutProjectVisualPanel2()
   {
@@ -151,7 +151,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     };
   }
 
-  public JComboBox<Object> getGitBranchComboBox()
+  public JComboBox<IRef> getGitBranchComboBox()
   {
     return gitBranchComboBox;
   }
