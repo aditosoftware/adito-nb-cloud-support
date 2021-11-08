@@ -198,6 +198,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       IRef toSet = _getCurrentRef(getAvailableRefs);
       if(toSet != null)
         comp.getGitBranchComboBox().setSelectedItem(toSet);
+
     }
   }
 
@@ -278,43 +279,6 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return null;
   }
 
-  /*@NotNull
-  private IRemoteBranch[] _getAvailableGitBranches(@NotNull String pGitUrl)
-  {
-    IRemoteBranch[] gitBranches;
-    List<IRemoteBranch> branches = new ArrayList<>();
-    try
-    {
-      branches = Lookup.getDefault().lookup(IGitVersioningSupport.class).getBranchesInRepository(pGitUrl);
-    }
-    catch(AditoVersioningException pE)
-    {
-      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING, pE.getMessage(), pE);
-      NotificationDisplayer.getDefault().notify(pE.getMessage(), NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "SSPCheckoutProjectVisualPanel2.error.branchesList"),
-                                                null, NotificationDisplayer.Priority.NORMAL);
-    }
-    gitBranches = branches.toArray(new IRemoteBranch[0]);
-
-    return gitBranches;
-  }
-
-  private ITag[] _getAvailableTags(@NotNull String pGitUrl)
-  {
-    ITag[] gitTags;
-    List<ITag> tags = new ArrayList<>();
-    try
-    {
-      tags = Lookup.getDefault().lookup(IGitVersioningSupport.class).getTagsInRepository(pGitUrl);
-    }
-    catch(AditoVersioningException pE)
-    {
-      Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING,"AditoVersioningException: couldn't find key");
-    }
-    gitTags = tags.toArray(new ITag[0]);
-
-    return gitTags;
-  }*/
   @NotNull
   private IRef[] _getAvailableRef(@NotNull String pGitUrl)
   {
@@ -333,34 +297,19 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
                                                 NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "SSPCheckoutProjectVisualPanel2.error.branchesList"),
                                                 null, NotificationDisplayer.Priority.NORMAL);
     }
+    catch(AbstractMethodError error)
+    {
+      comp.getGitBranchComboBox().setVisible(false);
+      comp.getGitBranchNameLabel().setVisible(false);
+      comp.validate();
+      comp.repaint();
+    }
     gitRefs.addAll(branches);
     gitRefs.addAll(tags);
 
     return gitRefs.toArray(new IRef[0]);
   }
 
-  /*@Nullable
-  private IRemoteBranch _getCurrentRemoteBranch(@NotNull IRemoteBranch[] pRemoteBranches)
-  {
-    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    for (IRemoteBranch pAvailableBranch : pRemoteBranches)
-    {
-      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
-        return pAvailableBranch;
-    }
-    return null;
-  }
-  @Nullable
-  private ITag _getCurrentTag(@NotNull ITag[] pRemoteTag)
-  {
-    CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    for (ITag pAvailableBranch : pRemoteTag)
-    {
-      if (pAvailableBranch.getName().matches(cListObject.getSystemDetails().getGitBranch()))
-        return pAvailableBranch;
-    }
-    return null;
-  }*/
 
   @Nullable
   private IRef _getCurrentRef(@NotNull IRef[] pRefs)

@@ -17,6 +17,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   private JTextField projectLocationTextField;
   private JLabel projectNameLabel;
   private JComboBox<IRef> gitBranchComboBox;
+  private JLabel gitBranchNameLabel;
 
   public SSPCheckoutProjectVisualPanel2()
   {
@@ -54,7 +55,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
                                                                                           "SSPCheckoutProjectVisualPanel2.projectLocationBrowseButton.text"));
     projectLocationTextField.setText(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
                                                                                  "SSPCheckoutProjectVisualPanel2.projectLocationTextField.text"));
-    JLabel gitBranchNameLabel = new JLabel("Choose Git-Branch:");
+    gitBranchNameLabel = new JLabel("Branch/Tag: ");
     gitBranchComboBox = new JComboBox<>();
     gitBranchComboBox.setRenderer(createListRenderer());
 
@@ -126,6 +127,16 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     return projectNameTextField;
   }
 
+  public JComboBox<IRef> getGitBranchComboBox()
+  {
+    return gitBranchComboBox;
+  }
+
+  public JLabel getGitBranchNameLabel()
+  {
+    return gitBranchNameLabel;
+  }
+
   private static DefaultListCellRenderer createListRenderer() {
     return new DefaultListCellRenderer() {
 
@@ -151,8 +162,4 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     };
   }
 
-  public JComboBox<IRef> getGitBranchComboBox()
-  {
-    return gitBranchComboBox;
-  }
 }

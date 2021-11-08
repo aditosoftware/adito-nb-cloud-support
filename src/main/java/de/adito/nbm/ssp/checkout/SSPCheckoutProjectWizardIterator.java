@@ -103,8 +103,17 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
       boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
+      String branchToSet;
+      if(wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH) != null)
+      {
+        branchToSet = (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
+      }
+      else
+      {
+        branchToSet = cListObject.getSystemDetails().getGitBranch();
+      }
       instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
-                                                 (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH), isCheckoutDeployedState);
+                                                 branchToSet, isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }
