@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.checkout;
 
 import com.google.common.collect.Sets;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IRemoteBranch;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
@@ -26,6 +27,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   // Property names for the WizardDescriptor
   public static final String PROJECT_NAME = "de.adito.ssp.new.project.name";
   public static final String PROJECT_PATH = "de.adito.ssp.new.project.path";
+  public static final String PROJECT_GIT_BRANCH = "de.adito.ssp.new.project.gitbranch";
   public static final String SELECTED = "de.adito.ssp.new.selected";
   public static final String CHECKOUT_DEPLOYED_STATE = "de.adito.ssp.new.checkout.deployed";
 
@@ -101,7 +103,17 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
       boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
-      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath), isCheckoutDeployedState);
+      String branchToSet;
+      if(wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH) != null)
+      {
+        branchToSet = (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
+      }
+      else
+      {
+        branchToSet = cListObject.getSystemDetails().getGitBranch();
+      }
+      instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
+                                                 branchToSet, isCheckoutDeployedState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }

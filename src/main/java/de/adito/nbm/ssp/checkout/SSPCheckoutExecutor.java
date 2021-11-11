@@ -2,7 +2,7 @@ package de.adito.nbm.ssp.checkout;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IGitVersioningSupport;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.IMetaInfo;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.deploy.IDeployMetaInfoFacade;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.model.IModelFacade;
@@ -19,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.netbeans.api.progress.ProgressHandle;
+import org.openide.WizardDescriptor;
 import org.openide.awt.NotificationDisplayer;
 import org.openide.filesystems.*;
 import org.openide.util.*;
@@ -61,7 +62,7 @@ public class SSPCheckoutExecutor
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull String pBranch, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -76,13 +77,13 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        _checkoutDeployedState(pHandle, pSystemDetails, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
-                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get());
+        _checkoutDeployedState(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
+                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
       }
       else
       {
         boolean cloneSuccess = performGitClone(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
-                                               pSystemDetails.getGitBranch(), null, "origin", pTarget);
+                                               pBranch, null, "origin", pTarget);
         if (cloneSuccess)
           writeConfigs(pHandle, pSystemDetails, pTarget, currentCredentials);
         else
@@ -99,8 +100,8 @@ public class SSPCheckoutExecutor
     return FileUtil.toFileObject(pTarget);
   }
 
-  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull String pGitProjectUrl,
-                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents)
+  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull String pGitProjectUrl,
+                                             @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull String pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
@@ -111,7 +112,7 @@ public class SSPCheckoutExecutor
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pSystemDetails.getGitBranch()), null,
+        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {
