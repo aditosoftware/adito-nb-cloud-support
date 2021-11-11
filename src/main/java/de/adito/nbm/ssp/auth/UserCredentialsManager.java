@@ -5,7 +5,6 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.icons.IconManager;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.ISSPFacade;
-import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.openide.*;
@@ -30,11 +29,15 @@ public class UserCredentialsManager
   private static final String LAST_USER_KEY = "de.adito.ssp.auth.lastUser";
   private static final String PASSWORT_STATIC_PART_KEY = "de.adito.ssp.auth.pass.";
   private static final Preferences preferences = NbPreferences.forModule(UserCredentialsManager.class);
-  private static final Logger logger = Logger.getLogger(SSPFacadeImpl.class.getName());
+  private static final Logger logger = Logger.getLogger(UserCredentialsManager.class.getName());
   private static DecodedJWT jwt = null;
 
+  private UserCredentialsManager()
+  {
+  }
+
   @Nullable
-  public static DecodedJWT getCredentials()
+  public static synchronized DecodedJWT getCredentials()
   {
     if (jwt == null)
     {

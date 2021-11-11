@@ -7,8 +7,9 @@ import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.ssp.WarningPanel;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
+import de.adito.nbm.ssp.checkout.filterby.*;
 import de.adito.nbm.ssp.exceptions.*;
-import de.adito.nbm.ssp.facade.ISSPFacade;
+import de.adito.nbm.ssp.facade.*;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
@@ -17,10 +18,12 @@ import org.jetbrains.annotations.*;
 import org.openide.util.*;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.*;
+import javax.swing.event.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
+import java.time.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
@@ -38,6 +41,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private final IVaadinIconsProvider iconsProvider;
   private final WarningPanel warningPanel = new WarningPanel();
   private JPanel userEntrys;
+  private SearchBox searchBox;
   private JButton refreshButton;
   private JButton oldDefaultButton;
   private JTextField usernameTextField;
@@ -45,10 +49,12 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private JScrollPane scrollPane;
   private CList cList;
   private final List<IOptionsProvider> additionalOptionsProviders;
+  private String pattern = "(.*)";
 
   public SSPCheckoutProjectVisualPanel1()
   {
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
+    _initSearchBox();
     _initCList();
     _initScrollPane();
     _initEntries();
@@ -86,6 +92,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     validListeners.forEach(pListener -> pListener.changedValidity(pState));
   }
 
+  private void _initSearchBox()
+  {
+    searchBox = new SearchBox();
+  }
+
   /**
    * Initiates the clist
    */
@@ -118,7 +129,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private void _initEntries()
   {
     userEntrys = new JPanel();
-    userEntrys.setLayout(new BorderLayout());
+    userEntrys.setLayout(new BorderLayout(0, 8));
     userEntrys.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
     GridBagConstraints c = new GridBagConstraints();
 
@@ -168,10 +179,15 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     refreshButton = new JButton(refreshIcon);
     rightPanel.add(refreshButton, BorderLayout.CENTER);
 
+    JPanel bottomPanel = new JPanel();
+    bottomPanel.setLayout(new BorderLayout());
+    bottomPanel.add(warningPanel, BorderLayout.NORTH);
+    bottomPanel.add(searchBox, BorderLayout.SOUTH);
+
     userEntrys.add(leftPanel, BorderLayout.WEST);
     userEntrys.add(midPanel, BorderLayout.CENTER);
     userEntrys.add(rightPanel, BorderLayout.EAST);
-    userEntrys.add(warningPanel, BorderLayout.SOUTH);
+    userEntrys.add(bottomPanel, BorderLayout.SOUTH);
     usernameTextField.addFocusListener(new FocusListenerRepositoryData());
     usernameTextField.getDocument().addDocumentListener(new UsernameEmailDocumentListener(warningPanel));
     usernameTextField.setText(UserCredentialsManager.getLastUser());
@@ -580,5 +596,212 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     void addOptions(@NotNull Map<String, Object> pOptionsMap);
 
+  }
+
+  /**
+   * Filters the clistobjects and only shows the ones that match the given String. If filtered by a date, an empty String
+   * will be handed over.
+   * @param pSearchText The String that the clist needs to match.
+   */
+  private void _filter(String pSearchText)
+  {
+    boolean isFirst = true;
+    boolean valid = false;
+    boolean matches;
+    DatePicker dp = searchBox.getDatePicker();
+
+    if(searchBox.getComboBox().getSelectedItem() != null){
+      for(int i = 0; i < cList.getObjectList().size(); i++){
+        FilterBy filter = (FilterBy) searchBox.getComboBox().getSelectedItem();
+        if(filter.getClass() == FilterByAfterDate.class || filter.getClass() == FilterByBeforeDate.class)
+          matches = filter.filterDate(dp.getCurrentDay(), dp.getCurrentMonth(), dp.getCurrentYear(),
+                                      cList.getObjectList().get(i).getSystemDetails());
+        else
+          matches = filter.filter(pSearchText, cList.getObjectList().get(i).getSystemDetails());
+        if(!matches)
+          cList.getComponent(i).setVisible(false);
+        else{
+          valid = true;
+          cList.getComponent(i).setVisible(true);
+          if(isFirst){
+            cList.setSelected(cList.getObjectList().get(i));
+            isFirst = false;
+          }
+        }
+      }
+      cList.revalidate();
+      cList.repaint();
+      if(valid)
+        fireStateChanged(IStateChangeListener.State.ISVALID);
+      else
+        fireStateChanged(IStateChangeListener.State.ISINVALID);
+    }
+  }
+
+  /**
+   * The Searchbox that will be shown below the username and password, so the user can filter the clistobjects.
+   */
+  private class SearchBox extends JPanel
+  {
+    private final JTextField searchable = new JTextField(30);
+    private final JComboBox<FilterBy> comboBox;
+    private final DatePicker datePicker;
+
+    private final DefaultComboBoxModel<Integer> leapYear = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<Integer> nonLeapYearFeb = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<Integer> thirtyOneDays = new DefaultComboBoxModel<>();
+    private final DefaultComboBoxModel<Integer> thirtyDays = new DefaultComboBoxModel<>();
+
+    private HashMap<Integer, DefaultComboBoxModel<Integer>> intToArray;
+
+    private SearchBox() throws HeadlessException
+    {
+      super();
+      _initializeModels();
+
+      datePicker = new DatePicker();
+
+      //ItemListener for when a date is changed
+      datePicker.getDayCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED)
+          _filter("");
+      });
+      datePicker.getYearCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED)
+          _filter("");
+      });
+      datePicker.getMonthCombobox().addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED){
+          boolean setSelected = false;
+          Integer selectedOld = null;
+          if(datePicker.getDayCombobox().getSelectedItem() != null)
+            selectedOld = (Integer) datePicker.getDayCombobox().getSelectedItem();
+          if(datePicker.getYearCombobox().getSelectedItem() != null){
+            YearMonth yearMonthObject = YearMonth.of((Integer) datePicker.getYearCombobox().getSelectedItem(), (int) e.getItem());
+            int daysInMonth = yearMonthObject.lengthOfMonth();
+            if(selectedOld != null && selectedOld > daysInMonth)
+              setSelected = true;
+            datePicker.getDayCombobox().setModel(intToArray.get(daysInMonth));
+            if(setSelected)
+              datePicker.getDayCombobox().setSelectedItem(daysInMonth);
+            else
+              datePicker.getDayCombobox().setSelectedItem(selectedOld);
+
+            _filter("");
+          }
+        }
+      });
+
+      FilterBy[] comboBoxContent = {new FilterByProjectName(), new FilterByGitURL(), new FilterByGitBranch(), new FilterByKernelVersion(),
+                                    new FilterByBeforeDate(), new FilterByAfterDate()};
+      comboBox = new JComboBox<>(comboBoxContent);
+      comboBox.setRenderer(createListRenderer());
+      setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+      JLabel search = new JLabel("Filter by:");
+      add(search);
+      add(Box.createRigidArea(new Dimension(22, 0)));
+      add(comboBox);
+      add(Box.createRigidArea(new Dimension(5, 0)));
+      add(datePicker);
+      add(searchable);
+
+      searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
+      comboBox.addItemListener(e -> {
+        if(e.getStateChange() == ItemEvent.SELECTED){
+          if(e.getItem().getClass() == FilterByAfterDate.class || e.getItem().getClass() == FilterByBeforeDate.class){
+            searchable.setVisible(false);
+            datePicker.setVisible(true);
+            _filter("");
+          }
+          else{
+            datePicker.setVisible(false);
+            searchable.setVisible(true);
+            _filter(searchable.getText());
+          }
+        }
+      });
+    }
+
+    /**
+     * Initializing the Defaultmodels, so that we can dynamically change the options for the combobox.
+     */
+    private void _initializeModels(){
+      for(int i = 1; i <= 28; i++){
+        nonLeapYearFeb.addElement(i);
+      }
+
+      for(int i = 1; i <= 29; i++){
+        leapYear.addElement(i);
+      }
+
+      for(int i = 1; i <= 30; i++){
+        thirtyDays.addElement(i);
+      }
+
+      for(int i = 1; i <= 31; i++){
+        thirtyOneDays.addElement(i);
+      }
+
+      intToArray = new HashMap<>()
+      {{
+        put(28, nonLeapYearFeb);
+        put(29, leapYear);
+        put(30, thirtyDays);
+        put(31, thirtyOneDays);
+      }};
+    }
+
+    public JComboBox<FilterBy> getComboBox(){
+      return comboBox;
+    }
+
+    public DatePicker getDatePicker(){
+      return datePicker;
+    }
+  }
+
+  /**
+   * Returns a ListCellRenderer for the Combobox used in the Searchbox.
+   * @return ListCellRenderer
+   */
+  private static ListCellRenderer<? super FilterBy> createListRenderer() {
+    return new DefaultListCellRenderer() {
+
+      @Override
+      public Component getListCellRendererComponent(JList<?> list, Object value, int index,
+                                                    boolean isSelected, boolean cellHasFocus)
+      {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+        FilterBy filter = (FilterBy) value;
+        this.setText(filter.toString());
+        return this;
+      }
+    };
+  }
+
+  /**
+   * Functional Interface to see if a Document gets changed.
+   */
+  @FunctionalInterface
+  public interface SimpleDocumentListener extends DocumentListener
+  {
+    void update(DocumentEvent e);
+
+    @Override
+    default void insertUpdate(DocumentEvent e)
+    {
+      update(e);
+    }
+    @Override
+    default void removeUpdate(DocumentEvent e)
+    {
+      update(e);
+    }
+    @Override
+    default void changedUpdate(DocumentEvent e)
+    {
+      update(e);
+    }
   }
 }

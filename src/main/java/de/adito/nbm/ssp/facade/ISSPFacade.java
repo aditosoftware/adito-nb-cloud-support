@@ -1,10 +1,9 @@
 package de.adito.nbm.ssp.facade;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.google.inject.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.exceptions.*;
-import de.adito.nbm.ssp.impl.ImplModule;
+import de.adito.nbm.ssp.impl.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -17,8 +16,7 @@ public interface ISSPFacade
 
   static ISSPFacade getInstance()
   {
-    Injector INJECTOR = Guice.createInjector(new ImplModule());
-    return INJECTOR.getInstance(ISSPFacade.class);
+    return InjectorCache.getInjector(ImplModule.class).getInstance(ISSPFacade.class);
   }
 
   /**

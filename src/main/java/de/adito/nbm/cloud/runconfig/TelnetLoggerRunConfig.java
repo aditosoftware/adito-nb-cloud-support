@@ -192,13 +192,17 @@ public class TelnetLoggerRunConfig implements IRunConfig
         {
           _printlnColored(inputOutput, colorSupport, ExceptionUtils.getStackTrace(pE), SERVER_ERROR_COLOR_KEY);
         }
-        catch (IOException ignored)
+        catch (IOException pIOException)
         {
+          Logger.getLogger(TelnetLoggerRunConfig.class.getName()).log(Level.SEVERE, pIOException, () -> NbBundle.getMessage(TelnetLoggerRunConfig.class,
+                                                                                                                            "TXT.TelnetLoggerRunConfig.error.io"));
         }
       }
       catch (InterruptedException pE)
       {
         // return means the task is done -> No need to rethrow or re-interrupt the thread
+        Logger.getLogger(TelnetLoggerRunConfig.class.getName()).log(Level.SEVERE, () -> NbBundle.getMessage(TelnetLoggerRunConfig.class,
+                                                                                                            "TXT.TelnetLoggerRunConfig.interrupt"));
         return;
       }
       try
@@ -207,6 +211,8 @@ public class TelnetLoggerRunConfig implements IRunConfig
       }
       catch (InterruptedIOException interrupt)
       {
+        Logger.getLogger(TelnetLoggerRunConfig.class.getName()).log(Level.SEVERE, () -> NbBundle.getMessage(TelnetLoggerRunConfig.class,
+                                                                                                            "TXT.TelnetLoggerRunConfig.interrupt"));
         // If task is interrupted -> exit, so do nothing here
       }
       catch (IOException pE)
@@ -216,8 +222,10 @@ public class TelnetLoggerRunConfig implements IRunConfig
         {
           _printlnColored(inputOutput, colorSupport, ExceptionUtils.getStackTrace(pE), SERVER_ERROR_COLOR_KEY);
         }
-        catch (IOException ignored)
+        catch (IOException pIOException)
         {
+          Logger.getLogger(TelnetLoggerRunConfig.class.getName()).log(Level.SEVERE, pIOException, () -> NbBundle.getMessage(TelnetLoggerRunConfig.class,
+                                                                                                                            "TXT.TelnetLoggerRunConfig.error.io"));
         }
       }
     });
@@ -298,7 +306,11 @@ public class TelnetLoggerRunConfig implements IRunConfig
 
       _printlnColored(inputOutput, "// Connected to server", SERVER_OUTPUT_COLOR_KEY);
       BufferedReader reader = new BufferedReader(new InputStreamReader(currentClient.getInputStream()));
-      Flowable<String> logs = FlowableFromReader.create(reader);
+      Flowable<String> logs = FlowableFromReader.create(reader)
+          .doOnComplete(() -> _printlnColored(inputOutput, NbBundle.getMessage(TelnetLoggerRunConfig.class, "TXT.TelnetLoggerRunConfig.completed"),
+                                              SERVER_OUTPUT_DEFAULT_COLOR_KEY))
+          .doOnError(pE -> _printlnColored(inputOutput, NbBundle.getMessage(TelnetLoggerRunConfig.class, "TXT.TelnetLoggerRunConfig.completed.error",
+                                                                            pE.getMessage(), Arrays.toString(pE.getStackTrace())), SERVER_ERROR_COLOR_KEY));
       Flowable<String> flowable = logs.onBackpressureDrop();
       BackpressureSubscriber<String> backpressureSubscriber =
           new BackpressureSubscriber.Builder<String>(pReadLine -> _printlnColored(inputOutput, colorSupport, pReadLine, SERVER_OUTPUT_DEFAULT_COLOR_KEY))

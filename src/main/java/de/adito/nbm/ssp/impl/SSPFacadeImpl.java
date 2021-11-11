@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.inject.Singleton;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
@@ -14,6 +15,7 @@ import java.util.*;
 /**
  * @author m.kaspera, 08.10.2020
  */
+@Singleton
 public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISystemStatusChecker, ISystemStarter, ISystemStopper, ISSPConfigRetriever
 {
 
