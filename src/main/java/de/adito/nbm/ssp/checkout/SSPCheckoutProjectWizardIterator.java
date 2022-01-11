@@ -1,7 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
 import com.google.common.collect.Sets;
-import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IRemoteBranch;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.progress.ProgressHandle;
@@ -172,7 +171,6 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   @Override
   public boolean hasPrevious()
   {
-    _checkForOverlayPanel();
     return index > 0;
   }
 
