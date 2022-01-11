@@ -9,7 +9,7 @@ import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.clist.*;
 import de.adito.nbm.ssp.checkout.filterby.*;
 import de.adito.nbm.ssp.exceptions.*;
-import de.adito.nbm.ssp.facade.*;
+import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
@@ -18,12 +18,12 @@ import org.jetbrains.annotations.*;
 import org.openide.util.*;
 
 import javax.swing.*;
-import javax.swing.border.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.*;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.*;
-import java.time.*;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
@@ -49,11 +49,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private JScrollPane scrollPane;
   private CList cList;
   private final List<IOptionsProvider> additionalOptionsProviders;
-  private String pattern = "(.*)";
 
   public SSPCheckoutProjectVisualPanel1()
   {
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
+    this.setPreferredSize(new Dimension(700, 400));
     _initSearchBox();
     _initCList();
     _initScrollPane();

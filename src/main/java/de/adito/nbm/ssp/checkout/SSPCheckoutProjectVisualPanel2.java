@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.checkout;
 
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -61,7 +62,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
 
     GroupLayout layout = new GroupLayout(this);
     this.setLayout(layout);
-    this.setPreferredSize(new Dimension(700, 300));
+    this.setPreferredSize(new Dimension(700, 400));
     layout.setHorizontalGroup(
         layout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
