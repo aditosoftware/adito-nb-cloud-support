@@ -34,6 +34,7 @@ import java.io.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.*;
 import java.util.stream.Collectors;
 
@@ -385,10 +386,11 @@ public class TelnetLoggerRunConfig implements IRunConfig
   public static List<ISSHTunnel> startTunnels(List<ISSHTunnel> tunnels) throws InterruptedException
   {
     List<ISSHTunnel> failedTunnels = new ArrayList<>();
+    AtomicBoolean abortFlag = new AtomicBoolean(false);
     List<Pair<ISSHTunnel, Future<String>>> tunnelTasks = new ArrayList<>();
     for (ISSHTunnel tunnel : tunnels)
     {
-      tunnelTasks.add(Pair.of(tunnel, tunnel.connect()));
+      tunnelTasks.add(Pair.of(tunnel, tunnel.connect(abortFlag)));
     }
     _awaitFinish(tunnelTasks, failedTunnels);
     return failedTunnels;
