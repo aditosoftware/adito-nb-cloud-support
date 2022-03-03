@@ -2,7 +2,7 @@ package de.adito.nbm.ssp.checkout;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IGitVersioningSupport;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.IMetaInfo;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.deploy.IDeployMetaInfoFacade;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.model.IModelFacade;
@@ -19,7 +19,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.netbeans.api.progress.ProgressHandle;
-import org.openide.WizardDescriptor;
 import org.openide.awt.NotificationDisplayer;
 import org.openide.filesystems.*;
 import org.openide.util.*;
@@ -77,8 +76,7 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        _checkoutDeployedState(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
-                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
+        _checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
       }
       else
       {
@@ -100,19 +98,21 @@ public class SSPCheckoutExecutor
     return FileUtil.toFileObject(pTarget);
   }
 
-  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull String pGitProjectUrl,
+  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials,
                                              @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull String pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
-    boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
-    if (isTunnelsGo)
+    try
     {
-      try
+      _storeSSHPasswords(pSystemDetails, ISSPFacade.getInstance(), pCurrentCredentials, pTunnelConfigContents);
+      boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
+      if (isTunnelsGo)
       {
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch), null,
+        String gitProjectUrl = _getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, deployedBranchName.orElse(pBranch), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {
@@ -120,13 +120,14 @@ public class SSPCheckoutExecutor
           IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
           projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(),
                                                pTarget.getName(), tempServerConfigFile.toAbsolutePath().toString());
+          writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
         }
       }
-      catch (IOException pE)
-      {
-        logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.execute.write.error",
-                                                                                        ExceptionUtils.getStackTrace(pE)));
-      }
+    }
+    catch (IOException | TransformerException | UnirestException | AditoSSPException pE)
+    {
+      logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.execute.write.error",
+                                                                                      ExceptionUtils.getStackTrace(pE)));
     }
   }
 
