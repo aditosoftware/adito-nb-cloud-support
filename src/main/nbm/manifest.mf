@@ -5,6 +5,17 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.3.0</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>The user now has the option to choose which tag or branch should be checked out when loading a cloud system</li>
+    <li>Credentials are remembered after restarting the ADITO Designer</li>
+    <li>Cancelling a tunnel now cancels all tunnels that were started as part of one batch</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
+  <ul>
+    <li>Fix: "Checkout Deployed State" fails to properly link the system to a cloud system and stores the SSH Credentials only after the tunnels are started</li>
+  </ul>
   <p style="font-weight: bold;">v1.2.0</p>
   <p style="margin-left: 10px; font-weight: bold;">MAJOR</p>
   <ul>
