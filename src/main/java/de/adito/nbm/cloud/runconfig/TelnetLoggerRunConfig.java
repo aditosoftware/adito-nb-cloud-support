@@ -58,7 +58,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
   private final ExecutorService executorService = Executors.newSingleThreadExecutor();
   private final ISystemInfo systemInfo;
   private final StartAction startAction;
-  private final ClearAction clearAction;
   private final StopSystemAction stopSystemAction;
   private final IVaadinIconsProvider iconsProvider;
   private final IColorSupportProvider colorSupportProvider;
@@ -74,7 +73,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
     colorSupportProvider = Lookup.getDefault().lookup(IColorSupportProvider.class);
     systemInfo = pSystemInfo;
     startAction = new StartAction();
-    clearAction = new ClearAction();
     stopSystemAction = new StopSystemAction();
   }
 
@@ -337,7 +335,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
     // re-use the io if it is already initialized
     if (inputOutput == null || inputOutput.isClosed())
     {
-      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, stopSystemAction, clearAction);
+      inputOutput = getIO("Cloud Server: " + systemInfo.getSystemName().blockingFirst(""), startAction, stopSystemAction);
     }
     else
     {
@@ -555,31 +553,6 @@ public class TelnetLoggerRunConfig implements IRunConfig
         }
       }
       return false;
-    }
-  }
-
-  /**
-   * Action that clears the current cotent of the console
-   */
-  private class ClearAction extends AbstractAction
-  {
-    public ClearAction()
-    {
-      super("Clear", _getIcon(iconsProvider, IVaadinIconsProvider.VaadinIcon.DATE_INPUT));
-      putValue(Action.SHORT_DESCRIPTION, "Clear console");
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e)
-    {
-      try
-      {
-        inputOutput.getOut().reset();
-      }
-      catch (IOException pE)
-      {
-        pE.printStackTrace(inputOutput.getErr());
-      }
     }
   }
 
