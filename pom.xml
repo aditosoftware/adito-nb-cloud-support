@@ -51,17 +51,22 @@
     <dependency>
       <groupId>de.adito.nbm</groupId>
       <artifactId>de-adito-runconfig-api</artifactId>
-      <version>RELEASE111-1.5.0-1</version>
+      <version>RELEASE125-1.9.2</version>
     </dependency>
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>nb-adito-interface</artifactId>
-      <version>1.9.1</version>
+      <version>1.9.4-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>de-adito-netbeans-utilities</artifactId>
-      <version>RELEASE122-1.6.2-4</version>
+      <version>RELEASE125-1.9.3</version>
+    </dependency>
+    <dependency>
+      <groupId>de.adito.nbm</groupId>
+      <artifactId>de-adito-metrics-api</artifactId>
+      <version>RELEASE125-1.9.1</version>
     </dependency>
     <dependency>
       <groupId>org.netbeans.api</groupId>
