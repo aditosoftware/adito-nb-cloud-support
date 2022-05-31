@@ -167,12 +167,19 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     String tunnelConfigName = pSelectedSystem.getName() + "_tunnelconfig.xml";
     String resolvedAditoDataPath = pSystemInfo.getResolvedAditoDataPath();
     // If the ADITODATA property points to nowhere use the absolute path of the project in combination with the data folder
-    boolean isUseDataPath = !resolvedAditoDataPath.isEmpty() && new File(resolvedAditoDataPath).exists();
+    boolean isUseDataPath = !resolvedAditoDataPath.isEmpty();
     if (!isUseDataPath)
+    {
       resolvedAditoDataPath = pProjectDir.getAbsolutePath() + "/data";
+    }
+    else if (!new File(resolvedAditoDataPath).exists())
+    {
+      new File(resolvedAditoDataPath).mkdirs();
+    }
+    File configFolderPath = new File(resolvedAditoDataPath, "config");
     // If any of the config files already exist, ask the user if they should be overridden. If no, stop the link
-    if (new File(pProjectDir, SSPCheckoutExecutor.CONFIG_FOLDER_PATH + serverConfigName).exists() ||
-        new File(pProjectDir, SSPCheckoutExecutor.CONFIG_FOLDER_PATH + tunnelConfigName).exists())
+    if (new File(configFolderPath, serverConfigName).exists() ||
+        new File(configFolderPath, tunnelConfigName).exists())
     {
       pressedButton = DialogDisplayer.getDefault()
           .notify(new NotifyDescriptor.Confirmation(NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.overrideQuestion"),
@@ -184,16 +191,15 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     }
     if (pressedButton == null || pressedButton.equals(NotifyDescriptor.YES_OPTION))
     {
-      String finalResolvedAditoDataPath = resolvedAditoDataPath;
       SSPCheckoutExecutor.getServerConfigContents(pProgressHandle, pSelectedSystem, UserCredentialsManager.getCredentials())
           .ifPresent(pServerConfigContents -> {
-            SSPCheckoutExecutor.writeServerConfig(pProgressHandle, new File(finalResolvedAditoDataPath, "config"), serverConfigName, pServerConfigContents);
+            SSPCheckoutExecutor.writeServerConfig(pProgressHandle, configFolderPath, serverConfigName, pServerConfigContents);
             setConfigFilePathProperty(pSystemInfo, pProjectDir, isUseDataPath, PropertyNames.SystemDataModel.SERVER_CONFIG_PATH, serverConfigName);
           });
 
       SSPCheckoutExecutor.getTunnelConfigContents(pProgressHandle, pSelectedSystem)
           .ifPresent(pTunnelConfigContents -> {
-            SSPCheckoutExecutor.writeTunnelConfig(pProgressHandle, pSelectedSystem, new File(finalResolvedAditoDataPath, "config"), tunnelConfigName,
+            SSPCheckoutExecutor.writeTunnelConfig(pProgressHandle, pSelectedSystem, configFolderPath, tunnelConfigName,
                                                   UserCredentialsManager.getCredentials(), pTunnelConfigContents);
             setConfigFilePathProperty(pSystemInfo, pProjectDir, isUseDataPath, PropertyNames.SystemDataModel.TUNNEL_CONFIG_PATH, tunnelConfigName);
           });
