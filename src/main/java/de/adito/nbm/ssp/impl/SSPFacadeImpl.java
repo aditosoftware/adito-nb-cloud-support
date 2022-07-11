@@ -2,14 +2,18 @@ package de.adito.nbm.ssp.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.Singleton;
+import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import de.adito.http.proxy.ProxyClientProvider;
 import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.client.HttpClient;
 import org.jetbrains.annotations.NotNull;
 import org.openide.awt.NotificationDisplayer;
 
+import java.security.*;
 import java.util.*;
 
 /**
@@ -35,6 +39,9 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   public SSPFacadeImpl()
   {
     sspSystemUrl = getSSPSystemUrl();
+    setProxy();
+    // This is a singleton, and the preferencesNode should always be there -> no need to unregister the listener
+    ProxyClientProvider.addProxySettingsListener(evt -> setProxy());
   }
 
   /**
@@ -210,5 +217,19 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   public String getSystemConfigMapServiceUrl()
   {
     return sspSystemUrl + SYSTEM_CONFIG_MAP_SERVICE_ADDRESS;
+  }
+
+  void setProxy()
+  {
+    try
+    {
+      HttpClient client = ProxyClientProvider.getClient(false);
+      Unirest.setHttpClient(client);
+    }
+    catch (NoSuchAlgorithmException | KeyStoreException | KeyManagementException pIgnored)
+    {
+      pIgnored.printStackTrace();
+      // ignore exception, because none of these is thrown if certificates are not ignored
+    }
   }
 }
