@@ -43,49 +43,64 @@ public class UserCredentialsManager
     {
       String lastUser = getLastUser();
       char[] password = getLastUserPass();
-      UserCredentialsDialog credentialsDialog = new UserCredentialsDialog(lastUser, password);
-      JPanel borderPane = new _NonScrollablePanel(new BorderLayout());
-      borderPane.add(credentialsDialog, BorderLayout.CENTER);
-      borderPane.setBorder(new EmptyBorder(7, 7, 0, 7));
-      Object[] buttons = new Object[]{NotifyDescriptor.OK_OPTION, NotifyDescriptor.CANCEL_OPTION};
-      DialogDescriptor dialogDescriptor = new DialogDescriptor(borderPane, NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.title"),
-                                                               true, buttons, buttons[0], DialogDescriptor.BOTTOM_ALIGN, null, null);
-      dialogDescriptor.setValid(credentialsDialog.getPassword().length > 0 && credentialsDialog.getUsername().length() > 0);
-      credentialsDialog.addPasswordFieldDocumentListener(new UserCredentialsManager.CredentialsFieldListener(credentialsDialog, dialogDescriptor));
-      credentialsDialog.addUsernameFieldDocumentListener(new CredentialsFieldListener(credentialsDialog, dialogDescriptor));
-
-      Dialog dialog = DialogDisplayer.getDefault().createDialog(dialogDescriptor);
-      dialog.setResizable(true);
-      dialog.setMinimumSize(new Dimension(250, 50));
-      dialog.pack();
-      dialog.setVisible(true);
-
-      if (dialogDescriptor.getValue() == buttons[0] && credentialsDialog.getPassword().length > 0)
+      if (lastUser != null && password.length > 0)
       {
-        saveLastUser(credentialsDialog.getUsername());
-        if (credentialsDialog.isRememberPassword())
-          Keyring.save(PASSWORT_STATIC_PART_KEY + credentialsDialog.getUsername(), credentialsDialog.getPassword(),
-                       NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.credentials", credentialsDialog.getUsername()));
-        else
+        _getToken(lastUser, password);
+      }
+      if (jwt == null)
+      {
+        UserCredentialsDialog credentialsDialog = new UserCredentialsDialog(lastUser, password);
+        JPanel borderPane = new _NonScrollablePanel(new BorderLayout());
+        borderPane.add(credentialsDialog, BorderLayout.CENTER);
+        borderPane.setBorder(new EmptyBorder(7, 7, 0, 7));
+        Object[] buttons = new Object[]{NotifyDescriptor.OK_OPTION, NotifyDescriptor.CANCEL_OPTION};
+        DialogDescriptor dialogDescriptor = new DialogDescriptor(borderPane, NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.title"),
+                                                                 true, buttons, buttons[0], DialogDescriptor.BOTTOM_ALIGN, null, null);
+        dialogDescriptor.setValid(credentialsDialog.getPassword().length > 0 && credentialsDialog.getUsername().length() > 0);
+        credentialsDialog.addPasswordFieldDocumentListener(new UserCredentialsManager.CredentialsFieldListener(credentialsDialog, dialogDescriptor));
+        credentialsDialog.addUsernameFieldDocumentListener(new CredentialsFieldListener(credentialsDialog, dialogDescriptor));
+
+        Dialog dialog = DialogDisplayer.getDefault().createDialog(dialogDescriptor);
+        dialog.setResizable(true);
+        dialog.setMinimumSize(new Dimension(250, 50));
+        dialog.pack();
+        dialog.setVisible(true);
+
+        lastUser = credentialsDialog.getUsername();
+        password = credentialsDialog.getPassword();
+
+        if (dialogDescriptor.getValue() == buttons[0] && credentialsDialog.getPassword().length > 0)
         {
-          Keyring.delete(PASSWORT_STATIC_PART_KEY + credentialsDialog.getUsername());
-        }
-        ISSPFacade sspFacade = ISSPFacade.getInstance();
-        try
-        {
-          jwt = sspFacade.getJWT(credentialsDialog.getUsername(), credentialsDialog.getPassword());
-        }
-        catch (AditoSSPException | UnirestException pE)
-        {
-          if (!GraphicsEnvironment.isHeadless())
-            NotificationDisplayer.getDefault().notify(NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail"),
-                                                      IconManager.getInstance().getErrorIcon(), pE.getMessage(), null);
+          saveLastUser(lastUser);
+          if (credentialsDialog.isRememberPassword())
+            Keyring.save(PASSWORT_STATIC_PART_KEY + lastUser, password,
+                         NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.credentials", lastUser));
           else
-            logger.log(Level.WARNING, pE, () -> NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail.headless"));
+          {
+            Keyring.delete(PASSWORT_STATIC_PART_KEY + lastUser);
+          }
+          _getToken(lastUser, password);
         }
       }
     }
     return jwt;
+  }
+
+  private static void _getToken(String lastUser, char[] password)
+  {
+    ISSPFacade sspFacade = ISSPFacade.getInstance();
+    try
+    {
+      jwt = sspFacade.getJWT(lastUser, password);
+    }
+    catch (AditoSSPException | UnirestException pE)
+    {
+      if (!GraphicsEnvironment.isHeadless())
+        NotificationDisplayer.getDefault().notify(NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail"),
+                                                  IconManager.getInstance().getErrorIcon(), pE.getMessage(), null);
+      else
+        logger.log(Level.WARNING, pE, () -> NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail.headless"));
+    }
   }
 
   @Nullable

@@ -2,7 +2,7 @@ package de.adito.nbm.ssp.checkout;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
+import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IGitVersioningSupport;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.IMetaInfo;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.metainfo.deploy.IDeployMetaInfoFacade;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.model.IModelFacade;
@@ -19,7 +19,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.netbeans.api.progress.ProgressHandle;
-import org.openide.WizardDescriptor;
 import org.openide.awt.NotificationDisplayer;
 import org.openide.filesystems.*;
 import org.openide.util.*;
@@ -44,8 +43,9 @@ import java.util.stream.Collectors;
 public class SSPCheckoutExecutor
 {
 
-  public static final String DEFAULT_SERVER_CONFIG_PATH = "data/config/serverconfig_default.xml";
-  public static final String DEFAULT_TUNNEL_CONFIG_PATH = "data/config/tunnelconfig.xml";
+  public static final String CONFIG_FOLDER_PATH = "data/config/";
+  public static final String DEFAULT_SERVER_CONFIG_NAME = "serverconfig_default.xml";
+  public static final String DEFAULT_TUNNEL_CONFIG_NAME = "tunnelconfig.xml";
   private static final Logger logger = Logger.getLogger(SSPCheckoutExecutor.class.getName());
   private static IGitVersioningSupport gitSupport;
   private static Future<?> future = null;
@@ -77,8 +77,7 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        _checkoutDeployedState(pHandle, _getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials), pTarget,
-                               serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
+        _checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
       }
       else
       {
@@ -100,19 +99,21 @@ public class SSPCheckoutExecutor
     return FileUtil.toFileObject(pTarget);
   }
 
-  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull String pGitProjectUrl,
+  private static void _checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials,
                                              @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull String pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
-    boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
-    if (isTunnelsGo)
+    try
     {
-      try
+      _storeSSHPasswords(pSystemDetails, ISSPFacade.getInstance(), pCurrentCredentials, pTunnelConfigContents);
+      boolean isTunnelsGo = _startTunnels(pTunnelConfigContents);
+      if (isTunnelsGo)
       {
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
         Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
-        boolean cloneSuccess = performGitClone(pHandle, pGitProjectUrl, deployedBranchName.orElse(pBranch), null,
+        String gitProjectUrl = _getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, deployedBranchName.orElse(pBranch), null,
                                                "origin", pTarget);
         if (cloneSuccess)
         {
@@ -120,13 +121,14 @@ public class SSPCheckoutExecutor
           IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
           projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(),
                                                pTarget.getName(), tempServerConfigFile.toAbsolutePath().toString());
+          writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
         }
       }
-      catch (IOException pE)
-      {
-        logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.execute.write.error",
-                                                                                        ExceptionUtils.getStackTrace(pE)));
-      }
+    }
+    catch (IOException | TransformerException | UnirestException | AditoSSPException pE)
+    {
+      logger.log(Level.WARNING, pE, () -> SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.execute.write.error",
+                                                                                      ExceptionUtils.getStackTrace(pE)));
     }
   }
 
@@ -223,10 +225,10 @@ public class SSPCheckoutExecutor
   private static void writeConfigs(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull DecodedJWT pCredentials)
   {
     getServerConfigContents(pHandle, pSystemDetails, pCredentials)
-        .ifPresent(pServerConfigContents -> writeServerConfig(pHandle, pTarget, pServerConfigContents));
+        .ifPresent(pServerConfigContents -> writeServerConfig(pHandle, new File(pTarget, CONFIG_FOLDER_PATH), DEFAULT_SERVER_CONFIG_NAME, pServerConfigContents));
 
     getTunnelConfigContents(pHandle, pSystemDetails)
-        .ifPresent(pTunnelConfigContents -> writeTunnelConfig(pHandle, pSystemDetails, pTarget, pCredentials, pTunnelConfigContents));
+        .ifPresent(pTunnelConfigContents -> writeTunnelConfig(pHandle, pSystemDetails, new File(pTarget, CONFIG_FOLDER_PATH), DEFAULT_TUNNEL_CONFIG_NAME, pCredentials, pTunnelConfigContents));
     NbPreferences.forModule(ISystemInfo.class).put(ISystemInfo.CLOUD_ID_PREF_KEY_PEFIX + "default." + pTarget.getPath().replace("\\", "/"), pSystemDetails.getSystemdId());
     try
     {
@@ -277,12 +279,18 @@ public class SSPCheckoutExecutor
     return Optional.empty();
   }
 
-  public static void writeServerConfig(@NotNull ProgressHandle pHandle, @NotNull File pTargetDir, @NotNull String pServerConfigContents)
+  /**
+   * @param pHandle               ProgessHandle to progress
+   * @param pConfigFolder         folder that should contain the config file
+   * @param pFileName             name of the file, will be placed inside the CONFIG_FOLDER_PATH in the project folder
+   * @param pServerConfigContents contents of the file to be written
+   */
+  public static void writeServerConfig(@NotNull ProgressHandle pHandle, @NotNull File pConfigFolder, @NotNull String pFileName, @NotNull String pServerConfigContents)
   {
     try
     {
       pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.write.serverConfig"));
-      writeFileData(new File(pTargetDir, DEFAULT_SERVER_CONFIG_PATH), pServerConfigContents);
+      writeFileData(new File(pConfigFolder, pFileName), pServerConfigContents);
     }
     catch (IOException pE)
     {
@@ -291,13 +299,21 @@ public class SSPCheckoutExecutor
     }
   }
 
-  public static void writeTunnelConfig(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTargetDir,
+  /**
+   * @param pHandle               ProgessHandle to progress
+   * @param pSystemDetails        systemDetails, used for storing the credentials necessary to establish a tunnel connection
+   * @param pConfigFolder         folder that should contain the config file
+   * @param pFileName             name of the file, will be placed inside the CONFIG_FOLDER_PATH in the project folder
+   * @param currentCredentials    Credentials for the tunnels that should be stored so the user does not have to enter them when connecting to the tunnel
+   * @param pTunnelConfigContents contents of the file to be written
+   */
+  public static void writeTunnelConfig(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pConfigFolder, @NotNull String pFileName,
                                        @NotNull DecodedJWT currentCredentials, @NotNull String pTunnelConfigContents)
   {
     try
     {
       pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.write.tunnelConfig"));
-      writeFileData(new File(pTargetDir, DEFAULT_TUNNEL_CONFIG_PATH), pTunnelConfigContents);
+      writeFileData(new File(pConfigFolder, pFileName), pTunnelConfigContents);
       _storeSSHPasswords(pSystemDetails, ISSPFacade.getInstance(), currentCredentials, pTunnelConfigContents);
     }
     catch (IOException | UnirestException | AditoSSPException | TransformerException pE)
