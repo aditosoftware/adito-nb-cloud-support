@@ -111,16 +111,19 @@ public class SSPCheckoutExecutor
       {
         Path tempServerConfigFile = Files.createTempFile("", "");
         writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
-        Optional<String> deployedBranchName = _getDeployedBranch(tempServerConfigFile.toFile());
+
+        Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
+        String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
         String gitProjectUrl = _getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
-        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, deployedBranchName.orElse(pBranch), null,
-                                               "origin", pTarget);
+        String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
+
+        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
         if (cloneSuccess)
         {
           _cleanTargetDirectory(pTarget);
+          String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
           IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
-          projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(),
-                                               pTarget.getName(), tempServerConfigFile.toAbsolutePath().toString());
+          projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
           writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
         }
       }
@@ -153,19 +156,34 @@ public class SSPCheckoutExecutor
       }
   }
 
-  @NotNull
-  private static Optional<String> _getDeployedBranch(@NotNull File pServerConfigFile)
+  /**
+   * @param pServerConfigFile Serverconfig file used to know where the database is
+   * @return Optional of the MetaInfos contained in the database that corresponds with the serverConfig
+   */
+  private static Optional<IMetaInfo> getMetaInfos(@NotNull File pServerConfigFile)
   {
-    IDeployMetaInfoFacade deployMetaInfoFacade = Lookup.getDefault().lookup(IDeployMetaInfoFacade.class);
-    if (deployMetaInfoFacade != null)
-    {
-      IMetaInfo metaInfo = deployMetaInfoFacade.getInfos(pServerConfigFile);
-      if (metaInfo != null)
-      {
-        return Optional.ofNullable(metaInfo.getAll().get("GitDeployMetaInfoProvider.branchActualName"));
-      }
-    }
-    return Optional.empty();
+    return Optional.ofNullable(Lookup.getDefault().lookup(IDeployMetaInfoFacade.class))
+        .map(pFacade -> pFacade.getInfos(pServerConfigFile));
+  }
+
+  /**
+   * @param pMetaInfo MetaInfo that contains the name of the branch that was used when the last deploy happened
+   * @return name of the branch that was used when the last deploy happened
+   */
+  @Nullable
+  private static String getDeployedBranch(@NotNull IMetaInfo pMetaInfo)
+  {
+    return pMetaInfo.getAll().get("GitDeployMetaInfoProvider.branchActualName");
+  }
+
+  /**
+   * @param pMetaInfo MetaInfo that contains the project version info
+   * @return version that should be used when creating the project
+   */
+  @Nullable
+  private static String getProjectVersion(@NotNull IMetaInfo pMetaInfo)
+  {
+    return pMetaInfo.getAll().get("de.adito.aditoweb.nbm.deploy.metainfo.ProjectVersionDeployMetaInfoProvider.designer.project.version");
   }
 
   /**
