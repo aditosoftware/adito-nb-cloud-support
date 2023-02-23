@@ -1,5 +1,6 @@
 package de.adito.nbm.ssp.actions;
 
+import com.google.common.annotations.VisibleForTesting;
 import de.adito.aditoweb.properties.PropertyAlias;
 import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.runconfig.exception.PropertyNotFoundException;
@@ -7,6 +8,7 @@ import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.checkout.*;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
+import de.adito.notification.INotificationFacade;
 import de.adito.properties.PropertyNames;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +42,7 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
 
   private static final String PROGRESS_BUNDLE_KEY = "TXT.LinkSystemAction.progress";
 
-  private enum CONFIG_RESULTS
+  enum CONFIG_RESULTS
   {
     DO_NOT_WRITE,
     WRITTEN,
@@ -87,7 +89,7 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
       CListObject selectedObject = panel.getSelected();
       if (dialogDescriptor.getValue() == NotifyDescriptor.OK_OPTION && selectedObject != null)
       {
-        _performLink(systemInfo, selectedObject.getSystemDetails(), loadConfigsCB.isSelected());
+        performLink(systemInfo, selectedObject.getSystemDetails(), loadConfigsCB.isSelected());
       }
     }
   }
@@ -97,7 +99,8 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
    * @param pSystemDetails SystemDetails for the Cloud system that should be loaded
    * @param pIsLoadConfigs true if the config files should be loaded and written, false otherwise
    */
-  private void _performLink(ISystemInfo pSystemInfo, ISSPSystemDetails pSystemDetails, boolean pIsLoadConfigs)
+  @VisibleForTesting
+  void performLink(ISystemInfo pSystemInfo, ISSPSystemDetails pSystemDetails, boolean pIsLoadConfigs)
   {
     // Already create the progressHandle to pass it to the SSPCheckoutExecutor during the task
     ProgressHandle progressHandle = ProgressHandle.createHandle(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY));
@@ -111,13 +114,13 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
       }
       else
       {
-        configResults = _handleConfigFiles(pSystemInfo, pSystemDetails, progressHandle, projectDir);
+        configResults = handleConfigFiles(pSystemInfo, pSystemDetails, progressHandle, projectDir);
       }
+
       if (configResults == CONFIG_RESULTS.CANCELLED)
       {
-        NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
-                                                  NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                  NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.aborted"), null);
+        INotificationFacade.INSTANCE.notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                            NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.aborted"), true);
       }
       else
       {
@@ -136,17 +139,15 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
         }
         if (configResults == CONFIG_RESULTS.NOT_OVERRIDDEN)
         {
-          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
-                                                    NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                    NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.successWithoutOverride"), null);
+          INotificationFacade.INSTANCE.notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                              NbBundle.getMessage(LinkSystemAction.class, "TXT.LinkSystemAction.successWithoutOverride"), true);
         }
         else
         {
-          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
-                                                    NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                    NbBundle.getMessage(LinkSystemAction.class,
-                                                                        pIsLoadConfigs ? "TXT.LinkSystemAction.successWithConfigs" : "TXT.LinkSystemAction.success"),
-                                                    null);
+          INotificationFacade.INSTANCE.notify(NbBundle.getMessage(LinkSystemAction.class, PROGRESS_BUNDLE_KEY),
+                                              NbBundle.getMessage(LinkSystemAction.class,
+                                                                  pIsLoadConfigs ? "TXT.LinkSystemAction.successWithConfigs" : "TXT.LinkSystemAction.success"),
+                                              true);
         }
       }
     }, progressHandle, true);
@@ -159,8 +160,9 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
    * @param pProjectDir     ProjectDirectory
    * @return true if the link should be cancelled, false if the link should be finished
    */
-  private CONFIG_RESULTS _handleConfigFiles(@NotNull ISystemInfo pSystemInfo, @NotNull ISSPSystemDetails pSelectedSystem, @NotNull ProgressHandle pProgressHandle,
-                                            @NotNull File pProjectDir)
+  @VisibleForTesting
+  CONFIG_RESULTS handleConfigFiles(@NotNull ISystemInfo pSystemInfo, @NotNull ISSPSystemDetails pSelectedSystem, @NotNull ProgressHandle pProgressHandle,
+                                   @NotNull File pProjectDir)
   {
     Object pressedButton = null;
     String serverConfigName = pSelectedSystem.getName() + "_serverconfig.xml";

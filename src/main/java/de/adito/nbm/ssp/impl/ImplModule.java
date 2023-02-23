@@ -13,7 +13,7 @@ public class ImplModule extends AbstractModule
   protected void configure()
   {
     bind(ISSPFacade.class).to(SSPFacadeImpl.class);
-    bind(INotificationFacade.class).to(NotificationFacadeImpl.class);
+    bind(ICloudNotificationFacade.class).to(CloudNotificationFacadeImpl.class);
     bind(ISystemStatusFacade.class).to(SystemStatusFacadeImpl.class);
   }
 }

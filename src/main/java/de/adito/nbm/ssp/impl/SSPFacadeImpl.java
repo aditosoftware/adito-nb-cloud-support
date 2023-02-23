@@ -1,6 +1,7 @@
 package de.adito.nbm.ssp.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
@@ -8,10 +9,9 @@ import de.adito.http.proxy.ProxyClientProvider;
 import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import de.adito.notification.INotificationFacade;
 import org.apache.http.client.HttpClient;
 import org.jetbrains.annotations.NotNull;
-import org.openide.awt.NotificationDisplayer;
 
 import java.security.*;
 import java.util.*;
@@ -104,11 +104,8 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     }
     catch (UnirestException | AditoSSPException pE)
     {
-      NotificationDisplayer.getDefault().notify(SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.checkSystem.error"),
-                                                NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.checkSystem.error",
-                                                                                            pSystemId, ExceptionUtils.getStackTrace(pE)),
-                                                null, NotificationDisplayer.Priority.HIGH);
+      INotificationFacade.INSTANCE.error(pE, SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.checkSystem.error"),
+                                         generateSystemIdMessage(pSystemId));
       return false;
     }
   }
@@ -122,11 +119,8 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     }
     catch (UnirestException | AditoSSPException pE)
     {
-      NotificationDisplayer.getDefault().notify(SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.startSystem.error"),
-                                                NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.startSystem.error",
-                                                                                            pSystemId, ExceptionUtils.getStackTrace(pE)),
-                                                null, NotificationDisplayer.Priority.HIGH);
+      INotificationFacade.INSTANCE.error(pE, SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.startSystem.error"),
+                                         generateSystemIdMessage(pSystemId));
       return false;
     }
   }
@@ -140,11 +134,8 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     }
     catch (UnirestException | AditoSSPException pE)
     {
-      NotificationDisplayer.getDefault().notify(SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.stopSystem.error"),
-                                                NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.stopSystem.error",
-                                                                                            pSystemId, ExceptionUtils.getStackTrace(pE)),
-                                                null, NotificationDisplayer.Priority.HIGH);
+      INotificationFacade.INSTANCE.error(pE, SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "LBL.SSPFacadeImpl.stopSystem.error"),
+                                         generateSystemIdMessage(pSystemId));
       return false;
     }
   }
@@ -217,6 +208,18 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   public String getSystemConfigMapServiceUrl()
   {
     return sspSystemUrl + SYSTEM_CONFIG_MAP_SERVICE_ADDRESS;
+  }
+
+  /**
+   * Generates a message with the systemId.
+   *
+   * @param pSystemId the system-Id that should be put into the message
+   * @return the message with the system id
+   */
+  @VisibleForTesting
+  String generateSystemIdMessage(@NotNull String pSystemId)
+  {
+    return SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.systemId", pSystemId);
   }
 
   void setProxy()

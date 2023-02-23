@@ -1,14 +1,15 @@
 package de.adito.nbm.ssp.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.annotations.VisibleForTesting;
 import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.HttpUtil;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
+import de.adito.notification.INotificationFacade;
 import org.jetbrains.annotations.NotNull;
 import org.json.*;
-import org.openide.awt.NotificationDisplayer;
 
 import java.util.*;
 
@@ -42,8 +43,23 @@ interface ISystemExplorer
         .body(listSystemBody)
         .asJson();
     HttpUtil.verifyStatus(listSystemsResponse);
-    List<ISSPSystem> sspSystems = new ArrayList<>();
+
     JSONObject jsonObject = listSystemsResponse.getBody().getObject();
+    return extractSspSystems(jsonObject);
+  }
+
+  /**
+   * Extracts the SSP-Systems from a JSONObject while handling possible errors.
+   *
+   * @param jsonObject the {@link JSONObject} the SSP-Systems need to be extracted
+   * @return the list of extracted systems
+   */
+  @NotNull
+  @VisibleForTesting
+  static List<ISSPSystem> extractSspSystems(@NotNull JSONObject jsonObject)
+  {
+    List<ISSPSystem> sspSystems = new ArrayList<>();
+
     for (String key : jsonObject.keySet())
     {
       try
@@ -52,15 +68,11 @@ interface ISystemExplorer
       }
       catch (MalformedInputException pE)
       {
-        NotificationDisplayer.getDefault().notify("Malformed system details", NotificationDisplayer.Priority.NORMAL.getIcon(), pE.getMessage(), e -> {
-                                                  },
-                                                  NotificationDisplayer.Priority.NORMAL);
+        INotificationFacade.INSTANCE.error(pE, "Malformed system details");
       }
       catch (AditoSSPParseException pE)
       {
-        NotificationDisplayer.getDefault().notify("Error while parsing system details", NotificationDisplayer.Priority.NORMAL.getIcon(), pE.getMessage(), e -> {
-                                                  },
-                                                  NotificationDisplayer.Priority.NORMAL);
+        INotificationFacade.INSTANCE.error(pE, "Error while parsing system details");
       }
     }
     return sspSystems;

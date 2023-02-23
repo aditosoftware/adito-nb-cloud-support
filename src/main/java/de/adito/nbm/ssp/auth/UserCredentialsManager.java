@@ -1,14 +1,14 @@
 package de.adito.nbm.ssp.auth;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.google.common.annotations.VisibleForTesting;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import de.adito.nbm.icons.IconManager;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.ISSPFacade;
+import de.adito.notification.INotificationFacade;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.openide.*;
-import org.openide.awt.NotificationDisplayer;
 import org.openide.util.*;
 
 import javax.swing.*;
@@ -45,12 +45,12 @@ public class UserCredentialsManager
       char[] password = getLastUserPass();
       if (lastUser != null && password.length > 0)
       {
-        _getToken(lastUser, password);
+        getToken(lastUser, password);
       }
       if (jwt == null)
       {
         UserCredentialsDialog credentialsDialog = new UserCredentialsDialog(lastUser, password);
-        JPanel borderPane = new _NonScrollablePanel(new BorderLayout());
+        JPanel borderPane = new NonScrollablePanel(new BorderLayout());
         borderPane.add(credentialsDialog, BorderLayout.CENTER);
         borderPane.setBorder(new EmptyBorder(7, 7, 0, 7));
         Object[] buttons = new Object[]{NotifyDescriptor.OK_OPTION, NotifyDescriptor.CANCEL_OPTION};
@@ -79,14 +79,15 @@ public class UserCredentialsManager
           {
             Keyring.delete(PASSWORT_STATIC_PART_KEY + lastUser);
           }
-          _getToken(lastUser, password);
+          getToken(lastUser, password);
         }
       }
     }
     return jwt;
   }
 
-  private static void _getToken(String lastUser, char[] password)
+  @VisibleForTesting
+  static void getToken(String lastUser, char[] password)
   {
     ISSPFacade sspFacade = ISSPFacade.getInstance();
     try
@@ -96,8 +97,7 @@ public class UserCredentialsManager
     catch (AditoSSPException | UnirestException pE)
     {
       if (!GraphicsEnvironment.isHeadless())
-        NotificationDisplayer.getDefault().notify(NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail"),
-                                                  IconManager.getInstance().getErrorIcon(), pE.getMessage(), null);
+        INotificationFacade.INSTANCE.error(pE, NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail"));
       else
         logger.log(Level.WARNING, pE, () -> NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.login.fail.headless"));
     }
@@ -146,9 +146,9 @@ public class UserCredentialsManager
    * Extended JPanel that makes it so that the Panel does not provide scrolling in a ScrollPane, but instead requires wrapping or hiding of information
    * This can be of use if you want to make sure a panel can be resized to a smaller size even if it is in a ScrollPane
    */
-  private static class _NonScrollablePanel extends JPanel implements Scrollable
+  private static class NonScrollablePanel extends JPanel implements Scrollable
   {
-    public _NonScrollablePanel(LayoutManager layout)
+    public NonScrollablePanel(LayoutManager layout)
     {
       super(layout);
     }
