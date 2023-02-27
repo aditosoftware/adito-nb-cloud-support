@@ -152,7 +152,7 @@ class SSPFacadeImplTest
      */
     @Test
     @SneakyThrows
-    void shouldStartSystem()
+    void shouldStopSystem()
     {
       SSPFacadeImpl sspFacade = Mockito.spy(new SSPFacadeImpl());
       Mockito.doReturn(true).when(sspFacade).doStopSystem(any(), any(), any());
