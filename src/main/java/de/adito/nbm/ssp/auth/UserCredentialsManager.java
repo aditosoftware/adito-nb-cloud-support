@@ -57,8 +57,9 @@ public class UserCredentialsManager
         DialogDescriptor dialogDescriptor = new DialogDescriptor(borderPane, NbBundle.getMessage(UserCredentialsManager.class, "LBL.UserCredentialsManager.title"),
                                                                  true, buttons, buttons[0], DialogDescriptor.BOTTOM_ALIGN, null, null);
         dialogDescriptor.setValid(credentialsDialog.getPassword().length > 0 && credentialsDialog.getUsername().length() > 0);
-        credentialsDialog.addPasswordFieldDocumentListener(new UserCredentialsManager.CredentialsFieldListener(credentialsDialog, dialogDescriptor));
-        credentialsDialog.addUsernameFieldDocumentListener(new CredentialsFieldListener(credentialsDialog, dialogDescriptor));
+        CredentialsFieldListener isValidCredentialsListener = new CredentialsFieldListener(credentialsDialog, dialogDescriptor);
+        credentialsDialog.addPasswordFieldDocumentListener(isValidCredentialsListener);
+        credentialsDialog.addUsernameFieldDocumentListener(isValidCredentialsListener);
 
         Dialog dialog = DialogDisplayer.getDefault().createDialog(dialogDescriptor);
         dialog.setResizable(true);
