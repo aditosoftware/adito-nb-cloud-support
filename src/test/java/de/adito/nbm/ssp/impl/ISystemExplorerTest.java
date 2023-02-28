@@ -6,7 +6,6 @@ import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.json.*;
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.condition.*;
 import org.mockito.Mockito;
 
 import java.time.*;
@@ -31,23 +30,17 @@ class ISystemExplorerTest
   {
 
     /**
-     * Tests that the normal method will work under windows.
+     * Tests that the normal method will work.
      */
     @Test
-    @EnabledOnOs(OS.WINDOWS)
-    void shouldExtractSspSystemsWindows()
+    void shouldExtractSspSystems()
     {
-      baseTestExtractSspSystems("Jan. 21, 2022");
-    }
-
-    /**
-     * Tests that the normal method will work under Linux.
-     */
-    @Test
-    @DisabledOnOs(OS.WINDOWS)
-    void shouldExtractSspSystemsLinux()
-    {
-      baseTestExtractSspSystems("Jan 21, 2022");
+      String os = System.getProperty("os.name");
+      System.out.println(os);
+      if (os.equals("Windows 10"))
+        baseTestExtractSspSystems("Jan. 21, 2022");
+      else
+        baseTestExtractSspSystems("Jan 21, 2022");
     }
 
     /**
