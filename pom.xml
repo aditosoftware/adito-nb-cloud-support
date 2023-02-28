@@ -61,7 +61,7 @@
     <dependency>
       <groupId>de.adito.nb-modules</groupId>
       <artifactId>de-adito-netbeans-utilities</artifactId>
-      <version>RELEASE125-1.9.5</version>
+      <version>RELEASE125-1.9.6</version>
     </dependency>
     <dependency>
       <groupId>de.adito.nbm</groupId>
@@ -243,6 +243,16 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- Lombok for additional annotations -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>1.18.22</version>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -254,6 +264,25 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <version>5.6.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>5.6.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-inline</artifactId>
+      <version>4.8.1</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Mockito Extensions für JUnit Jupiter -->
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <version>4.8.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

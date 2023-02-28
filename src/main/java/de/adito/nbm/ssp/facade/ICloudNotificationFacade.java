@@ -10,12 +10,12 @@ import java.util.List;
  *
  * @author m.kaspera, 16.09.2021
  */
-public interface INotificationFacade
+public interface ICloudNotificationFacade
 {
 
-  static INotificationFacade getInstance()
+  static ICloudNotificationFacade getInstance()
   {
-    return InjectorCache.getInjector(ImplModule.class).getInstance(INotificationFacade.class);
+    return InjectorCache.getInjector(ImplModule.class).getInstance(ICloudNotificationFacade.class);
   }
 
   /**

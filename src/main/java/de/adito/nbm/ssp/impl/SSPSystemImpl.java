@@ -2,6 +2,7 @@ package de.adito.nbm.ssp.impl;
 
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.ISSPSystem;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 import org.json.*;
 
@@ -12,6 +13,8 @@ import java.util.logging.*;
 /**
  * @author m.kaspera, 08.10.2020
  */
+@ToString
+@EqualsAndHashCode
 class SSPSystemImpl implements ISSPSystem
 {
 
@@ -47,8 +50,7 @@ class SSPSystemImpl implements ISSPSystem
       }
       creationDate = creationDateVar;
     }
-    catch (
-        JSONException pJSONException)
+    catch (JSONException pJSONException)
     {
       throw new AditoSSPParseException(pJSONException, pJSONArray);
     }

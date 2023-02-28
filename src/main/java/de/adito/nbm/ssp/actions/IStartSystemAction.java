@@ -4,8 +4,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.ISSPFacade;
+import de.adito.notification.INotificationFacade;
 import org.jetbrains.annotations.Nullable;
-import org.openide.awt.NotificationDisplayer;
 import org.openide.util.NbBundle;
 
 /**
@@ -27,22 +27,19 @@ public interface IStartSystemAction
         {
           boolean startedSystem = sspFacade.startSystem(jwt.getSubject(), jwt, pSystemInfo.getCloudId().blockingFirst(""));
           if (startedSystem)
-            NotificationDisplayer.getDefault().notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
-                                                      NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                      NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.success"),
-                                                      null, NotificationDisplayer.Priority.NORMAL);
+            INotificationFacade.INSTANCE.notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
+                                                NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.success"),
+                                                true);
           else
-            NotificationDisplayer.getDefault().notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
-                                                      NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                      NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.failure"),
-                                                      null, NotificationDisplayer.Priority.HIGH);
+            INotificationFacade.INSTANCE.notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
+                                                NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.failure"),
+                                                false);
         }
         else
         {
-          NotificationDisplayer.getDefault().notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
-                                                    NotificationDisplayer.Priority.HIGH.getIcon(),
-                                                    NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.running"),
-                                                    null, NotificationDisplayer.Priority.NORMAL);
+          INotificationFacade.INSTANCE.notify(NbBundle.getMessage(IStartSystemAction.class, "LBL.StartSystemAction"),
+                                              NbBundle.getMessage(IStartSystemAction.class, "TXT.StartSystemAction.notification.running"),
+                                              true);
         }
       }
     }

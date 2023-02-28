@@ -1,14 +1,15 @@
 package de.adito.nbm.ssp.checkout;
 
 
+import com.google.common.annotations.VisibleForTesting;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.exceptions.AditoVersioningException;
-import de.adito.nbm.ssp.checkout.clist.*;
+import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
+import de.adito.notification.INotificationFacade;
 import de.adito.swing.IFileChooserProvider;
 import org.jetbrains.annotations.*;
 import org.openide.WizardDescriptor;
-import org.openide.awt.NotificationDisplayer;
 import org.openide.util.*;
 
 import javax.swing.*;
@@ -32,15 +33,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private WizardDescriptor wd;
   private final DefaultComboBoxModel<IRef> model = new DefaultComboBoxModel<>();
 
-  public SSPCheckoutProjectWizardPanel2()
-  {
-  }
-
   public SSPCheckoutProjectVisualPanel2 getComponent()
   {
     if (comp == null)
     {
-        _createComponent();
+      createComponent();
     }
     return comp;
   }
@@ -60,7 +57,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     //Validate paths and adjust message
     Object projName = wd.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_NAME);
     Object projPath = wd.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH);
-    return _updateMessage(projName, projPath);
+    return updateMessage(projName, projPath);
   }
 
   @Override
@@ -86,7 +83,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     String projectPath = SSPCheckoutProjectWizardIterator.getCallback().getDefaultProjectPath();
     if (projectPath != null && !projectPath.isEmpty())
       wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, projectPath);
-      _updateComponent();
+    updateComponent();
   }
 
   /**
@@ -104,15 +101,15 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Sets the listener of all visual components
    */
-  private void _createComponent()
+  private void createComponent()
   {
-    _loadFileChooserAsync();
+    loadFileChooserAsync();
 
     comp = new SSPCheckoutProjectVisualPanel2();
     //Listener for the ProjectPath button
     comp.getProjectLocationBrowseButton().addActionListener(e -> {
-      _applyFileChooser(comp.getProjectLocationTextField());
-        _updateComponent();
+      applyFileChooser(comp.getProjectLocationTextField());
+      updateComponent();
     });
 
     //DocumentListener for the two textFields
@@ -122,7 +119,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       public void update(DocumentEvent e)
       {
         if (wd != null)
-          wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_NAME, _getProjectName());
+          wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_NAME, getProjectName());
         cs.fireChange();
       }
     });
@@ -132,7 +129,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       public void update(DocumentEvent e)
       {
         if (wd != null)
-          wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, _getProjectPath());
+          wd.putProperty(SSPCheckoutProjectWizardIterator.PROJECT_PATH, getProjectPath());
         cs.fireChange();
       }
     });
@@ -146,7 +143,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     });
   }
 
-  private void _loadFileChooserAsync()
+  private void loadFileChooserAsync()
   {
     new Thread("SSPCheckoutProjectWizardPanel2.FileChooserLoader")
     {
@@ -166,13 +163,13 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   /**
    * Writes the name and paths as they are in the WizardDescriptor to the fields
    */
-  private void _updateComponent()
+  private void updateComponent()
   {
     if (wd == null || comp == null)
       return;
 
 
-    ISSPSystemDetails projectDescription = _getProjectDescription();
+    ISSPSystemDetails projectDescription = getProjectDescription();
 
     Object projectName = wd.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_NAME);
     if (projectName != null)
@@ -188,15 +185,15 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     if (cListObject != null)
     {
       model.removeAllElements();
-      IRef[] getAvailableRefs = _getAvailableRef(cListObject.getSystemDetails().getGitRepoUrl());
+      IRef[] getAvailableRefs = getAvailableRef(cListObject.getSystemDetails().getGitRepoUrl());
       for (IRef getAvailableRef : getAvailableRefs)
       {
         model.addElement(getAvailableRef);
       }
 
       comp.getGitBranchComboBox().setModel(model);
-      IRef toSet = _getCurrentRef(getAvailableRefs);
-      if(toSet != null)
+      IRef toSet = getCurrentRef(getAvailableRefs);
+      if (toSet != null)
         comp.getGitBranchComboBox().setSelectedItem(toSet);
 
     }
@@ -208,7 +205,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
    *
    * @param pTarget a JTextField
    */
-  private void _applyFileChooser(JTextField pTarget)
+  private void applyFileChooser(JTextField pTarget)
   {
     String fieldText = pTarget.getText();
     if (fieldText != null && !fieldText.isEmpty())
@@ -228,7 +225,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
    * @param pProjName name of the project/project folder
    * @param pProjPath path to the project folder
    */
-  private boolean _updateMessage(@Nullable Object pProjName, @Nullable Object pProjPath)
+  private boolean updateMessage(@Nullable Object pProjName, @Nullable Object pProjPath)
   {
     if (wd == null)
       return false;
@@ -249,7 +246,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
    * @return content of the name field
    */
   @Nullable
-  private String _getProjectName()
+  private String getProjectName()
   {
     String projectName = comp.getProjectNameTextField().getText();
     if (projectName.trim().isEmpty())
@@ -261,7 +258,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
    * @return content of the projectPath field
    */
   @Nullable
-  private String _getProjectPath()
+  private String getProjectPath()
   {
     String text = comp.getProjectLocationTextField().getText();
     if (text.trim().isEmpty())
@@ -270,7 +267,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   }
 
   @Nullable
-  private ISSPSystemDetails _getProjectDescription()
+  private ISSPSystemDetails getProjectDescription()
   {
     Object selectedObj = wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     if (selectedObj != null)
@@ -280,24 +277,23 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   }
 
   @NotNull
-  private IRef[] _getAvailableRef(@NotNull String pGitUrl)
+  @VisibleForTesting
+  IRef[] getAvailableRef(@NotNull String pGitUrl)
   {
     List<IRef> gitRefs = new ArrayList<>();
     List<ITag> tags = new ArrayList<>();
-    List<IRemoteBranch> branches= new ArrayList<>();
+    List<IRemoteBranch> branches = new ArrayList<>();
     try
     {
       tags = Lookup.getDefault().lookup(IGitVersioningSupport.class).getTagsInRepository(pGitUrl);
       branches = Lookup.getDefault().lookup(IGitVersioningSupport.class).getBranchesInRepository(pGitUrl);
     }
-    catch(AditoVersioningException pE)
+    catch (AditoVersioningException pE)
     {
       Logger.getLogger(SSPCheckoutProjectWizardPanel2.class.getName()).log(Level.WARNING, pE.getMessage(), pE);
-      NotificationDisplayer.getDefault().notify(pE.getMessage(), NotificationDisplayer.Priority.NORMAL.getIcon(),
-                                                NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "SSPCheckoutProjectVisualPanel2.error.branchesList"),
-                                                null, NotificationDisplayer.Priority.NORMAL);
+      INotificationFacade.INSTANCE.error(pE, NbBundle.getMessage(SSPCheckoutProjectWizardPanel2.class, "SSPCheckoutProjectVisualPanel2.error.branchesList"));
     }
-    catch(AbstractMethodError error)
+    catch (AbstractMethodError error)
     {
       comp.getGitBranchComboBox().setVisible(false);
       comp.getGitBranchNameLabel().setVisible(false);
@@ -312,7 +308,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
 
 
   @Nullable
-  private IRef _getCurrentRef(@NotNull IRef[] pRefs)
+  private IRef getCurrentRef(@NotNull IRef[] pRefs)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     for (IRef ref : pRefs)
