@@ -94,7 +94,7 @@ public class UserCredentialsDialog extends JPanel
 
   public void addUsernameFieldDocumentListener(@NotNull DocumentListener pDocumentListener)
   {
-    passwordField.getDocument().addDocumentListener(pDocumentListener);
+    usernameField.getDocument().addDocumentListener(pDocumentListener);
   }
 
 }
