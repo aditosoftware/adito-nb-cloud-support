@@ -3,6 +3,7 @@ package de.adito.nbm.ssp.impl;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
 import lombok.SneakyThrows;
+import org.jetbrains.annotations.NotNull;
 import org.json.*;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -32,8 +33,23 @@ class ISystemExplorerTest
      * Tests that the normal method will work.
      */
     @Test
-    @SneakyThrows
     void shouldExtractSspSystems()
+    {
+      String os = System.getProperty("os.name");
+      System.out.println(os);
+      if (os.equals("Windows 10"))
+        baseTestExtractSspSystems("Jan. 21, 2022");
+      else
+        baseTestExtractSspSystems("Jan 21, 2022");
+    }
+
+    /**
+     * Tests that the normal method will work.
+     *
+     * @param pDateString the date string. Windows will have a dot after the month in this specific simple date format, whereas linux will not have a dot
+     */
+    @SneakyThrows
+    private void baseTestExtractSspSystems(@NotNull String pDateString)
     {
       SSPSystemImpl expected = new SSPSystemImpl("name", "url", "clusterId", "systemId", "ranchRID", LocalDate.of(2022, Month.JANUARY, 21).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
@@ -45,7 +61,7 @@ class ISystemExplorerTest
       jsonArray.put("ranchRID");
       jsonArray.put("irrelevant");
       jsonArray.put("clusterId");
-      jsonArray.put("Jan. 21, 2022");
+      jsonArray.put(pDateString);
 
       JSONObject jsonObject = new JSONObject();
       jsonObject.put("someKey", jsonArray);
