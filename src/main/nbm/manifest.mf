@@ -5,6 +5,18 @@ OpenIDE-Module-Display-Category: ADITO / Cloud
 OpenIDE-Module-Layer: de/adito/nbm/ssp/layer.xml
 OpenIDE-Module-Long-Description: Provides support for connecting to Cloud Systems in the Designer
   <p style="font-weight: bold;">Changelog</p>
+  <p style="font-weight: bold;">v1.4.1</p>
+  <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
+  <ul>
+    <li>If a project is checked out with its deployed state, the plugin now uses the project version that was used in the last deploy</li>
+    <li>Tunnel and Serverconfig files are now stored in a name format that includes the cloud system name they belong to. This makes it easier to tell which system they belong to</li>
+    <li>The plugin now supports proxies set in the Netbeans options</li>
+    <li>Error messages from the plugin now show up in the IDE log</li>
+  </ul>
+  <p style="margin-left: 10px; font-weight: bold;">BUGFIX</p>
+  <ul>
+    <li>Fix: Gitlab authentication dialog does not update its okay button on changes in the username field</li>
+  </ul>
   <p style="font-weight: bold;">v1.4.0</p>
   <p style="margin-left: 10px; font-weight: bold;">MINOR</p>
   <ul>
