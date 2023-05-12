@@ -36,8 +36,7 @@ class ISystemExplorerTest
     void shouldExtractSspSystems()
     {
       String os = System.getProperty("os.name");
-      System.out.println(os);
-      if (os.equals("Windows 10"))
+      if (os.equals("Windows 10") || os.equals("Mac OS X"))
         baseTestExtractSspSystems("Jan. 21, 2022");
       else
         baseTestExtractSspSystems("Jan 21, 2022");
@@ -46,7 +45,7 @@ class ISystemExplorerTest
     /**
      * Tests that the normal method will work.
      *
-     * @param pDateString the date string. Windows will have a dot after the month in this specific simple date format, whereas linux will not have a dot
+     * @param pDateString the date string. Windows and Mac will have a dot after the month in this specific simple date format, whereas linux will not have a dot
      */
     @SneakyThrows
     private void baseTestExtractSspSystems(@NotNull String pDateString)
