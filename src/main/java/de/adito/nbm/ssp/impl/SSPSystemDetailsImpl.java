@@ -2,7 +2,7 @@ package de.adito.nbm.ssp.impl;
 
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 import org.json.*;
 
 import java.util.List;
@@ -24,15 +24,15 @@ class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
   SSPSystemDetailsImpl(@NotNull ISSPSystem pSystem, @NotNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
   {
     super(pSystem.getName(), pSystem.getUrl(), pSystem.getClusterId(), pSystem.getSystemdId(), pSystem.getRanchRId(), pSystem.getCreationDate());
-    if (pJSONArray.length() != 1 || !pJSONArray.getJSONObject(0).keySet().containsAll(List.of(GIT_REPO_KEY, GIT_BRANCH_KEY, KERNEL_VERSION_KEY)))
+    if (pJSONArray.length() != 1 || !pJSONArray.getJSONObject(0).keySet().contains(KERNEL_VERSION_KEY))
     {
-      Logger.getLogger(SSPSystemDetailsImpl.class.getName()).log(Level.WARNING, () -> String.format("Malformed JSONArray: %s", pJSONArray.toString()));
+      Logger.getLogger(SSPSystemDetailsImpl.class.getName()).log(Level.WARNING, () -> String.format("Malformed JSONArray: %s", pJSONArray));
       throw new MalformedInputException(pJSONArray.toString(0));
     }
     try
     {
-      gitRepoUrl = pJSONArray.getJSONObject(0).optString(GIT_REPO_KEY);
-      gitBranch = pJSONArray.getJSONObject(0).optString(GIT_BRANCH_KEY);
+      gitRepoUrl = pJSONArray.getJSONObject(0).optString(GIT_REPO_KEY, null);
+      gitBranch = pJSONArray.getJSONObject(0).optString(GIT_BRANCH_KEY, null);
       kernelVersion = pJSONArray.getJSONObject(0).optString(KERNEL_VERSION_KEY);
     }
     catch (JSONException pJSONException)
@@ -41,14 +41,14 @@ class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
     }
   }
 
-  @NotNull
+  @Nullable
   @Override
   public String getGitRepoUrl()
   {
     return gitRepoUrl;
   }
 
-  @NotNull
+  @Nullable
   @Override
   public String getGitBranch()
   {
