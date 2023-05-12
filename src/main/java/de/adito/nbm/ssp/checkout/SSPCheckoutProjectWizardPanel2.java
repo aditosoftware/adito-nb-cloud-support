@@ -133,6 +133,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         cs.fireChange();
       }
     });
+    comp.getCheckoutModeSelectionButtons().forEach(pButton -> pButton.addActionListener(e -> {
+      if (wd != null)
+        wd.putProperty(SSPCheckoutProjectWizardIterator.CHECKOUT_MODE, getCheckoutMode());
+      cs.fireChange();
+    }));
     comp.getGitBranchComboBox().addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.SELECTED)
       {
@@ -182,11 +187,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       comp.getProjectLocationTextField().setText(projectPath.toString());
 
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    String repoUrl = cListObject == null ? null : cListObject.getSystemDetails().getGitRepoUrl();
     if (cListObject != null)
     {
       model.removeAllElements();
-      String repoUrl = cListObject.getSystemDetails().getGitRepoUrl();
-      if(repoUrl != null)
+      if (repoUrl != null)
       {
         IRef[] getAvailableRefs = getAvailableRef(repoUrl);
         for (IRef getAvailableRef : getAvailableRefs)
@@ -198,6 +203,30 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
           comp.getGitBranchComboBox().setSelectedItem(toSet);
       }
     }
+
+    Object checkoutMode = wd.getProperty(SSPCheckoutProjectWizardIterator.CHECKOUT_MODE);
+    SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton firstPossibleItem = null;
+    boolean isAnythingSelected = false;
+    for (SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton pItem : comp.getCheckoutModeSelectionButtons())
+    {
+      // check enabled state, based on git repo
+      pItem.updateEnabledBasedOnProjectAvailability(repoUrl != null);
+      if (pItem.isEnabled())
+      {
+        // check selected state, based on current checkout mode
+        boolean isSelected = pItem.getCheckoutMode() == checkoutMode;
+        pItem.setSelected(isSelected);
+
+        // store information, so we can select the first possible item if necessary
+        firstPossibleItem = firstPossibleItem == null ? pItem : firstPossibleItem;
+        isAnythingSelected = isAnythingSelected || isSelected;
+      }
+      else
+        // disabled items can not be selected
+        pItem.setSelected(false);
+    }
+    if (!isAnythingSelected && firstPossibleItem != null)
+      firstPossibleItem.setSelected(true);
   }
 
 
@@ -267,6 +296,19 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return text;
   }
 
+  /**
+   * @return the current checkout mode
+   */
+  @NotNull
+  private SSPCheckoutProjectWizardIterator.ECheckoutMode getCheckoutMode()
+  {
+    return comp.getCheckoutModeSelectionButtons().stream()
+        .filter(AbstractButton::isSelected)
+        .map(SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton::getCheckoutMode)
+        .findFirst()
+        .orElseThrow();
+  }
+
   @Nullable
   private ISSPSystemDetails getProjectDescription()
   {
@@ -313,7 +355,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     String gitBranch = cListObject.getSystemDetails().getGitBranch();
-    if(gitBranch != null)
+    if (gitBranch != null)
     {
       for (IRef ref : pRefs)
       {

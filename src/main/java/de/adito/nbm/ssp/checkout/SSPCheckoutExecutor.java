@@ -63,11 +63,12 @@ public class SSPCheckoutExecutor
    * @param pHandle                  ProgressHandle that should be used to indicate the current progress
    * @param pSystemDetails           Selected system details, containg the info about the git repo and url as well as the system id
    * @param pTarget                  the location that the project should be cloned to
+   * @param pBranch                  Name of the branch to checkout, null if nothing should be checked out
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
   @Nullable
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull String pBranch, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @Nullable String pBranch, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -84,7 +85,7 @@ public class SSPCheckoutExecutor
       {
         checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
       }
-      else
+      else if (pBranch != null)
       {
         boolean cloneSuccess = performGitClone(pHandle, getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
                                                pBranch, null, "origin", pTarget);
@@ -104,7 +105,7 @@ public class SSPCheckoutExecutor
   }
 
   private static void checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials,
-                                            @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @NotNull String pBranch)
+                                            @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @Nullable String pBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     try
@@ -118,15 +119,28 @@ public class SSPCheckoutExecutor
 
         Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
         String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
-        String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
-        String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
 
-        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
-        if (cloneSuccess)
+        // Clone project, if possible
+        Boolean cloneSuccess = null;
+        if (branchToCheckout != null)
         {
-          cleanTargetDirectory(pTarget);
+          String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+          cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
+        }
+
+        // Read from deployed state, if the clone did not fail
+        if (cloneSuccess != Boolean.FALSE)
+        {
+          // if no project was cloned before, then the target directory should be created anyway
+          if (!pTarget.exists())
+            //noinspection ResultOfMethodCallIgnored
+            pTarget.mkdirs();
+          else
+            cleanTargetDirectory(pTarget);
+
           String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
           IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
+          String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
           projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
           writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
         }

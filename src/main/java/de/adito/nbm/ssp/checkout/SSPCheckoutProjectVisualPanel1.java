@@ -15,7 +15,7 @@ import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
-import org.openide.util.*;
+import org.openide.util.Lookup;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -48,7 +48,6 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   private JPasswordField passwordTextField;
   private JScrollPane scrollPane;
   private CList cList;
-  private final List<IOptionsProvider> additionalOptionsProviders;
 
   public SSPCheckoutProjectVisualPanel1()
   {
@@ -65,15 +64,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     urlLabel.setBorder(new EmptyBorder(5, 0, 0, 0));
 
     add(userEntrys, BorderLayout.NORTH);
-    JPanel centerPanel = new JPanel(new BorderLayout());
-    centerPanel.add(scrollPane, BorderLayout.CENTER);
-    JPanel addtionalComponentsPanel = new JPanel();
-    BoxLayout boxLayout = new BoxLayout(addtionalComponentsPanel, BoxLayout.Y_AXIS);
-    addtionalComponentsPanel.setLayout(boxLayout);
-    additionalOptionsProviders = getAdditionalOptionsProviders();
-    additionalOptionsProviders.forEach(pOptionsProvider -> addtionalComponentsPanel.add(pOptionsProvider.getComponent()));
-    centerPanel.add(addtionalComponentsPanel, BorderLayout.SOUTH);
-    add(centerPanel, BorderLayout.CENTER);
+    add(scrollPane, BorderLayout.CENTER);
     add(urlLabel, BorderLayout.SOUTH);
   }
 
@@ -304,48 +295,11 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
   }
 
   /**
-   * @return List of IOptionsProviders whose components should be added to the panel
-   */
-  protected List<IOptionsProvider> getAdditionalOptionsProviders()
-  {
-    JCheckBox loadConfigsCB = new JCheckBox(NbBundle.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.loadDeployedSystemState"));
-    loadConfigsCB.setAlignmentX(Component.RIGHT_ALIGNMENT);
-    JPanel panel = new JPanel(new BorderLayout());
-    panel.setBorder(new EmptyBorder(5, 0, 5, 0));
-    panel.add(loadConfigsCB);
-    IOptionsProvider optionsProvider = new IOptionsProvider()
-    {
-      @Override
-      public JComponent getComponent()
-      {
-        return panel;
-      }
-
-      @Override
-      public void addOptions(@NotNull Map<String, Object> pOptionsMap)
-      {
-        pOptionsMap.put(SSPCheckoutProjectWizardIterator.CHECKOUT_DEPLOYED_STATE, loadConfigsCB.isSelected());
-      }
-    };
-    return List.of(optionsProvider);
-  }
-
-  /**
    * @return Returns the currently selected object
    */
   public CListObject getSelected()
   {
     return cList.getSelected();
-  }
-
-  /**
-   * @return Map with the selected options from the list of OptionsProviders obtained by the getAddtionalOptionsProviders
-   */
-  public Map<String, Object> getAdditionalOptions()
-  {
-    Map<String, Object> additionalOptions = new HashMap<>();
-    additionalOptionsProviders.forEach(optionsProvider -> optionsProvider.addOptions(additionalOptions));
-    return additionalOptions;
   }
 
   public List<CListObject> getObjects()

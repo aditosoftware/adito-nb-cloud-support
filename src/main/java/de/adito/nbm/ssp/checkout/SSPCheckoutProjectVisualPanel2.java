@@ -1,9 +1,18 @@
 package de.adito.nbm.ssp.checkout;
 
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
+import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator.ECheckoutMode;
+import de.adito.swing.TableLayoutUtil;
+import info.clearthought.layout.TableLayout;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List;
+
+import static de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator.getMessage;
 
 /**
  * The visualPanel of the wizard in which the location of the project to create are entered
@@ -13,30 +22,15 @@ import java.awt.*;
 public class SSPCheckoutProjectVisualPanel2 extends JPanel
 {
   private JButton projectLocationBrowseButton;
-  private JLabel projectLocationLabel;
   private JTextField projectNameTextField;
   private JTextField projectLocationTextField;
-  private JLabel projectNameLabel;
+  private List<CheckoutModeRadioButton> checkoutModeSelectionButtons;
   private JComboBox<IRef> gitBranchComboBox;
   private JLabel gitBranchNameLabel;
 
   public SSPCheckoutProjectVisualPanel2()
   {
     initComponents();
-  }
-
-  /**
-   * Enables or disables all components
-   *
-   * @param pEnabled <tt>true</tt> if all components should be enabled
-   */
-  public void enableComps(boolean pEnabled)
-  {
-    projectLocationBrowseButton.setEnabled(pEnabled);
-    projectNameTextField.setEnabled(pEnabled);
-    projectLocationTextField.setEnabled(pEnabled);
-    projectLocationLabel.setEnabled(pEnabled);
-    projectNameLabel.setEnabled(pEnabled);
   }
 
   /**
@@ -47,59 +41,80 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     projectLocationTextField = new JTextField();
     projectNameTextField = new JTextField();
 
-    projectNameLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
-                                                                              "SSPCheckoutProjectVisualPanel2.projectNameLabel.text"));
-    projectLocationLabel = new JLabel(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
-                                                                                  "SSPCheckoutProjectVisualPanel2.projectLocationLabel.text"));
+    checkoutModeSelectionButtons = List.of(
+        new CheckoutModeRadioButton(ECheckoutMode.PROJECT_ONLY, getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                           "SSPCheckoutProjectVisualPanel2.checkoutmode.project_only.text"), true),
+        new CheckoutModeRadioButton(ECheckoutMode.SYSTEMSTATE_ONLY, getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                               "SSPCheckoutProjectVisualPanel2.checkoutmode.systemstate_only.text"), false),
+        new CheckoutModeRadioButton(ECheckoutMode.PROJECT_AND_SYSTEMSTATE, getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                                                      "SSPCheckoutProjectVisualPanel2.checkoutmode.project_and_systemstate.text"), false)
+    );
 
-    projectLocationBrowseButton = new JButton(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
-                                                                                          "SSPCheckoutProjectVisualPanel2.projectLocationBrowseButton.text"));
-    projectLocationTextField.setText(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class,
-                                                                                 "SSPCheckoutProjectVisualPanel2.projectLocationTextField.text"));
-    gitBranchNameLabel = new JLabel("Branch/Tag: ");
+    JLabel projectNameLabel = new JLabel(getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                    "SSPCheckoutProjectVisualPanel2.projectNameLabel.text"));
+    JLabel projectLocationLabel = new JLabel(getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                        "SSPCheckoutProjectVisualPanel2.projectLocationLabel.text"));
+    JLabel checkoutModeSelectionLabel = new JLabel("Checkout Mode");
+
+    projectLocationBrowseButton = new JButton(getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                         "SSPCheckoutProjectVisualPanel2.projectLocationBrowseButton.text"));
+    projectLocationTextField.setText(getMessage(SSPCheckoutProjectVisualPanel2.class,
+                                                "SSPCheckoutProjectVisualPanel2.projectLocationTextField.text"));
+    gitBranchNameLabel = new JLabel("Branch/Tag");
     gitBranchComboBox = new JComboBox<>();
     gitBranchComboBox.setRenderer(createListRenderer());
 
-    GroupLayout layout = new GroupLayout(this);
-    this.setLayout(layout);
-    this.setPreferredSize(new Dimension(700, 400));
-    layout.setHorizontalGroup(
-        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                          .addContainerGap()
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(projectNameLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(projectLocationLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(gitBranchNameLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                          .addGap(10, 10, 10)
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-                                        .addComponent(projectNameTextField, GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
-                                        .addComponent(projectLocationTextField, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE)
-                                        .addComponent(gitBranchComboBox, GroupLayout.DEFAULT_SIZE, 350, Short.MAX_VALUE))
-                          .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING)
-                                        .addComponent(projectLocationBrowseButton))
-                          .addContainerGap())
-    );
-    layout.setVerticalGroup(
-        layout.createParallelGroup(GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                          .addContainerGap()
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(projectNameLabel)
-                                        .addComponent(projectNameTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                          .addGap(18, 18, 18)
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(projectLocationTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                                        .addComponent(projectLocationLabel)
-                                        .addComponent(projectLocationBrowseButton))
-                          .addGap(18, 18, 18)
-                          .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
-                                        .addComponent(gitBranchNameLabel)
-                                        .addComponent(gitBranchComboBox, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                          .addGap(18, 18, 18)
-                          .addContainerGap(199, Short.MAX_VALUE))
-    );
+    int compGap = 10;
+    int layoutGap = 18;
+    TableLayout tlu = new TableLayout(new double[]{TableLayout.PREFERRED, layoutGap, TableLayout.FILL}, new double[]{
+        TableLayout.PREFERRED,
+        layoutGap,
+        TableLayout.PREFERRED,
+        layoutGap,
+        TableLayout.PREFERRED,
+        layoutGap,
+        TableLayout.PREFERRED,
+        });
+    setLayout(tlu);
+    setBorder(new EmptyBorder(compGap, compGap, compGap, compGap));
+    setPreferredSize(new Dimension(700, 400));
+
+    TableLayoutUtil util = new TableLayoutUtil(this);
+
+    // Project Name
+    util.add(0, 0, projectNameLabel);
+    util.add(2, 0, projectNameTextField);
+
+    // Project Location
+    JPanel locationPanel = new JPanel(new BorderLayout(compGap, 0));
+    locationPanel.add(projectLocationTextField, BorderLayout.CENTER);
+    locationPanel.add(projectLocationBrowseButton, BorderLayout.EAST);
+    util.add(0, 2, projectLocationLabel);
+    util.add(2, 2, locationPanel);
+
+    // Checkout Mode
+    ButtonGroup checkoutModeSelectionButtonGroup = new ButtonGroup();
+    JPanel checkoutModeSelectionButtonPanel = new JPanel();
+    checkoutModeSelectionButtonPanel.setLayout(new BoxLayout(checkoutModeSelectionButtonPanel, BoxLayout.Y_AXIS));
+    for (int i = 0; i < checkoutModeSelectionButtons.size(); i++)
+    {
+      CheckoutModeRadioButton button = checkoutModeSelectionButtons.get(i);
+      checkoutModeSelectionButtonGroup.add(button);
+      if (i > 0)
+        checkoutModeSelectionButtonPanel.add(Box.createVerticalStrut(compGap));
+      checkoutModeSelectionButtonPanel.add(button);
+    }
+    util.add(0, 4, checkoutModeSelectionLabel);
+    util.add(2, 4, checkoutModeSelectionButtonPanel);
+
+    // Branch/Tag
+    util.add(0, 6, gitBranchNameLabel);
+    util.add(2, 6, gitBranchComboBox);
+    checkoutModeSelectionButtons.forEach(pBtn -> {
+      if (pBtn.isSelected())
+        gitBranchComboBox.setEnabled(pBtn.getCheckoutMode().isLoadProject());
+      pBtn.addActionListener(a -> gitBranchComboBox.setEnabled(pBtn.getCheckoutMode().isLoadProject()));
+    });
   }
 
   /**
@@ -110,7 +125,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   @Override
   public String getName()
   {
-    return SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutProjectVisualPanel2.class, "SSPCheckoutProjectVisualPanel2.stepName.text");
+    return getMessage(SSPCheckoutProjectVisualPanel2.class, "SSPCheckoutProjectVisualPanel2.stepName.text");
   }
 
   public JButton getProjectLocationBrowseButton()
@@ -138,16 +153,28 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
     return gitBranchNameLabel;
   }
 
-  private static DefaultListCellRenderer createListRenderer() {
-    return new DefaultListCellRenderer() {
+  /**
+   * @return all available checkout mode radio buttons
+   */
+  @NotNull
+  public List<CheckoutModeRadioButton> getCheckoutModeSelectionButtons()
+  {
+    return checkoutModeSelectionButtons;
+  }
+
+  private static DefaultListCellRenderer createListRenderer()
+  {
+    return new DefaultListCellRenderer()
+    {
 
       @Override
       public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                     boolean isSelected, boolean cellHasFocus)
       {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-        if(value != null){
-          if(value instanceof ITag)
+        if (value != null)
+        {
+          if (value instanceof ITag)
           {
             ITag tag = (ITag) value;
             this.setText("Tag: " + tag.getName());
@@ -161,6 +188,33 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
         return this;
       }
     };
+  }
+
+  /**
+   * RadioButtons to display a specific {@link ECheckoutMode}
+   */
+  public static class CheckoutModeRadioButton extends JRadioButton
+  {
+    @Getter
+    @NotNull
+    private final ECheckoutMode checkoutMode;
+
+    public CheckoutModeRadioButton(@NotNull ECheckoutMode pCheckoutMode, @NotNull String pText, boolean pIsSelected)
+    {
+      super(pText, pIsSelected);
+      setActionCommand(pCheckoutMode.name());
+      checkoutMode = pCheckoutMode;
+    }
+
+    /**
+     * Updates the enabled state based on the given project availability.
+     *
+     * @param pHasProject true, if a git project is currently available
+     */
+    public void updateEnabledBasedOnProjectAvailability(boolean pHasProject)
+    {
+      setEnabled(pHasProject || !checkoutMode.isLoadProject());
+    }
   }
 
 }
