@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.facade;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 /**
  * @author m.kaspera, 08.10.2020
@@ -13,7 +13,7 @@ public interface ISSPSystemDetails extends ISSPSystem
    *
    * @return Git Repo URl
    */
-  @NotNull
+  @Nullable
   String getGitRepoUrl();
 
   /**
@@ -21,7 +21,7 @@ public interface ISSPSystemDetails extends ISSPSystem
    *
    * @return name of the git branch
    */
-  @NotNull
+  @Nullable
   String getGitBranch();
 
   /**

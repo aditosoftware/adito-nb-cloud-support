@@ -185,17 +185,18 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     if (cListObject != null)
     {
       model.removeAllElements();
-      IRef[] getAvailableRefs = getAvailableRef(cListObject.getSystemDetails().getGitRepoUrl());
-      for (IRef getAvailableRef : getAvailableRefs)
+      String repoUrl = cListObject.getSystemDetails().getGitRepoUrl();
+      if(repoUrl != null)
       {
-        model.addElement(getAvailableRef);
+        IRef[] getAvailableRefs = getAvailableRef(repoUrl);
+        for (IRef getAvailableRef : getAvailableRefs)
+          model.addElement(getAvailableRef);
+
+        comp.getGitBranchComboBox().setModel(model);
+        IRef toSet = getCurrentRef(getAvailableRefs);
+        if (toSet != null)
+          comp.getGitBranchComboBox().setSelectedItem(toSet);
       }
-
-      comp.getGitBranchComboBox().setModel(model);
-      IRef toSet = getCurrentRef(getAvailableRefs);
-      if (toSet != null)
-        comp.getGitBranchComboBox().setSelectedItem(toSet);
-
     }
   }
 
@@ -311,11 +312,16 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private IRef getCurrentRef(@NotNull IRef[] pRefs)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    for (IRef ref : pRefs)
+    String gitBranch = cListObject.getSystemDetails().getGitBranch();
+    if(gitBranch != null)
     {
-      if (ref.getName().matches(cListObject.getSystemDetails().getGitBranch()))
-        return ref;
+      for (IRef ref : pRefs)
+      {
+        if (ref.getName().matches(gitBranch))
+          return ref;
+      }
     }
+
     return null;
   }
 
