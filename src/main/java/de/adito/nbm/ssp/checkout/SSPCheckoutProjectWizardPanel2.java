@@ -215,7 +215,10 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       {
         // check selected state, based on current checkout mode
         boolean isSelected = pItem.getCheckoutMode() == checkoutMode;
-        pItem.setSelected(isSelected);
+        if (isSelected)
+          pItem.doClick();
+        else
+          pItem.setSelected(false);
 
         // store information, so we can select the first possible item if necessary
         firstPossibleItem = firstPossibleItem == null ? pItem : firstPossibleItem;
@@ -226,7 +229,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         pItem.setSelected(false);
     }
     if (!isAnythingSelected && firstPossibleItem != null)
-      firstPossibleItem.setSelected(true);
+      firstPossibleItem.doClick();
   }
 
 
