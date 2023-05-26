@@ -115,12 +115,13 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
           branchToSet = cListObject.getSystemDetails().getGitBranch();
       }
 
-      // Determine, if the system state should be read
+      // Determine, if the system state and/or project should be read
       boolean loadSystemState = checkoutMode.isLoadSystemState();
+      boolean loadProject = checkoutMode.isLoadProject();
 
       // Download System!
       instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
-                                                 branchToSet, loadSystemState);
+                                                 branchToSet, loadProject, loadSystemState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }

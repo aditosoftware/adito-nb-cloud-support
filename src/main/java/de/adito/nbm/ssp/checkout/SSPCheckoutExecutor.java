@@ -64,12 +64,14 @@ public class SSPCheckoutExecutor
    * @param pHandle                  ProgressHandle that should be used to indicate the current progress
    * @param pSystemDetails           Selected system details, containg the info about the git repo and url as well as the system id
    * @param pTarget                  the location that the project should be cloned to
-   * @param pBranch                  Name of the branch to checkout, null if nothing should be checked out
+   * @param pBranch                  Name of the branch to checkout, null may use the previously deployed branch
+   * @param pIsCheckoutProject       true, if the project should be checked out. This requires pBranch to be set.
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
   @Nullable
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @Nullable String pBranch, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @Nullable String pBranch,
+                            boolean pIsCheckoutProject, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -84,9 +86,10 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
+        checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(),
+                              pIsCheckoutProject, pBranch);
       }
-      else if (pBranch != null)
+      else if (pIsCheckoutProject && pBranch != null)
       {
         boolean cloneSuccess = performGitClone(pHandle, getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
                                                pBranch, null, "origin", pTarget);
@@ -106,7 +109,8 @@ public class SSPCheckoutExecutor
   }
 
   private static void checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials,
-                                            @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, @Nullable String pBranch)
+                                            @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, boolean pIncludeGitProject,
+                                            @Nullable String pFallbackBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     try
@@ -120,14 +124,17 @@ public class SSPCheckoutExecutor
           writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
 
           Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
-          String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
 
-          // Clone project, if possible
+          // Clone project, if possible and necessary
           Boolean cloneSuccess = null;
-          if (branchToCheckout != null)
+          if (pIncludeGitProject)
           {
-            String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
-            cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
+            String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pFallbackBranch);
+            if (branchToCheckout != null)
+            {
+              String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+              cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
+            }
           }
 
           // Read from deployed state, if the clone did not fail
