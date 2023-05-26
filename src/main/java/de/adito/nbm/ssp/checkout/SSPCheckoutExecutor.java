@@ -16,6 +16,7 @@ import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.INotificationFacade;
 import lombok.*;
+import lombok.extern.java.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
@@ -111,38 +112,40 @@ public class SSPCheckoutExecutor
     try
     {
       storeSSHPasswords(pSystemDetails, ISSPFacade.getInstance(), pCurrentCredentials, pTunnelConfigContents);
-      boolean isTunnelsGo = startTunnels(pTunnelConfigContents);
-      if (isTunnelsGo)
+      try (StartTunnelInfo tunnelInfo = startTunnels(pTunnelConfigContents))
       {
-        Path tempServerConfigFile = Files.createTempFile("", "");
-        writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
-
-        Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
-        String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
-
-        // Clone project, if possible
-        Boolean cloneSuccess = null;
-        if (branchToCheckout != null)
+        if (tunnelInfo.isTunnelsGo())
         {
-          String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
-          cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
-        }
+          Path tempServerConfigFile = Files.createTempFile("", "");
+          writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
 
-        // Read from deployed state, if the clone did not fail
-        if (cloneSuccess != Boolean.FALSE)
-        {
-          // if no project was cloned before, then the target directory should be created anyway
-          if (!pTarget.exists())
-            //noinspection ResultOfMethodCallIgnored
-            pTarget.mkdirs();
-          else
-            cleanTargetDirectory(pTarget);
+          Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
+          String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
 
-          String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
-          IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
-          String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
-          projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
-          writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
+          // Clone project, if possible
+          Boolean cloneSuccess = null;
+          if (branchToCheckout != null)
+          {
+            String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+            cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
+          }
+
+          // Read from deployed state, if the clone did not fail
+          if (cloneSuccess != Boolean.FALSE)
+          {
+            // if no project was cloned before, then the target directory should be created anyway
+            if (!pTarget.exists())
+              //noinspection ResultOfMethodCallIgnored
+              pTarget.mkdirs();
+            else
+              cleanTargetDirectory(pTarget);
+
+            String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
+            IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
+            String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
+            projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
+            writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
+          }
         }
       }
     }
@@ -226,7 +229,14 @@ public class SSPCheckoutExecutor
     return Optional.ofNullable(configMap).map(pConfigMap -> pConfigMap.get("linked_git_project")).orElseGet(pSystemDetails::getGitRepoUrl);
   }
 
-  private static boolean startTunnels(@NotNull String pTunnelConfigContents)
+  /**
+   * Starts all necessary tunnels described in the given tunnel config
+   *
+   * @param pTunnelConfigContents tunnel config that contains all necessary tunnels
+   * @return information about the started tunnels
+   */
+  @NotNull
+  private static StartTunnelInfo startTunnels(@NotNull String pTunnelConfigContents)
   {
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
     if (tunnelProvider != null)
@@ -242,7 +252,7 @@ public class SSPCheckoutExecutor
                                                                                                                  "TXT.SSPCheckoutExecutor.tunnel.start.failed"),
                                                       SSPCheckoutExecutor.tunnelToString(pTunnel)));
         }
-        return failedTunnels.size() != sshTunnels.size();
+        return new StartTunnelInfo(failedTunnels.size() != sshTunnels.size(), sshTunnels);
       }
       catch (InterruptedException | TransformerException pE)
       {
@@ -250,7 +260,7 @@ public class SSPCheckoutExecutor
                                                                                         ExceptionUtils.getStackTrace(pE)));
       }
     }
-    return false;
+    return new StartTunnelInfo(false, List.of());
   }
 
   /**
@@ -483,6 +493,43 @@ public class SSPCheckoutExecutor
   private static String tunnelToString(ISSHTunnel pTunnel)
   {
     return pTunnel.getLocalTarget() + ":" + pTunnel.getRemoteTargetPort() + ":" + pTunnel.getRemoteTarget() + "@" + pTunnel.getTunnelHost() + ":" + pTunnel.getPort();
+  }
+
+  /**
+   * Contains information about all started tunnels and provides the ability to close them afterwards.
+   * This object gets created during {@link SSPCheckoutExecutor#startTunnels(String)}.
+   */
+  @Log
+  @RequiredArgsConstructor
+  private static class StartTunnelInfo implements AutoCloseable
+  {
+    /**
+     * Determines, if the tunnels are connect and ready
+     */
+    @Getter
+    private final boolean isTunnelsGo;
+
+    /**
+     * Contains all closables, that should be closed during {@link AutoCloseable#close()}
+     */
+    @NotNull
+    private final List<? extends AutoCloseable> closeables;
+
+    @Override
+    public void close()
+    {
+      for (AutoCloseable closeable : closeables)
+      {
+        try
+        {
+          closeable.close();
+        }
+        catch (Exception e)
+        {
+          log.log(Level.WARNING, "Failed to close object: " + closeable, e);
+        }
+      }
+    }
   }
 
 }
