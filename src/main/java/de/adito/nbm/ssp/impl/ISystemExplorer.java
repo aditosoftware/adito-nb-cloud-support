@@ -8,7 +8,7 @@ import de.adito.nbm.ssp.HttpUtil;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.INotificationFacade;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.json.*;
 
 import java.util.*;
@@ -33,8 +33,8 @@ interface ISystemExplorer
    * @throws AditoSSPUnauthorizedException               if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException                           if the response of the server contains an error status other than the ones listed above
    */
-  @NotNull
-  default List<ISSPSystem> retrieveSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws UnirestException, AditoSSPException
+  @NonNull
+  default List<ISSPSystem> retrieveSystems(@NonNull String pUsername, @NonNull DecodedJWT pJWT) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject listSystemBody = new JSONObject(Map.of(USER_KEY, pUsername, TOKEN_KEY, pJWT.getToken()));
@@ -54,9 +54,9 @@ interface ISystemExplorer
    * @param jsonObject the {@link JSONObject} the SSP-Systems need to be extracted
    * @return the list of extracted systems
    */
-  @NotNull
+  @NonNull
   @VisibleForTesting
-  static List<ISSPSystem> extractSspSystems(@NotNull JSONObject jsonObject)
+  static List<ISSPSystem> extractSspSystems(@NonNull JSONObject jsonObject)
   {
     List<ISSPSystem> sspSystems = new ArrayList<>();
 
@@ -78,7 +78,7 @@ interface ISystemExplorer
     return sspSystems;
   }
 
-  default ISSPSystemDetails retrieveDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException,
+  default ISSPSystemDetails retrieveDetails(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException,
       MalformedInputException, AditoSSPParseException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
@@ -92,7 +92,7 @@ interface ISystemExplorer
     return new SSPSystemDetailsImpl(pSystem, jsonArray);
   }
 
-  default Map<String, String> retrieveConfigMap(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
+  default Map<String, String> retrieveConfigMap(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject systemDetailsBody = new JSONObject(Map.of(USER_KEY, pUsername, TOKEN_KEY, pJWT.getToken(), SYSTEM_ID_KEY, pSystem.getSystemdId()));
@@ -110,7 +110,7 @@ interface ISystemExplorer
     return configMap;
   }
 
-  @NotNull
+  @NonNull
   String getListSystemsServiceUrl();
 
   String getListSystemDetailsServiceUrl();

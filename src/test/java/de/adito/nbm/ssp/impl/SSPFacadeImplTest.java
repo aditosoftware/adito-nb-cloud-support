@@ -4,8 +4,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -23,17 +23,17 @@ import static org.mockito.ArgumentMatchers.any;
  */
 class SSPFacadeImplTest
 {
-  @NotNull
+  @NonNull
   private static final String SYSTEM_ID = "1234";
-  @NotNull
+  @NonNull
   private static final String USERNAME = "Alice";
-  @NotNull
+  @NonNull
   private static final String SYSTEM_ID_MESSAGE = "SystemId: " + SYSTEM_ID;
 
   /**
    * @return the arguments for all handle error methods in this test class
    */
-  @NotNull
+  @NonNull
   private static Stream<Arguments> createArgumentsForHandleError()
   {
     return Stream.of(
@@ -90,7 +90,7 @@ class SSPFacadeImplTest
     @SneakyThrows
     @ParameterizedTest
     @MethodSource("de.adito.nbm.ssp.impl.SSPFacadeImplTest#createArgumentsForHandleError")
-    void shouldHandleError(@NotNull Exception pException)
+    void shouldHandleError(@NonNull Exception pException)
     {
       SSPFacadeImpl sspFacade = Mockito.spy(new SSPFacadeImpl());
       Mockito.doThrow(pException).when(sspFacade).checkSystemStatus(any(), any(), any());
@@ -130,7 +130,7 @@ class SSPFacadeImplTest
     @ParameterizedTest
     @MethodSource("de.adito.nbm.ssp.impl.SSPFacadeImplTest#createArgumentsForHandleError")
     @SneakyThrows
-    void shouldHandleError(@NotNull Exception pException)
+    void shouldHandleError(@NonNull Exception pException)
     {
       SSPFacadeImpl sspFacade = Mockito.spy(new SSPFacadeImpl());
       Mockito.doThrow(pException).when(sspFacade).doStartSystem(any(), any(), any());
@@ -169,7 +169,7 @@ class SSPFacadeImplTest
     @ParameterizedTest
     @MethodSource("de.adito.nbm.ssp.impl.SSPFacadeImplTest#createArgumentsForHandleError")
     @SneakyThrows
-    void shouldHandleError(@NotNull Exception pException)
+    void shouldHandleError(@NonNull Exception pException)
     {
       SSPFacadeImpl sspFacade = Mockito.spy(new SSPFacadeImpl());
       Mockito.doThrow(pException).when(sspFacade).doStopSystem(any(), any(), any());

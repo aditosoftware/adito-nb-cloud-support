@@ -6,8 +6,8 @@ import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
 import io.reactivex.rxjava3.core.Observable;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -56,7 +56,7 @@ class IStopSystemActionTest
     /**
      * @return the arguments for {@link #shouldStopSystem(String, boolean)}
      */
-    @NotNull
+    @NonNull
     private Stream<Arguments> shouldStopSystem()
     {
       return Stream.of(
@@ -74,7 +74,7 @@ class IStopSystemActionTest
     @ParameterizedTest
     @MethodSource
     @SneakyThrows
-    void shouldStopSystem(@NotNull String pMessage, boolean pStoppedSystem)
+    void shouldStopSystem(@NonNull String pMessage, boolean pStoppedSystem)
     {
       ISystemInfo systemInfo = Mockito.spy(ISystemInfo.class);
       Mockito.doReturn(Observable.empty()).when(systemInfo).getCloudId();

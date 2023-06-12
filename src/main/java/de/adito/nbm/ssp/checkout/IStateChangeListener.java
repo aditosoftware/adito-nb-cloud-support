@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 /**
  * @author m.kaspera, 05.03.2021
@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 public interface IStateChangeListener
 {
 
-  void changedValidity(@NotNull State pState);
+  void changedValidity(@NonNull State pState);
 
   enum State
   {

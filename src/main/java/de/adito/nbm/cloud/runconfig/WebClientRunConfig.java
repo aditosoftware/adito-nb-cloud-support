@@ -7,7 +7,7 @@ import de.adito.nbm.runconfig.spi.IActiveConfigComponentProvider;
 import de.adito.observables.netbeans.*;
 import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.project.*;
 import org.openide.util.Lookup;
@@ -31,14 +31,14 @@ public class WebClientRunConfig implements IRunConfig
     systemInfo = pSystemInfo;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<Optional<IRunConfigCategory>> category()
   {
     return Observable.just(Optional.of(new AditoClientRunConfigCategory()));
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<Optional<Image>> icon()
   {
@@ -46,7 +46,7 @@ public class WebClientRunConfig implements IRunConfig
                         .map(pIconProvider -> pIconProvider.findImage(IVaadinIconsProvider.VaadinIcon.BROWSER, new IconAttributes.Builder().create())));
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<String> displayName()
   {
@@ -69,7 +69,7 @@ public class WebClientRunConfig implements IRunConfig
   }
 
   @Override
-  public void executeAsnyc(@NotNull ProgressHandle pProgressHandle) throws Exception
+  public void executeAsnyc(@NonNull ProgressHandle pProgressHandle) throws Exception
   {
     Desktop.getDesktop().browse(new URI(systemInfo.getParameters().get(ISystemInfo.WEBCLIENT_URL_KEY)));
   }

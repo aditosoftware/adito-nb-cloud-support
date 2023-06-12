@@ -10,8 +10,8 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.*;
+import lombok.NonNull;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.*;
 
@@ -27,16 +27,16 @@ public class SystemStatusFacadeImpl implements ISystemStatusFacade, Disposable
   private final ObservableCache observableCache = new ObservableCache();
   private final ObservableCacheDisposable observableCacheDisposable = new ObservableCacheDisposable(observableCache);
 
-  @NotNull
+  @NonNull
   @Override
-  public Observable<Boolean> getIsSystemRunningObservable(@NotNull String pCloudId)
+  public Observable<Boolean> getIsSystemRunningObservable(@NonNull String pCloudId)
   {
     return observableCache.calculate(pCloudId, () -> _createSubjectAndObs(pCloudId).right);
   }
 
-  @NotNull
+  @NonNull
   @Override
-  public Boolean triggerIsSystemRunningUpdate(@NotNull String pCloudId)
+  public Boolean triggerIsSystemRunningUpdate(@NonNull String pCloudId)
   {
     Subject<String> triggerUpdateSubject = subjectCache.getIfPresent(pCloudId);
     if (triggerUpdateSubject == null)
@@ -48,7 +48,7 @@ public class SystemStatusFacadeImpl implements ISystemStatusFacade, Disposable
         .blockingFirst(Boolean.FALSE);
   }
 
-  private ImmutablePair<Subject<String>, Observable<Boolean>> _createSubjectAndObs(@NotNull String pCloudId)
+  private ImmutablePair<Subject<String>, Observable<Boolean>> _createSubjectAndObs(@NonNull String pCloudId)
   {
     Subject<String> triggerUpdateSubject;
     try

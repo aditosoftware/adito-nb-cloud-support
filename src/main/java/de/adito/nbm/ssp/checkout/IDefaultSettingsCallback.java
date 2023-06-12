@@ -1,5 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
+import lombok.NonNull;
 import org.jetbrains.annotations.*;
 
 import java.awt.*;
@@ -28,6 +29,6 @@ public interface IDefaultSettingsCallback
   /**
    * Gibt die Default-Hintergrundfarbe f?r ein VisualPanel des Wizards zur?ck
    */
-  @NotNull
+  @NonNull
   Color getDefaultBackgroundColor();
 }

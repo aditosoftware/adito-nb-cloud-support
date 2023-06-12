@@ -5,7 +5,7 @@ import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.HttpUtil;
 import de.adito.nbm.ssp.exceptions.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -26,7 +26,7 @@ interface ISystemStopper
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  default boolean doStopSystem(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId) throws UnirestException, AditoSSPException
+  default boolean doStopSystem(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject systemDetailsBody = new JSONObject(Map.of(ISystemExplorer.USER_KEY, pUsername, ISystemExplorer.TOKEN_KEY, pJWT.getToken(),
@@ -40,7 +40,7 @@ interface ISystemStopper
     return replicaCount != null && (int) replicaCount == 0;
   }
 
-  @NotNull
+  @NonNull
   String getSystemStopUrl();
 
 }

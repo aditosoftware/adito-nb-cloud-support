@@ -6,7 +6,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.util.NbBundle;
 
 import javax.swing.*;
@@ -101,7 +101,7 @@ public class CList extends JPanel implements Scrollable
    * @throws UnirestException  if an error occurs during the rest call when retrieving the systems
    * @throws AditoSSPException if the response of the server contains an error status when retrieving the systems
    */
-  public void fillListBasedOnURL(@NotNull DecodedJWT pToken) throws UnirestException, AditoSSPException
+  public void fillListBasedOnURL(@NonNull DecodedJWT pToken) throws UnirestException, AditoSSPException
   {
     // clear old list
     clearList();
@@ -210,7 +210,7 @@ public class CList extends JPanel implements Scrollable
    *
    * @param pSelected The newly selected object
    */
-  public void setSelected(@NotNull CListObject pSelected)
+  public void setSelected(@NonNull CListObject pSelected)
   {
     if (!pSelected.getSystemDetails().isDesignerVersionOk())
       return;

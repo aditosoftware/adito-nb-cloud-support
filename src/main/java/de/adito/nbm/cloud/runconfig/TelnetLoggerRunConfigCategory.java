@@ -4,7 +4,7 @@ import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.nbm.runconfig.api.IRunConfigCategory;
 import de.adito.swing.icon.IconAttributes;
 import io.reactivex.rxjava3.core.Observable;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.util.Lookup;
 
 import java.awt.*;
@@ -23,21 +23,21 @@ public class TelnetLoggerRunConfigCategory implements IRunConfigCategory
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getName()
   {
     return "Servers";
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<String> title()
   {
     return Observable.just("Servers");
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<Optional<Image>> icon()
   {

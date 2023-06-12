@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.WizardDescriptor;
 import org.openide.util.*;
 
@@ -107,7 +107,7 @@ public class SSPCheckoutProjectWizardPanel1 implements WizardDescriptor.Panel<Wi
   }
 
   @Override
-  public void changedValidity(@NotNull State pState)
+  public void changedValidity(@NonNull State pState)
   {
     if (pState == State.ISVALID)
       wd.setValid(true);

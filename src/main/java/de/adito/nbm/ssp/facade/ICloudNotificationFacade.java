@@ -1,7 +1,7 @@
 package de.adito.nbm.ssp.facade;
 
 import de.adito.nbm.ssp.impl.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public interface ICloudNotificationFacade
    * @param pOptions Selectable buttons for the user
    * @return the selected option the user chose
    */
-  @NotNull
-  Object notifyUser(@NotNull String pMessage, @NotNull String pTitle, @NotNull List<Object> pOptions);
+  @NonNull
+  Object notifyUser(@NonNull String pMessage, @NonNull String pTitle, @NonNull List<Object> pOptions);
 
 }

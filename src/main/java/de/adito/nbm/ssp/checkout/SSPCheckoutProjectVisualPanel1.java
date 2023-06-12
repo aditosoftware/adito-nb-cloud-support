@@ -13,6 +13,7 @@ import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
+import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.jetbrains.annotations.*;
 import org.openide.util.*;
@@ -77,17 +78,17 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     add(urlLabel, BorderLayout.SOUTH);
   }
 
-  public void addStateChangeListener(@NotNull IStateChangeListener pListener)
+  public void addStateChangeListener(@NonNull IStateChangeListener pListener)
   {
     validListeners.add(pListener);
   }
 
-  public void removeStateChangeListener(@NotNull IStateChangeListener pListener)
+  public void removeStateChangeListener(@NonNull IStateChangeListener pListener)
   {
     validListeners.remove(pListener);
   }
 
-  private void fireStateChanged(@NotNull IStateChangeListener.State pState)
+  private void fireStateChanged(@NonNull IStateChangeListener.State pState)
   {
     validListeners.forEach(pListener -> pListener.changedValidity(pState));
   }
@@ -219,7 +220,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @throws UnirestException  if an error occurs during the rest call when loading the systems for the list
    * @throws AditoSSPException if the response of the server contains an error status when loading the systems for the list
    */
-  private void loadList(@NotNull DecodedJWT pToken) throws UnirestException, AditoSSPException
+  private void loadList(@NonNull DecodedJWT pToken) throws UnirestException, AditoSSPException
   {
     cList.fillListBasedOnURL(pToken);
     refreshShowPanel();
@@ -232,7 +233,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pSelected The object to set as selected
    * @param pDoScroll represents if the view should scroll to the CListObject
    */
-  private void setSelected(@NotNull CListObject pSelected, boolean pDoScroll)
+  private void setSelected(@NonNull CListObject pSelected, boolean pDoScroll)
   {
     cList.setSelected(pSelected);
     if (pDoScroll)
@@ -322,7 +323,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
       }
 
       @Override
-      public void addOptions(@NotNull Map<String, Object> pOptionsMap)
+      public void addOptions(@NonNull Map<String, Object> pOptionsMap)
       {
         pOptionsMap.put(SSPCheckoutProjectWizardIterator.CHECKOUT_DEPLOYED_STATE, loadConfigsCB.isSelected());
       }
@@ -382,7 +383,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pActionOnRetry ButtonAction in form of a Runnable. This action is assigned to the "Retry..." button
    *                       If NULL no "Retry..." is shown
    */
-  private void showErrorPanel(@NotNull NotificationPanel.NotificationType pType, @NotNull final Exception pException, @Nullable final Runnable pActionOnRetry)
+  private void showErrorPanel(@NonNull NotificationPanel.NotificationType pType, @NonNull final Exception pException, @Nullable final Runnable pActionOnRetry)
   {
     String errorMessage = ExceptionUtils.getRootCauseMessage(pException);
     if (pException instanceof AditoSSPAuthException)
@@ -594,7 +595,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     JComponent getComponent();
 
-    void addOptions(@NotNull Map<String, Object> pOptionsMap);
+    void addOptions(@NonNull Map<String, Object> pOptionsMap);
 
   }
 

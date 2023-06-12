@@ -6,7 +6,7 @@ import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.*;
 import io.reactivex.rxjava3.disposables.Disposable;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.awt.*;
 import org.openide.nodes.Node;
 import org.openide.util.*;
@@ -38,7 +38,7 @@ public class StopSystemAction extends AbstractAsyncNodeAction implements IContex
   }
 
   @Override
-  protected boolean enable0(@NotNull Node[] activatedNodes)
+  protected boolean enable0(@NonNull Node[] activatedNodes)
   {
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
     if (systemInfo != null)

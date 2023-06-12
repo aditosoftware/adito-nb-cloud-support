@@ -4,6 +4,7 @@ import de.adito.nbm.ssp.WarningPanel;
 import de.adito.nbm.ssp.checkout.UsernameEmailDocumentListener;
 import de.adito.swing.TableLayoutUtil;
 import info.clearthought.layout.*;
+import lombok.NonNull;
 import org.jetbrains.annotations.*;
 import org.openide.util.NbBundle;
 
@@ -24,7 +25,7 @@ public class UserCredentialsDialog extends JPanel
   private final JPasswordField passwordField = new JPasswordField(PW_FIELD_NUM_CHARS);
   private final JCheckBox rememberPasswordCheckbox = new JCheckBox(NbBundle.getMessage(UserCredentialsDialog.class, "LBL.UserCredentialsDialog.password.store"));
 
-  UserCredentialsDialog(@Nullable String pUsername, @NotNull char[] pPassword)
+  UserCredentialsDialog(@Nullable String pUsername, @NonNull char[] pPassword)
   {
     _initGui();
     if (pUsername != null)
@@ -65,13 +66,13 @@ public class UserCredentialsDialog extends JPanel
     usernameField.getDocument().addDocumentListener(new UsernameEmailDocumentListener(WARNING_PANEL));
   }
 
-  @NotNull
+  @NonNull
   public String getUsername()
   {
     return usernameField.getText();
   }
 
-  @NotNull
+  @NonNull
   public char[] getPassword()
   {
     return passwordField.getPassword();
@@ -87,12 +88,12 @@ public class UserCredentialsDialog extends JPanel
     passwordField.setText("");
   }
 
-  public void addPasswordFieldDocumentListener(@NotNull DocumentListener pDocumentListener)
+  public void addPasswordFieldDocumentListener(@NonNull DocumentListener pDocumentListener)
   {
     passwordField.getDocument().addDocumentListener(pDocumentListener);
   }
 
-  public void addUsernameFieldDocumentListener(@NotNull DocumentListener pDocumentListener)
+  public void addUsernameFieldDocumentListener(@NonNull DocumentListener pDocumentListener)
   {
     usernameField.getDocument().addDocumentListener(pDocumentListener);
   }

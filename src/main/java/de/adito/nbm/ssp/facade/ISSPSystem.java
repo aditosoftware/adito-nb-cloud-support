@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.facade;
 
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import java.time.Instant;
 
@@ -15,7 +15,7 @@ public interface ISSPSystem
    *
    * @return the name of the server
    */
-  @NotNull
+  @NonNull
   String getName();
 
 
@@ -24,7 +24,7 @@ public interface ISSPSystem
    *
    * @return URl
    */
-  @NotNull
+  @NonNull
   String getUrl();
 
   /**
@@ -32,7 +32,7 @@ public interface ISSPSystem
    *
    * @return ID
    */
-  @NotNull
+  @NonNull
   String getClusterId();
 
   /**
@@ -40,7 +40,7 @@ public interface ISSPSystem
    *
    * @return Id of the sytem
    */
-  @NotNull
+  @NonNull
   String getSystemdId();
 
   /**
@@ -48,7 +48,7 @@ public interface ISSPSystem
    *
    * @return RanchR id
    */
-  @NotNull
+  @NonNull
   String getRanchRId();
 
   /**

@@ -8,6 +8,7 @@ import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.notification.INotificationFacade;
 import de.adito.swing.IFileChooserProvider;
+import lombok.NonNull;
 import org.jetbrains.annotations.*;
 import org.openide.WizardDescriptor;
 import org.openide.util.*;
@@ -276,9 +277,9 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return null;
   }
 
-  @NotNull
+  @NonNull
   @VisibleForTesting
-  IRef[] getAvailableRef(@NotNull String pGitUrl)
+  IRef[] getAvailableRef(@NonNull String pGitUrl)
   {
     List<IRef> gitRefs = new ArrayList<>();
     List<ITag> tags = new ArrayList<>();
@@ -308,7 +309,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
 
 
   @Nullable
-  private IRef getCurrentRef(@NotNull IRef[] pRefs)
+  private IRef getCurrentRef(@NonNull IRef[] pRefs)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     for (IRef ref : pRefs)
