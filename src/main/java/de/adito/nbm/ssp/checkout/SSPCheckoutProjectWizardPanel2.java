@@ -9,7 +9,7 @@ import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.notification.INotificationFacade;
 import de.adito.swing.IFileChooserProvider;
 import lombok.NonNull;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.openide.WizardDescriptor;
 import org.openide.util.*;
 
@@ -134,6 +134,11 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
         cs.fireChange();
       }
     });
+    comp.getCheckoutModeSelectionButtons().forEach(pButton -> pButton.addActionListener(e -> {
+      if (wd != null)
+        wd.putProperty(SSPCheckoutProjectWizardIterator.CHECKOUT_MODE, getCheckoutMode());
+      cs.fireChange();
+    }));
     comp.getGitBranchComboBox().addItemListener(e -> {
       if (e.getStateChange() == ItemEvent.SELECTED)
       {
@@ -183,21 +188,49 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
       comp.getProjectLocationTextField().setText(projectPath.toString());
 
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
+    String repoUrl = cListObject == null ? null : cListObject.getSystemDetails().getGitRepoUrl();
     if (cListObject != null)
     {
       model.removeAllElements();
-      IRef[] getAvailableRefs = getAvailableRef(cListObject.getSystemDetails().getGitRepoUrl());
-      for (IRef getAvailableRef : getAvailableRefs)
+      if (repoUrl != null)
       {
-        model.addElement(getAvailableRef);
+        IRef[] getAvailableRefs = getAvailableRef(repoUrl);
+        for (IRef getAvailableRef : getAvailableRefs)
+          model.addElement(getAvailableRef);
+
+        comp.getGitBranchComboBox().setModel(model);
+        IRef toSet = getCurrentRef(getAvailableRefs);
+        if (toSet != null)
+          comp.getGitBranchComboBox().setSelectedItem(toSet);
       }
-
-      comp.getGitBranchComboBox().setModel(model);
-      IRef toSet = getCurrentRef(getAvailableRefs);
-      if (toSet != null)
-        comp.getGitBranchComboBox().setSelectedItem(toSet);
-
     }
+
+    Object checkoutMode = wd.getProperty(SSPCheckoutProjectWizardIterator.CHECKOUT_MODE);
+    SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton firstPossibleItem = null;
+    boolean isAnythingSelected = false;
+    for (SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton pItem : comp.getCheckoutModeSelectionButtons())
+    {
+      // check enabled state, based on git repo
+      pItem.updateEnabledBasedOnProjectAvailability(repoUrl != null);
+      if (pItem.isEnabled())
+      {
+        // check selected state, based on current checkout mode
+        boolean isSelected = pItem.getCheckoutMode() == checkoutMode;
+        if (isSelected)
+          pItem.doClick();
+        else
+          pItem.setSelected(false);
+
+        // store information, so we can select the first possible item if necessary
+        firstPossibleItem = firstPossibleItem == null ? pItem : firstPossibleItem;
+        isAnythingSelected = isAnythingSelected || isSelected;
+      }
+      else
+        // disabled items can not be selected
+        pItem.setSelected(false);
+    }
+    if (!isAnythingSelected && firstPossibleItem != null)
+      firstPossibleItem.doClick();
   }
 
 
@@ -267,6 +300,19 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
     return text;
   }
 
+  /**
+   * @return the current checkout mode
+   */
+  @NonNull
+  private SSPCheckoutProjectWizardIterator.ECheckoutMode getCheckoutMode()
+  {
+    return comp.getCheckoutModeSelectionButtons().stream()
+        .filter(AbstractButton::isSelected)
+        .map(SSPCheckoutProjectVisualPanel2.CheckoutModeRadioButton::getCheckoutMode)
+        .findFirst()
+        .orElseThrow();
+  }
+
   @Nullable
   private ISSPSystemDetails getProjectDescription()
   {
@@ -312,11 +358,16 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
   private IRef getCurrentRef(@NonNull IRef[] pRefs)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
-    for (IRef ref : pRefs)
+    String gitBranch = cListObject.getSystemDetails().getGitBranch();
+    if (gitBranch != null)
     {
-      if (ref.getName().matches(cListObject.getSystemDetails().getGitBranch()))
-        return ref;
+      for (IRef ref : pRefs)
+      {
+        if (ref.getName().matches(gitBranch))
+          return ref;
+      }
     }
+
     return null;
   }
 

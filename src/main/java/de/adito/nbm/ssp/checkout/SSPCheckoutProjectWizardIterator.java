@@ -2,8 +2,8 @@ package de.adito.nbm.ssp.checkout;
 
 import com.google.common.collect.Sets;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
-import lombok.NonNull;
-import org.jetbrains.annotations.*;
+import lombok.*;
+import org.jetbrains.annotations.Nullable;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.WizardDescriptor;
 import org.openide.filesystems.FileObject;
@@ -24,12 +24,13 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
 {
 
   private static final ImageIcon PROJECT_ICON = ImageUtilities.loadImageIcon("de/adito/nbm/ssp/checkout/adito16.png", false);
+
   // Property names for the WizardDescriptor
   public static final String PROJECT_NAME = "de.adito.ssp.new.project.name";
   public static final String PROJECT_PATH = "de.adito.ssp.new.project.path";
   public static final String PROJECT_GIT_BRANCH = "de.adito.ssp.new.project.gitbranch";
   public static final String SELECTED = "de.adito.ssp.new.selected";
-  public static final String CHECKOUT_DEPLOYED_STATE = "de.adito.ssp.new.checkout.deployed";
+  public static final String CHECKOUT_MODE = "de.adito.ssp.new.checkout.mode";
 
   // Callback object for default settings
   private static final IDefaultSettingsCallback defaultSettings = new DefaultSettingsCallback();
@@ -102,18 +103,25 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
     if (projectPath != null)
     {
       CListObject cListObject = (CListObject) wizard.getProperty(SELECTED);
-      boolean isCheckoutDeployedState = (boolean) wizard.getProperty(CHECKOUT_DEPLOYED_STATE);
-      String branchToSet;
-      if(wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH) != null)
+      ECheckoutMode checkoutMode = (ECheckoutMode) wizard.getProperty(CHECKOUT_MODE);
+
+      // Find GIT-Branch to clone
+      String branchToSet = null;
+      if (checkoutMode.isLoadProject())
       {
-        branchToSet = (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
+        if (wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH) != null)
+          branchToSet = (String) wizard.getProperty(SSPCheckoutProjectWizardIterator.PROJECT_GIT_BRANCH);
+        else
+          branchToSet = cListObject.getSystemDetails().getGitBranch();
       }
-      else
-      {
-        branchToSet = cListObject.getSystemDetails().getGitBranch();
-      }
+
+      // Determine, if the system state and/or project should be read
+      boolean loadSystemState = checkoutMode.isLoadSystemState();
+      boolean loadProject = checkoutMode.isLoadProject();
+
+      // Download System!
       instantiated = SSPCheckoutExecutor.execute(handle, cListObject.getSystemDetails(), new File(projectPath),
-                                                 branchToSet, isCheckoutDeployedState);
+                                                 branchToSet, loadProject, loadSystemState);
     }
     return instantiated == null ? Collections.emptySet() : Sets.newHashSet(instantiated);
   }
@@ -261,5 +269,40 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   public static String getMessage(Class<?> pClass, String pMsg, Object... params)
   {
     return NbBundle.getMessage(pClass, pMsg, params);
+  }
+
+  /**
+   * Mode to determine, how the checkout should be done
+   */
+  @RequiredArgsConstructor
+  public enum ECheckoutMode
+  {
+    /**
+     * Download the project (from git) only
+     */
+    PROJECT_ONLY(false, true),
+
+    /**
+     * Download the project from the system database only
+     */
+    SYSTEMSTATE_ONLY(true, false),
+
+    /**
+     * Dowlnoad the project (from git) first and then
+     * apply all changes made in the system database
+     */
+    PROJECT_AND_SYSTEMSTATE(true, true);
+
+    /**
+     * true, if this mode is loading the system state
+     */
+    @Getter
+    private final boolean loadSystemState;
+
+    /**
+     * true, if this mode is loading the (git) project
+     */
+    @Getter
+    private final boolean loadProject;
   }
 }

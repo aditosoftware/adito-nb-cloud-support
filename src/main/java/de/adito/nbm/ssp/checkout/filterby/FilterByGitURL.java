@@ -14,8 +14,12 @@ public class FilterByGitURL extends FilterBy
   @Override
   public boolean filter(String pToCompare, ISSPSystemDetails pSelected)
   {
+    String repoUrl = pSelected.getGitRepoUrl();
+    if (repoUrl == null)
+      return false;
+
     String fullPattern = pattern + pToCompare + pattern;
-    return  pSelected.getGitRepoUrl().matches(fullPattern);
+    return repoUrl.matches(fullPattern);
   }
 
   @Override
@@ -25,7 +29,8 @@ public class FilterByGitURL extends FilterBy
   }
 
   @Override
-  public String toString(){
+  public String toString()
+  {
     return FILTERNAME;
   }
 }

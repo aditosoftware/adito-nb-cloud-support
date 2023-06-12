@@ -16,9 +16,10 @@ import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.INotificationFacade;
 import lombok.*;
+import lombok.extern.java.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.netbeans.api.keyring.Keyring;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.filesystems.*;
@@ -63,11 +64,14 @@ public class SSPCheckoutExecutor
    * @param pHandle                  ProgressHandle that should be used to indicate the current progress
    * @param pSystemDetails           Selected system details, containg the info about the git repo and url as well as the system id
    * @param pTarget                  the location that the project should be cloned to
+   * @param pBranch                  Name of the branch to checkout, null may use the previously deployed branch
+   * @param pIsCheckoutProject       true, if the project should be checked out. This requires pBranch to be set.
    * @param pIsCheckoutDeployedState whether the default state of the system should be checked out or the currently deployed state as it is in the database
    * @return true if the clone was performed successfully
    */
   @Nullable
-  static FileObject execute(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull File pTarget, @NonNull String pBranch, boolean pIsCheckoutDeployedState)
+  static FileObject execute(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull File pTarget, @Nullable String pBranch,
+                            boolean pIsCheckoutProject, boolean pIsCheckoutDeployedState)
   {
     try
     {
@@ -82,9 +86,10 @@ public class SSPCheckoutExecutor
       Optional<String> tunnelConfigContentsOpt = getTunnelConfigContents(pHandle, pSystemDetails);
       if (pIsCheckoutDeployedState && serverConfigContentsOpt.isPresent() && tunnelConfigContentsOpt.isPresent())
       {
-        checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(), pBranch);
+        checkoutDeployedState(pHandle, pSystemDetails, currentCredentials, pTarget, serverConfigContentsOpt.get(), tunnelConfigContentsOpt.get(),
+                              pIsCheckoutProject, pBranch);
       }
-      else
+      else if (pIsCheckoutProject && pBranch != null)
       {
         boolean cloneSuccess = performGitClone(pHandle, getGitProject(ISSPFacade.getInstance(), pSystemDetails, currentCredentials),
                                                pBranch, null, "origin", pTarget);
@@ -104,31 +109,50 @@ public class SSPCheckoutExecutor
   }
 
   private static void checkoutDeployedState(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull DecodedJWT pCurrentCredentials,
-                                            @NonNull File pTarget, @NonNull String pServerConfigContents, @NonNull String pTunnelConfigContents, @NonNull String pBranch)
+                                            @NonNull File pTarget, @NonNull String pServerConfigContents, @NonNull String pTunnelConfigContents, boolean pIncludeGitProject,
+                                            @Nullable String pFallbackBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
     try
     {
       storeSSHPasswords(pSystemDetails, ISSPFacade.getInstance(), pCurrentCredentials, pTunnelConfigContents);
-      boolean isTunnelsGo = startTunnels(pTunnelConfigContents);
-      if (isTunnelsGo)
+      try (StartTunnelInfo tunnelInfo = startTunnels(pTunnelConfigContents))
       {
-        Path tempServerConfigFile = Files.createTempFile("", "");
-        writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
-
-        Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
-        String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pBranch);
-        String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
-        String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
-
-        boolean cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
-        if (cloneSuccess)
+        if (tunnelInfo.isTunnelsGo())
         {
-          cleanTargetDirectory(pTarget);
-          String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
-          IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
-          projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
-          writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
+          Path tempServerConfigFile = Files.createTempFile("", "");
+          writeFileData(tempServerConfigFile.toFile(), pServerConfigContents);
+
+          Optional<IMetaInfo> metaInfos = getMetaInfos(tempServerConfigFile.toFile());
+
+          // Clone project, if possible and necessary
+          Boolean cloneSuccess = null;
+          if (pIncludeGitProject)
+          {
+            String branchToCheckout = metaInfos.map(SSPCheckoutExecutor::getDeployedBranch).orElse(pFallbackBranch);
+            if (branchToCheckout != null)
+            {
+              String gitProjectUrl = getGitProject(ISSPFacade.getInstance(), pSystemDetails, pCurrentCredentials);
+              cloneSuccess = performGitClone(pHandle, gitProjectUrl, branchToCheckout, null, "origin", pTarget);
+            }
+          }
+
+          // Read from deployed state, if the clone did not fail
+          if (cloneSuccess != Boolean.FALSE)
+          {
+            // if no project was cloned before, then the target directory should be created anyway
+            if (!pTarget.exists())
+              //noinspection ResultOfMethodCallIgnored
+              pTarget.mkdirs();
+            else
+              cleanTargetDirectory(pTarget);
+
+            String serverConfigPath = tempServerConfigFile.toAbsolutePath().toString();
+            IProjectCreationManager projectCreationManager = Lookup.getDefault().lookup(IProjectCreationManager.class);
+            String projectVersion = metaInfos.map(SSPCheckoutExecutor::getProjectVersion).orElse(null);
+            projectCreationManager.createProject(pHandle, pTarget.getParentFile().getAbsolutePath(), pTarget.getName(), projectVersion, serverConfigPath);
+            writeConfigs(pHandle, pSystemDetails, pTarget, pCurrentCredentials);
+          }
         }
       }
     }
@@ -212,7 +236,14 @@ public class SSPCheckoutExecutor
     return Optional.ofNullable(configMap).map(pConfigMap -> pConfigMap.get("linked_git_project")).orElseGet(pSystemDetails::getGitRepoUrl);
   }
 
-  private static boolean startTunnels(@NonNull String pTunnelConfigContents)
+  /**
+   * Starts all necessary tunnels described in the given tunnel config
+   *
+   * @param pTunnelConfigContents tunnel config that contains all necessary tunnels
+   * @return information about the started tunnels
+   */
+  @NonNull
+  private static StartTunnelInfo startTunnels(@NonNull String pTunnelConfigContents)
   {
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
     if (tunnelProvider != null)
@@ -228,7 +259,7 @@ public class SSPCheckoutExecutor
                                                                                                                  "TXT.SSPCheckoutExecutor.tunnel.start.failed"),
                                                       SSPCheckoutExecutor.tunnelToString(pTunnel)));
         }
-        return failedTunnels.size() != sshTunnels.size();
+        return new StartTunnelInfo(failedTunnels.size() != sshTunnels.size(), sshTunnels);
       }
       catch (InterruptedException | TransformerException pE)
       {
@@ -236,7 +267,7 @@ public class SSPCheckoutExecutor
                                                                                         ExceptionUtils.getStackTrace(pE)));
       }
     }
-    return false;
+    return new StartTunnelInfo(false, List.of());
   }
 
   /**
@@ -469,6 +500,43 @@ public class SSPCheckoutExecutor
   private static String tunnelToString(ISSHTunnel pTunnel)
   {
     return pTunnel.getLocalTarget() + ":" + pTunnel.getRemoteTargetPort() + ":" + pTunnel.getRemoteTarget() + "@" + pTunnel.getTunnelHost() + ":" + pTunnel.getPort();
+  }
+
+  /**
+   * Contains information about all started tunnels and provides the ability to close them afterwards.
+   * This object gets created during {@link SSPCheckoutExecutor#startTunnels(String)}.
+   */
+  @Log
+  @RequiredArgsConstructor
+  private static class StartTunnelInfo implements AutoCloseable
+  {
+    /**
+     * Determines, if the tunnels are connect and ready
+     */
+    @Getter
+    private final boolean isTunnelsGo;
+
+    /**
+     * Contains all closables, that should be closed during {@link AutoCloseable#close()}
+     */
+    @NonNull
+    private final List<? extends AutoCloseable> closeables;
+
+    @Override
+    public void close()
+    {
+      for (AutoCloseable closeable : closeables)
+      {
+        try
+        {
+          closeable.close();
+        }
+        catch (Exception e)
+        {
+          log.log(Level.WARNING, "Failed to close object: " + closeable, e);
+        }
+      }
+    }
   }
 
 }

@@ -25,8 +25,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.List;
-import java.util.*;
+import java.util.Optional;
 import java.util.logging.*;
 
 /**
@@ -57,14 +56,7 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     ISystemInfo systemInfo = getSystemInfoFromNodes(activatedNodes);
     if (systemInfo != null)
     {
-      SSPCheckoutProjectVisualPanel1 panel = new SSPCheckoutProjectVisualPanel1()
-      {
-        @Override
-        protected List<IOptionsProvider> getAdditionalOptionsProviders()
-        {
-          return List.of();
-        }
-      };
+      SSPCheckoutProjectVisualPanel1 panel = new SSPCheckoutProjectVisualPanel1();
       new Thread(panel::reloadList).start();
       JPanel borderPanel = new JPanel(new BorderLayout());
       borderPanel.setBorder(new EmptyBorder(10, 10, 5, 10));

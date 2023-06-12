@@ -65,7 +65,7 @@ public class SSPSystemImplTest
     assertEquals("", sspSystemDetails.getClusterId());
     assertEquals(Instant.MIN, sspSystemDetails.getCreationDate());
     assertEquals("", sspSystemDetails.getUrl());
-    assertEquals("", sspSystemDetails.getGitBranch());
+    assertNull(sspSystemDetails.getGitBranch());
     assertEquals("{\"asdf\":null}", sspSystemDetails.getGitRepoUrl());
     assertEquals("", sspSystemDetails.getKernelVersion());
   }
@@ -87,8 +87,8 @@ public class SSPSystemImplTest
     assertEquals("", sspSystemDetails.getClusterId());
     assertEquals(Instant.MIN, sspSystemDetails.getCreationDate());
     assertEquals("", sspSystemDetails.getUrl());
-    assertEquals("", sspSystemDetails.getGitBranch());
-    assertEquals("", sspSystemDetails.getGitRepoUrl());
+    assertNull(sspSystemDetails.getGitBranch());
+    assertNull(sspSystemDetails.getGitRepoUrl());
     assertEquals("", sspSystemDetails.getKernelVersion());
   }
 

@@ -55,7 +55,7 @@ class SSPCheckoutExecutorTest
     }
 
     /**
-     * Base method for testing {@link SSPCheckoutExecutor#execute(ProgressHandle, ISSPSystemDetails, File, String, boolean)}.
+     * Base method for testing {@link SSPCheckoutExecutor#execute(ProgressHandle, ISSPSystemDetails, File, String, boolean, boolean)}.
      *
      * @param pCloneSuccess the result which should be returned by {@link SSPCheckoutExecutor#performGitClone(ProgressHandle, String, String, String, String, File)}.
      */
@@ -72,7 +72,7 @@ class SSPCheckoutExecutorTest
 
         isspFacadeMockedStatic.when(ISSPFacade::getInstance).thenReturn(Mockito.spy(ISSPFacade.class));
 
-        sspCheckoutExecutorMockedStatic.when(() -> SSPCheckoutExecutor.execute(any(), any(), any(), any(), anyBoolean())).thenCallRealMethod();
+        sspCheckoutExecutorMockedStatic.when(() -> SSPCheckoutExecutor.execute(any(), any(), any(), any(), anyBoolean(), anyBoolean())).thenCallRealMethod();
 
         sspCheckoutExecutorMockedStatic.when(() -> SSPCheckoutExecutor.getServerConfigContents(any(), any(), any())).thenReturn(Optional.empty());
         sspCheckoutExecutorMockedStatic.when(() -> SSPCheckoutExecutor.getTunnelConfigContents(any(), any())).thenReturn(Optional.empty());
@@ -82,9 +82,9 @@ class SSPCheckoutExecutorTest
         userCredentialsManagerMockedStatic.when(UserCredentialsManager::getCredentials).thenReturn(currentCredentials);
 
         // method call to the method under test
-        assertNotNull(SSPCheckoutExecutor.execute(progressHandle, systemDetails, new File("").getAbsoluteFile(), "main", false));
+        assertNotNull(SSPCheckoutExecutor.execute(progressHandle, systemDetails, new File("").getAbsoluteFile(), "main", true, true));
 
-        sspCheckoutExecutorMockedStatic.verify(() -> SSPCheckoutExecutor.execute(any(), any(), any(), any(), anyBoolean()));
+        sspCheckoutExecutorMockedStatic.verify(() -> SSPCheckoutExecutor.execute(any(), any(), any(), any(), anyBoolean(), anyBoolean()));
         sspCheckoutExecutorMockedStatic.verify(() -> SSPCheckoutExecutor.getServerConfigContents(any(), any(), any()));
         sspCheckoutExecutorMockedStatic.verify(() -> SSPCheckoutExecutor.getTunnelConfigContents(any(), any()));
         sspCheckoutExecutorMockedStatic.verify(() -> SSPCheckoutExecutor.getGitProject(any(), any(), any()));

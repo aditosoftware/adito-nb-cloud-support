@@ -14,8 +14,12 @@ public class FilterByGitBranch extends FilterBy
   @Override
   public boolean filter(String pToCompare, ISSPSystemDetails pSelected)
   {
+    String gitBranch = pSelected.getGitBranch();
+    if (gitBranch == null)
+      return false;
+
     String fullPattern = pattern + pToCompare + pattern;
-    return pSelected.getGitBranch().matches(fullPattern);
+    return gitBranch.matches(fullPattern);
   }
 
   @Override
@@ -25,7 +29,8 @@ public class FilterByGitBranch extends FilterBy
   }
 
   @Override
-  public String toString(){
+  public String toString()
+  {
     return FILTERNAME;
   }
 }
