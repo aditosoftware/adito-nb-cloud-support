@@ -1,7 +1,7 @@
 package de.adito.nbm.ssp.checkout;
 
 import de.adito.nbm.ssp.WarningPanel;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.util.NbBundle;
 
 import javax.swing.event.*;
@@ -18,7 +18,7 @@ public class UsernameEmailDocumentListener implements DocumentListener
   private final WarningPanel warningPanel;
   private final String warningMessage = NbBundle.getMessage(SSPCheckoutProjectVisualPanel1.class, "SSPCheckoutProjectVisualPanel1.warning.email");
 
-  public UsernameEmailDocumentListener(@NotNull WarningPanel pWarningPanel)
+  public UsernameEmailDocumentListener(@NonNull WarningPanel pWarningPanel)
   {
     warningPanel = pWarningPanel;
   }
@@ -45,7 +45,7 @@ public class UsernameEmailDocumentListener implements DocumentListener
    * @param pWarningPanel  WarningPanel used for displaying the warning
    * @param pDocumentEvent DocumentEvent with the update
    */
-  private void _checkUsername(@NotNull WarningPanel pWarningPanel, @NotNull DocumentEvent pDocumentEvent)
+  private void _checkUsername(@NonNull WarningPanel pWarningPanel, @NonNull DocumentEvent pDocumentEvent)
   {
     try
     {

@@ -3,7 +3,6 @@ package de.adito.nbm.ssp.impl;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.ISSPSystem;
 import lombok.*;
-import org.jetbrains.annotations.NotNull;
 import org.json.*;
 
 import java.text.*;
@@ -26,7 +25,7 @@ class SSPSystemImpl implements ISSPSystem
   private final String ranchRId;
   private final Instant creationDate;
 
-  SSPSystemImpl(@NotNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
+  SSPSystemImpl(@NonNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
   {
     Instant creationDateVar;
     if (pJSONArray.length() < 7)
@@ -66,35 +65,35 @@ class SSPSystemImpl implements ISSPSystem
     creationDate = pCreationDate;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getName()
   {
     return name;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getUrl()
   {
     return url;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getClusterId()
   {
     return clusterId;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getSystemdId()
   {
     return systemId;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getRanchRId()
   {

@@ -5,6 +5,7 @@ import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.IGitVersioningSupport;
 import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.*;
 import org.junit.jupiter.api.*;
@@ -167,7 +168,7 @@ class SSPCheckoutExecutorTest
      * @param pGitSupport the {@link IGitVersioningSupport} that should be set in the static attributes of {@link SSPCheckoutExecutor}
      * @param pRunnable   the Runnable which should execute the method call
      */
-    private void basePerformGitClone(@Nullable IGitVersioningSupport pGitSupport, @NotNull Runnable pRunnable)
+    private void basePerformGitClone(@Nullable IGitVersioningSupport pGitSupport, @NonNull Runnable pRunnable)
     {
       // change some fields of the class for this test
       SSPCheckoutExecutor.setLoading(false);

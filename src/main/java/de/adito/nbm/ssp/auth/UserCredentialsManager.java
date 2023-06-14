@@ -6,6 +6,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.notification.INotificationFacade;
+import lombok.NonNull;
 import org.jetbrains.annotations.*;
 import org.netbeans.api.keyring.Keyring;
 import org.openide.*;
@@ -121,7 +122,7 @@ public class UserCredentialsManager
     return preferences.get(LAST_USER_KEY, null);
   }
 
-  @NotNull
+  @NonNull
   public static char[] getLastUserPass()
   {
     String lastUser = preferences.get(LAST_USER_KEY, null);
@@ -134,7 +135,7 @@ public class UserCredentialsManager
     preferences.put(LAST_USER_KEY, pLastUser);
   }
 
-  public static void saveToken(@NotNull DecodedJWT pJwt)
+  public static void saveToken(@NonNull DecodedJWT pJwt)
   {
     // only store the token if it is still valid
     if (pJwt.getExpiresAt().toInstant().isAfter(Instant.now()))

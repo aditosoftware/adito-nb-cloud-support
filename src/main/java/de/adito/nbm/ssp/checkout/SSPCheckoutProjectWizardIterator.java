@@ -3,7 +3,7 @@ package de.adito.nbm.ssp.checkout;
 import com.google.common.collect.Sets;
 import de.adito.nbm.ssp.checkout.clist.CListObject;
 import lombok.*;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.WizardDescriptor;
 import org.openide.filesystems.FileObject;
@@ -138,7 +138,7 @@ public class SSPCheckoutProjectWizardIterator implements WizardDescriptor.Progre
   }
 
   @Nullable
-  static String getProjectPath(@NotNull Object pName, @Nullable Object pPath)
+  static String getProjectPath(@NonNull Object pName, @Nullable Object pPath)
   {
     return pPath != null ? pPath.toString() + "/" + pName.toString() : null;
   }

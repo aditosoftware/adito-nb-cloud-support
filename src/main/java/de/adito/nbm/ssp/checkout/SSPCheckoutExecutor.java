@@ -19,7 +19,7 @@ import lombok.*;
 import lombok.extern.java.Log;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.netbeans.api.keyring.Keyring;
 import org.netbeans.api.progress.ProgressHandle;
 import org.openide.filesystems.*;
@@ -70,7 +70,7 @@ public class SSPCheckoutExecutor
    * @return true if the clone was performed successfully
    */
   @Nullable
-  static FileObject execute(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @Nullable String pBranch,
+  static FileObject execute(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull File pTarget, @Nullable String pBranch,
                             boolean pIsCheckoutProject, boolean pIsCheckoutDeployedState)
   {
     try
@@ -108,8 +108,8 @@ public class SSPCheckoutExecutor
     return FileUtil.toFileObject(pTarget);
   }
 
-  private static void checkoutDeployedState(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials,
-                                            @NotNull File pTarget, @NotNull String pServerConfigContents, @NotNull String pTunnelConfigContents, boolean pIncludeGitProject,
+  private static void checkoutDeployedState(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull DecodedJWT pCurrentCredentials,
+                                            @NonNull File pTarget, @NonNull String pServerConfigContents, @NonNull String pTunnelConfigContents, boolean pIncludeGitProject,
                                             @Nullable String pFallbackBranch)
   {
     pHandle.setDisplayName("Starting tunnels");
@@ -163,7 +163,7 @@ public class SSPCheckoutExecutor
     }
   }
 
-  static void cleanTargetDirectory(@NotNull File pTarget) throws IOException
+  static void cleanTargetDirectory(@NonNull File pTarget) throws IOException
   {
     IModelFacade facade = Lookup.getDefault().lookup(IModelFacade.class);
     File[] filesFoldersToDelete;
@@ -188,7 +188,7 @@ public class SSPCheckoutExecutor
    * @param pServerConfigFile Serverconfig file used to know where the database is
    * @return Optional of the MetaInfos contained in the database that corresponds with the serverConfig
    */
-  private static Optional<IMetaInfo> getMetaInfos(@NotNull File pServerConfigFile)
+  private static Optional<IMetaInfo> getMetaInfos(@NonNull File pServerConfigFile)
   {
     return Optional.ofNullable(Lookup.getDefault().lookup(IDeployMetaInfoFacade.class))
         .map(pFacade -> pFacade.getInfos(pServerConfigFile));
@@ -199,7 +199,7 @@ public class SSPCheckoutExecutor
    * @return name of the branch that was used when the last deploy happened
    */
   @Nullable
-  private static String getDeployedBranch(@NotNull IMetaInfo pMetaInfo)
+  private static String getDeployedBranch(@NonNull IMetaInfo pMetaInfo)
   {
     return pMetaInfo.getAll().get("GitDeployMetaInfoProvider.branchActualName");
   }
@@ -209,7 +209,7 @@ public class SSPCheckoutExecutor
    * @return version that should be used when creating the project
    */
   @Nullable
-  private static String getProjectVersion(@NotNull IMetaInfo pMetaInfo)
+  private static String getProjectVersion(@NonNull IMetaInfo pMetaInfo)
   {
     return pMetaInfo.getAll().get("de.adito.aditoweb.nbm.deploy.metainfo.ProjectVersionDeployMetaInfoProvider.designer.project.version");
   }
@@ -221,7 +221,7 @@ public class SSPCheckoutExecutor
    * @return the git repository to use for cloning
    */
   @VisibleForTesting
-  static String getGitProject(@NotNull ISSPFacade pSspFacade, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials)
+  static String getGitProject(@NonNull ISSPFacade pSspFacade, @NonNull ISSPSystemDetails pSystemDetails, @NonNull DecodedJWT pCurrentCredentials)
   {
     Map<String, String> configMap = null;
     try
@@ -242,8 +242,8 @@ public class SSPCheckoutExecutor
    * @param pTunnelConfigContents tunnel config that contains all necessary tunnels
    * @return information about the started tunnels
    */
-  @NotNull
-  private static StartTunnelInfo startTunnels(@NotNull String pTunnelConfigContents)
+  @NonNull
+  private static StartTunnelInfo startTunnels(@NonNull String pTunnelConfigContents)
   {
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
     if (tunnelProvider != null)
@@ -277,7 +277,7 @@ public class SSPCheckoutExecutor
    * @param pCredentials   the cre
    */
   @VisibleForTesting
-  static void writeConfigs(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pTarget, @NotNull DecodedJWT pCredentials)
+  static void writeConfigs(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull File pTarget, @NonNull DecodedJWT pCredentials)
   {
     getServerConfigContents(pHandle, pSystemDetails, pCredentials)
         .ifPresent(pServerConfigContents -> writeServerConfig(pHandle, new File(pTarget, CONFIG_FOLDER_PATH), DEFAULT_SERVER_CONFIG_NAME, pServerConfigContents));
@@ -296,7 +296,7 @@ public class SSPCheckoutExecutor
     }
   }
 
-  public static Optional<String> getTunnelConfigContents(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails)
+  public static Optional<String> getTunnelConfigContents(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails)
   {
     ISSPFacade sspFacade = ISSPFacade.getInstance();
     DecodedJWT currentCredentials = UserCredentialsManager.getCredentials();
@@ -318,7 +318,7 @@ public class SSPCheckoutExecutor
     return Optional.empty();
   }
 
-  public static Optional<String> getServerConfigContents(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull DecodedJWT pCurrentCredentials)
+  public static Optional<String> getServerConfigContents(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull DecodedJWT pCurrentCredentials)
   {
     ISSPFacade sspFacade = ISSPFacade.getInstance();
     pHandle.progress(SSPCheckoutProjectWizardIterator.getMessage(SSPCheckoutExecutor.class, "TXT.SSPCheckoutExecutor.update.fetch.serverConfig"));
@@ -340,7 +340,7 @@ public class SSPCheckoutExecutor
    * @param pFileName             name of the file, will be placed inside the CONFIG_FOLDER_PATH in the project folder
    * @param pServerConfigContents contents of the file to be written
    */
-  public static void writeServerConfig(@NotNull ProgressHandle pHandle, @NotNull File pConfigFolder, @NotNull String pFileName, @NotNull String pServerConfigContents)
+  public static void writeServerConfig(@NonNull ProgressHandle pHandle, @NonNull File pConfigFolder, @NonNull String pFileName, @NonNull String pServerConfigContents)
   {
     try
     {
@@ -362,8 +362,8 @@ public class SSPCheckoutExecutor
    * @param currentCredentials    Credentials for the tunnels that should be stored so the user does not have to enter them when connecting to the tunnel
    * @param pTunnelConfigContents contents of the file to be written
    */
-  public static void writeTunnelConfig(@NotNull ProgressHandle pHandle, @NotNull ISSPSystemDetails pSystemDetails, @NotNull File pConfigFolder, @NotNull String pFileName,
-                                       @NotNull DecodedJWT currentCredentials, @NotNull String pTunnelConfigContents)
+  public static void writeTunnelConfig(@NonNull ProgressHandle pHandle, @NonNull ISSPSystemDetails pSystemDetails, @NonNull File pConfigFolder, @NonNull String pFileName,
+                                       @NonNull DecodedJWT currentCredentials, @NonNull String pTunnelConfigContents)
   {
     try
     {
@@ -378,14 +378,14 @@ public class SSPCheckoutExecutor
     }
   }
 
-  private static void writeFileData(@NotNull File pFile, @NotNull String pFileContents) throws IOException
+  private static void writeFileData(@NonNull File pFile, @NonNull String pFileContents) throws IOException
   {
     FileObject fileObject = FileUtil.createData(pFile);
     fileObject.getOutputStream().write(pFileContents.getBytes(StandardCharsets.UTF_8));
   }
 
-  @NotNull
-  public static String getUrlWithoutProtocol(@NotNull String pUrl) throws MalformedURLException
+  @NonNull
+  public static String getUrlWithoutProtocol(@NonNull String pUrl) throws MalformedURLException
   {
     URL serverAddressURL = new URL(pUrl);
     String serverAddressWithoutProtocol = pUrl.replace(serverAddressURL.getProtocol() + ":", "");
@@ -394,8 +394,8 @@ public class SSPCheckoutExecutor
     return serverAddressWithoutProtocol;
   }
 
-  private static void storeSSHPasswords(@NotNull ISSPSystemDetails pPSystemDetails, @NotNull ISSPFacade pSspFacade, @NotNull DecodedJWT pCurrentCredentials,
-                                        @NotNull String pTunnelConfigContents) throws IOException, TransformerException, UnirestException, AditoSSPException
+  private static void storeSSHPasswords(@NonNull ISSPSystemDetails pPSystemDetails, @NonNull ISSPFacade pSspFacade, @NonNull DecodedJWT pCurrentCredentials,
+                                        @NonNull String pTunnelConfigContents) throws IOException, TransformerException, UnirestException, AditoSSPException
   {
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
     try (InputStream inputStream = new ByteArrayInputStream(pTunnelConfigContents.getBytes()))
@@ -418,8 +418,8 @@ public class SSPCheckoutExecutor
    * @return true if the clone was performed successfully
    */
   @VisibleForTesting
-  static boolean performGitClone(ProgressHandle pHandle, @NotNull String pRemotePath, @Nullable String pBranch, @Nullable String pTagName,
-                                 @Nullable String pRemoteName, @NotNull File pTarget)
+  static boolean performGitClone(ProgressHandle pHandle, @NonNull String pRemotePath, @Nullable String pBranch, @Nullable String pTagName,
+                                 @Nullable String pRemoteName, @NonNull File pTarget)
   {
     try
     {
@@ -457,7 +457,7 @@ public class SSPCheckoutExecutor
     }
   }
 
-  private static boolean checkoutProject(@NotNull String pRemotePath, @NotNull File pTarget, Map<String, String> options) throws Exception
+  private static boolean checkoutProject(@NonNull String pRemotePath, @NonNull File pTarget, Map<String, String> options) throws Exception
   {
     try
     {
@@ -519,7 +519,7 @@ public class SSPCheckoutExecutor
     /**
      * Contains all closables, that should be closed during {@link AutoCloseable#close()}
      */
-    @NotNull
+    @NonNull
     private final List<? extends AutoCloseable> closeables;
 
     @Override

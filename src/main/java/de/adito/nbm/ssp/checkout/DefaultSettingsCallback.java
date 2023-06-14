@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.netbeans.spi.project.ui.support.ProjectChooser;
 
 import javax.swing.*;
@@ -26,7 +26,7 @@ public class DefaultSettingsCallback implements IDefaultSettingsCallback
     return 40;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Color getDefaultBackgroundColor()
   {

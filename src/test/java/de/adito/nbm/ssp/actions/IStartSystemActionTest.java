@@ -6,8 +6,8 @@ import de.adito.nbm.ssp.auth.UserCredentialsManager;
 import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
 import io.reactivex.rxjava3.core.Observable;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -56,7 +56,7 @@ class IStartSystemActionTest
     /**
      * @return arguments for {@link #shouldDoStartSystem(String, boolean, boolean)}
      */
-    @NotNull
+    @NonNull
     private Stream<Arguments> shouldDoStartSystem()
     {
       return Stream.of(
@@ -78,7 +78,7 @@ class IStartSystemActionTest
     @ParameterizedTest
     @MethodSource
     @SneakyThrows
-    void shouldDoStartSystem(@NotNull String pMessage, boolean pSystemRunning, boolean pStartedSystem)
+    void shouldDoStartSystem(@NonNull String pMessage, boolean pSystemRunning, boolean pStartedSystem)
     {
 
       ISystemInfo systemInfo = Mockito.spy(ISystemInfo.class);

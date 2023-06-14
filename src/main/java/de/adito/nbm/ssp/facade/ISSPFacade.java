@@ -4,7 +4,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.impl.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import java.util.*;
 
@@ -24,8 +24,8 @@ public interface ISSPFacade
    * @param pPassword password of the user
    * @return Java Web Token as String
    */
-  @NotNull
-  DecodedJWT getJWT(@NotNull String pUsername, @NotNull char[] pPassword) throws AditoSSPException, UnirestException;
+  @NonNull
+  DecodedJWT getJWT(@NonNull String pUsername, @NonNull char[] pPassword) throws AditoSSPException, UnirestException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -34,8 +34,8 @@ public interface ISSPFacade
    * @throws UnirestException  if an error occurs during the rest call
    * @throws AditoSSPException if the response of the server contains an error status
    */
-  @NotNull
-  List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws UnirestException, AditoSSPException;
+  @NonNull
+  List<ISSPSystem> getSystems(@NonNull String pUsername, @NonNull DecodedJWT pJWT) throws UnirestException, AditoSSPException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -48,8 +48,8 @@ public interface ISSPFacade
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    * @throws MalformedInputException       if the JSON returned by the server cannot be transformed to the SystemDetails
    */
-  @NotNull
-  ISSPSystemDetails getSystemDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws MalformedInputException, UnirestException,
+  @NonNull
+  ISSPSystemDetails getSystemDetails(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws MalformedInputException, UnirestException,
       AditoSSPException, AditoSSPParseException;
 
   /**
@@ -62,7 +62,7 @@ public interface ISSPFacade
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  String getServerConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
+  String getServerConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -74,7 +74,7 @@ public interface ISSPFacade
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  String getTunnelConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
+  String getTunnelConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -86,7 +86,7 @@ public interface ISSPFacade
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  Map<String, String> getConfigMap(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
+  Map<String, String> getConfigMap(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -94,7 +94,7 @@ public interface ISSPFacade
    * @param pSystemId ID to determine the system. The ID consists of the following: the name of the system, followed by #, followed by the cluster ID
    * @return true if the replica count of the system is currently > 0, indicating that the system is running. False for replica count <= 0
    */
-  boolean isSystemRunning(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId);
+  boolean isSystemRunning(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId);
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -102,7 +102,7 @@ public interface ISSPFacade
    * @param pSystemId ID to determine the system. The ID consists of the following: the name of the system, followed by #, followed by the cluster ID
    * @return true if the status code of the reply indicates success (meaning the connection was established and the order is valid, nothing more), false otherwise
    */
-  boolean startSystem(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId);
+  boolean startSystem(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId);
 
   /**
    * @param pUsername name of the user for which the JWT was issued
@@ -110,6 +110,6 @@ public interface ISSPFacade
    * @param pSystemId ID to determine the system. The ID consists of the following: the name of the system, followed by #, followed by the cluster ID
    * @return true if the status code of the reply indicates success (meaning the connection was established and the order is valid, nothing more), false otherwise
    */
-  boolean stopSystem(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId);
+  boolean stopSystem(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId);
 
 }

@@ -4,8 +4,8 @@ import de.adito.nbm.runconfig.api.ISystemInfo;
 import de.adito.nbm.ssp.actions.LinkSystemAction.CONFIG_RESULTS;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -50,7 +50,7 @@ class LinkSystemActionTest
     /**
      * @return the arguments for {@link LinkSystemAction#performLink(ISystemInfo, ISSPSystemDetails, boolean)}
      */
-    @NotNull
+    @NonNull
     private Stream<Arguments> shouldPerformLink()
     {
       String cancelledMessage = "Link was aborted";
@@ -87,7 +87,7 @@ class LinkSystemActionTest
     @ParameterizedTest
     @MethodSource
     @SneakyThrows
-    void shouldPerformLink(@NotNull String pMessage, int pSetCloudAndGetUrlTimes, @NotNull CONFIG_RESULTS pConfigResults, boolean pIsLoadConfigs)
+    void shouldPerformLink(@NonNull String pMessage, int pSetCloudAndGetUrlTimes, @NonNull CONFIG_RESULTS pConfigResults, boolean pIsLoadConfigs)
     {
       Project project = Mockito.spy(Project.class);
       Mockito.doReturn(FileUtil.toFileObject(new File("").getAbsoluteFile())).when(project).getProjectDirectory();

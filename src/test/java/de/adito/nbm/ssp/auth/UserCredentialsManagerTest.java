@@ -4,8 +4,8 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.exceptions.AditoSSPException;
 import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -48,7 +48,7 @@ class UserCredentialsManagerTest
     /**
      * @return the arguments for {@link #shouldHandleError(Exception)}
      */
-    @NotNull
+    @NonNull
     private Stream<Arguments> shouldHandleError()
     {
       return Stream.of(
@@ -65,7 +65,7 @@ class UserCredentialsManagerTest
     @ParameterizedTest
     @MethodSource
     @SneakyThrows
-    void shouldHandleError(@NotNull Exception pException)
+    void shouldHandleError(@NonNull Exception pException)
     {
       NotificationFacadeTestUtil.verifyNotificationFacade(pException.getClass(), "Login failed", () -> baseGetToken(pISSPFacade -> {
         try
@@ -84,7 +84,7 @@ class UserCredentialsManagerTest
      *
      * @param pISSPFacadeConsumer consumer for changing the behaviour of {@link ISSPFacade}. The given value is a {@link Mockito#spy(Class)}
      */
-    void baseGetToken(@NotNull Consumer<ISSPFacade> pISSPFacadeConsumer)
+    void baseGetToken(@NonNull Consumer<ISSPFacade> pISSPFacadeConsumer)
     {
       try (MockedStatic<ISSPFacade> sspFacadeMockedStatic = Mockito.mockStatic(ISSPFacade.class);
            MockedStatic<GraphicsEnvironment> graphicsEnvironmentMockedStatic = Mockito.mockStatic(GraphicsEnvironment.class))

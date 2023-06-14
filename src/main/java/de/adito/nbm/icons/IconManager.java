@@ -2,6 +2,7 @@ package de.adito.nbm.icons;
 
 import de.adito.aditoweb.nbm.vaadinicons.IVaadinIconsProvider;
 import de.adito.swing.icon.IconAttributes;
+import lombok.NonNull;
 import org.jetbrains.annotations.*;
 import org.openide.util.Lookup;
 
@@ -24,7 +25,7 @@ public class IconManager
     iconsProvider = Lookup.getDefault().lookup(IVaadinIconsProvider.class);
   }
 
-  @NotNull
+  @NonNull
   public static IconManager getInstance()
   {
     if (instance == null)

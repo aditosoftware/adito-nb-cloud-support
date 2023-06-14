@@ -3,7 +3,7 @@ package de.adito.nbm.cloud.runconfig;
 import de.adito.nbm.runconfig.api.*;
 import de.adito.util.reactive.ObservableCollectors;
 import io.reactivex.rxjava3.core.Observable;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.netbeans.api.project.Project;
 import org.openide.util.Pair;
 import org.openide.util.lookup.ServiceProvider;
@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @ServiceProvider(service = ISystemRunConfigProvider.class)
 public class TelnetLoggerServiceProvider implements ISystemRunConfigProvider
 {
-  @NotNull
+  @NonNull
   @Override
   public Observable<List<IRunConfig>> runConfigurations(List<ISystemInfo> pSystemInfos)
   {

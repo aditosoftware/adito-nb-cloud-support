@@ -10,8 +10,8 @@ import de.adito.nbm.ssp.checkout.clist.CListObject;
 import de.adito.nbm.ssp.facade.ISSPSystemDetails;
 import de.adito.notification.INotificationFacade;
 import de.adito.properties.PropertyNames;
+import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jetbrains.annotations.NotNull;
 import org.netbeans.api.progress.*;
 import org.openide.*;
 import org.openide.awt.*;
@@ -153,8 +153,8 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
    * @return true if the link should be cancelled, false if the link should be finished
    */
   @VisibleForTesting
-  CONFIG_RESULTS handleConfigFiles(@NotNull ISystemInfo pSystemInfo, @NotNull ISSPSystemDetails pSelectedSystem, @NotNull ProgressHandle pProgressHandle,
-                                   @NotNull File pProjectDir)
+  CONFIG_RESULTS handleConfigFiles(@NonNull ISystemInfo pSystemInfo, @NonNull ISSPSystemDetails pSelectedSystem, @NonNull ProgressHandle pProgressHandle,
+                                   @NonNull File pProjectDir)
   {
     Object pressedButton = null;
     String serverConfigName = pSelectedSystem.getName() + "_serverconfig.xml";
@@ -202,8 +202,8 @@ public class LinkSystemAction extends NodeAction implements IContextMenuAction
     return CONFIG_RESULTS.NOT_OVERRIDDEN;
   }
 
-  private void setConfigFilePathProperty(@NotNull ISystemInfo pSystemInfo, @NotNull File pProjectDir, boolean pIsUseDataPath, @NotNull PropertyAlias pPropertyName,
-                                         @NotNull String pFileName)
+  private void setConfigFilePathProperty(@NonNull ISystemInfo pSystemInfo, @NonNull File pProjectDir, boolean pIsUseDataPath, @NonNull PropertyAlias pPropertyName,
+                                         @NonNull String pFileName)
   {
     try
     {

@@ -3,8 +3,8 @@ package de.adito.nbm.ssp.checkout;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
 import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.exceptions.AditoVersioningException;
 import de.adito.notification.internal.NotificationFacadeTestUtil;
+import lombok.NonNull;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.*;
 import org.mockito.*;
 import org.openide.util.Lookup;
@@ -68,7 +68,7 @@ class SSPCheckoutProjectWizardPanel2Test
      * @param gitVersioningSupport the {@link IGitVersioningSupport} that should be returned by the lookup
      * @param pAction              the action which should do the method call
      */
-    private void baseGetAvailableRef(@NotNull IGitVersioningSupport gitVersioningSupport, @NotNull Consumer<SSPCheckoutProjectWizardPanel2> pAction)
+    private void baseGetAvailableRef(@NonNull IGitVersioningSupport gitVersioningSupport, @NonNull Consumer<SSPCheckoutProjectWizardPanel2> pAction)
     {
       SSPCheckoutProjectWizardPanel2 sspCheckoutProjectWizardPanel2 = new SSPCheckoutProjectWizardPanel2();
 

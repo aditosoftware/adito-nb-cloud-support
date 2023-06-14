@@ -18,6 +18,7 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.*;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.schedulers.Schedulers;
+import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.net.telnet.TelnetClient;
 import org.jetbrains.annotations.*;
@@ -76,14 +77,14 @@ public class TelnetLoggerRunConfig implements IRunConfig
     stopSystemAction = new StopSystemAction();
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<Optional<IRunConfigCategory>> category()
   {
     return Observable.just(Optional.of(new TelnetLoggerRunConfigCategory()));
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Observable<String> displayName()
   {
@@ -106,7 +107,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   }
 
   @Override
-  public void executeAsnyc(@NotNull ProgressHandle pProgressHandle)
+  public void executeAsnyc(@NonNull ProgressHandle pProgressHandle)
   {
     if (currentTask == null || currentTask.isDone())
     {
@@ -127,7 +128,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pColorKey Key for the color retrieved from the UIManager. Fallback is the foreground of a disabled label
    * @throws IOException if the message cannot be printed
    */
-  private static void _printlnColored(@NotNull InputOutput pIo, @Nullable IColorSupport pColorSupport, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
+  private static void _printlnColored(@NonNull InputOutput pIo, @Nullable IColorSupport pColorSupport, @NonNull String pMessage, @NonNull String pColorKey) throws IOException
   {
     if (pColorSupport != null)
     {
@@ -139,12 +140,12 @@ public class TelnetLoggerRunConfig implements IRunConfig
     }
   }
 
-  private static void _printlnColored(@NotNull InputOutput pIo, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
+  private static void _printlnColored(@NonNull InputOutput pIo, @NonNull String pMessage, @NonNull String pColorKey) throws IOException
   {
     _printColored(pIo, pMessage + "\n", pColorKey);
   }
 
-  private static void _printColored(@NotNull InputOutput pIo, @NotNull String pMessage, @NotNull String pColorKey) throws IOException
+  private static void _printColored(@NonNull InputOutput pIo, @NonNull String pMessage, @NonNull String pColorKey) throws IOException
   {
     Color color = UIManager.getColor(pColorKey);
     if (color == null)
@@ -163,8 +164,8 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pVaadinIcon    Icon to retrieve
    * @return Icon, or an icon representing a missing icon
    */
-  @NotNull
-  private static Icon _getIcon(@Nullable IVaadinIconsProvider pIconsProvider, @NotNull IVaadinIconsProvider.VaadinIcon pVaadinIcon)
+  @NonNull
+  private static Icon _getIcon(@Nullable IVaadinIconsProvider pIconsProvider, @NonNull IVaadinIconsProvider.VaadinIcon pVaadinIcon)
   {
     if (pIconsProvider == null)
       return MissingIcon.get16x16();
@@ -177,7 +178,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
   /**
    * starts the tunnels and runs the client as a task submitted to the executorService
    */
-  private void _startTask(@NotNull DecodedJWT pCredentials, @NotNull String pCloudId)
+  private void _startTask(@NonNull DecodedJWT pCredentials, @NonNull String pCloudId)
   {
     currentTask = executorService.submit(() -> {
       try
@@ -362,7 +363,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pSystemInfo SystemInfo from which to get the tunnels of the system
    * @throws InterruptedException if the Thread is interrupted while waiting for the tunnels to finish connecting
    */
-  private void _startTunnels(@NotNull ISystemInfo pSystemInfo) throws InterruptedException, IOException
+  private void _startTunnels(@NonNull ISystemInfo pSystemInfo) throws InterruptedException, IOException
   {
     _printlnColored(inputOutput, "// Starting all tunnels that are not running", SERVER_OUTPUT_COLOR_KEY);
     ISSHTunnelProvider tunnelProvider = Lookup.getDefault().lookup(ISSHTunnelProvider.class);
@@ -402,7 +403,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pFailedTunnels list of tunnels that failed to connect
    * @throws IOException if the message cannot be printed
    */
-  private void _checkTunnelStatus(@NotNull List<ISSHTunnel> pTunnels, @NotNull List<ISSHTunnel> pFailedTunnels) throws IOException
+  private void _checkTunnelStatus(@NonNull List<ISSHTunnel> pTunnels, @NonNull List<ISSHTunnel> pFailedTunnels) throws IOException
   {
     if (!pFailedTunnels.isEmpty())
     {
@@ -425,7 +426,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pTunnelTaskPairs List of tasks for which to wait for termination
    * @throws InterruptedException when the Thread is interrupted while waiting
    */
-  private static void _awaitFinish(@NotNull List<Pair<ISSHTunnel, Future<String>>> pTunnelTaskPairs, @NotNull List<ISSHTunnel> failedTunnels) throws InterruptedException
+  private static void _awaitFinish(@NonNull List<Pair<ISSHTunnel, Future<String>>> pTunnelTaskPairs, @NonNull List<ISSHTunnel> failedTunnels) throws InterruptedException
   {
     List<CompletableFuture<?>> futureFutureList = new ArrayList<>();
     for (Pair<ISSHTunnel, Future<String>> tunnelTaskPair : pTunnelTaskPairs)
@@ -484,7 +485,7 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pAddress adress
    * @return sanitized adress
    */
-  private String _sanitizeAddress(@NotNull String pAddress)
+  private String _sanitizeAddress(@NonNull String pAddress)
   {
     if ("0.0.0.0".equals(pAddress))
       return "localhost";
@@ -498,8 +499,8 @@ public class TelnetLoggerRunConfig implements IRunConfig
    * @param pActions Aktionen
    * @return das Ausgabefenster
    */
-  @NotNull
-  protected InputOutput getIO(@NotNull String pTitle, Action... pActions)
+  @NonNull
+  protected InputOutput getIO(@NonNull String pTitle, Action... pActions)
   {
     InputOutput io = IOProvider.getDefault().getIO(pTitle, pActions);
     io.setErrSeparated(false);

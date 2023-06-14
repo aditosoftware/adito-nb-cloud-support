@@ -4,8 +4,7 @@ import de.adito.aditoweb.nbm.nbide.nbaditointerface.git.*;
 import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator.ECheckoutMode;
 import de.adito.swing.TableLayoutUtil;
 import info.clearthought.layout.TableLayout;
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
+import lombok.*;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -156,7 +155,7 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   /**
    * @return all available checkout mode radio buttons
    */
-  @NotNull
+  @NonNull
   public List<CheckoutModeRadioButton> getCheckoutModeSelectionButtons()
   {
     return checkoutModeSelectionButtons;
@@ -196,10 +195,10 @@ public class SSPCheckoutProjectVisualPanel2 extends JPanel
   public static class CheckoutModeRadioButton extends JRadioButton
   {
     @Getter
-    @NotNull
+    @NonNull
     private final ECheckoutMode checkoutMode;
 
-    public CheckoutModeRadioButton(@NotNull ECheckoutMode pCheckoutMode, @NotNull String pText, boolean pIsSelected)
+    public CheckoutModeRadioButton(@NonNull ECheckoutMode pCheckoutMode, @NonNull String pText, boolean pIsSelected)
     {
       super(pText, pIsSelected);
       setActionCommand(pCheckoutMode.name());

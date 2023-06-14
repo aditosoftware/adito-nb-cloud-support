@@ -2,7 +2,7 @@ package de.adito.nbm.ssp.impl;
 
 import com.google.inject.Singleton;
 import de.adito.nbm.ssp.facade.ICloudNotificationFacade;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.openide.*;
 
 import javax.swing.*;
@@ -16,9 +16,9 @@ import java.util.List;
 @Singleton
 public class CloudNotificationFacadeImpl implements ICloudNotificationFacade
 {
-  @NotNull
+  @NonNull
   @Override
-  public Object notifyUser(@NotNull String pMessage, @NotNull String pTitle, @NotNull List<Object> pOptions)
+  public Object notifyUser(@NonNull String pMessage, @NonNull String pTitle, @NonNull List<Object> pOptions)
   {
     if (pOptions.isEmpty())
       return new Object();

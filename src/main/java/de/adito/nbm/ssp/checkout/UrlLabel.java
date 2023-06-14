@@ -1,6 +1,6 @@
 package de.adito.nbm.ssp.checkout;
 
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,7 +22,7 @@ public class UrlLabel extends JPanel
   private final String labelHoverText;
   private final String url;
 
-  public UrlLabel(@NotNull String pLabelText, @NotNull String pUrl)
+  public UrlLabel(@NonNull String pLabelText, @NonNull String pUrl)
   {
     super(new BorderLayout());
     labelText = pLabelText;

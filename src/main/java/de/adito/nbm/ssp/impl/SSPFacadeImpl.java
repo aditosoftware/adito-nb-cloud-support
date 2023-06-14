@@ -10,8 +10,8 @@ import de.adito.nbm.ssp.checkout.SSPCheckoutProjectWizardIterator;
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
 import de.adito.notification.INotificationFacade;
+import lombok.NonNull;
 import org.apache.http.client.HttpClient;
-import org.jetbrains.annotations.NotNull;
 
 import java.security.*;
 import java.util.*;
@@ -55,48 +55,48 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     return sspUrlProperty == null ? DEFAULT_SSP_SYSTEM_URL : sspUrlProperty;
   }
 
-  @NotNull
+  @NonNull
   @Override
-  public DecodedJWT getJWT(@NotNull String pUsername, @NotNull char[] pPassword) throws AditoSSPException, UnirestException
+  public DecodedJWT getJWT(@NonNull String pUsername, @NonNull char[] pPassword) throws AditoSSPException, UnirestException
   {
     return login(pUsername, pPassword);
   }
 
-  @NotNull
+  @NonNull
   @Override
-  public List<ISSPSystem> getSystems(@NotNull String pUsername, @NotNull DecodedJWT pJWT) throws AditoSSPException, UnirestException
+  public List<ISSPSystem> getSystems(@NonNull String pUsername, @NonNull DecodedJWT pJWT) throws AditoSSPException, UnirestException
   {
     return retrieveSystems(pUsername, pJWT);
   }
 
-  @NotNull
+  @NonNull
   @Override
-  public ISSPSystemDetails getSystemDetails(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws MalformedInputException,
+  public ISSPSystemDetails getSystemDetails(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws MalformedInputException,
       UnirestException, AditoSSPException, AditoSSPParseException
   {
     return retrieveDetails(pUsername, pJWT, pSystem);
   }
 
   @Override
-  public String getServerConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
+  public String getServerConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
   {
     return doGetServerConfig(pUsername, pJWT, pSystem.getSystemdId());
   }
 
   @Override
-  public String getTunnelConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
+  public String getTunnelConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
   {
     return doGetTunnelConfig(pUsername, pJWT, pSystem.getSystemdId());
   }
 
   @Override
-  public Map<String, String> getConfigMap(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
+  public Map<String, String> getConfigMap(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull ISSPSystem pSystem) throws UnirestException, AditoSSPException
   {
     return retrieveConfigMap(pUsername, pJWT, pSystem);
   }
 
   @Override
-  public boolean isSystemRunning(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId)
+  public boolean isSystemRunning(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId)
   {
     try
     {
@@ -111,7 +111,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   }
 
   @Override
-  public boolean startSystem(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId)
+  public boolean startSystem(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId)
   {
     try
     {
@@ -126,7 +126,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   }
 
   @Override
-  public boolean stopSystem(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId)
+  public boolean stopSystem(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId)
   {
     try
     {
@@ -140,21 +140,21 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
     }
   }
 
-  @NotNull
+  @NonNull
   @Override
   public Base64.Encoder getEncoder()
   {
     return ENCODER;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getLoginServiceUrl()
   {
     return sspSystemUrl + LOGIN_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getListSystemsServiceUrl()
   {
@@ -168,42 +168,42 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
   }
 
 
-  @NotNull
+  @NonNull
   @Override
   public String getSystemStatusUrl()
   {
     return sspSystemUrl + SYSTEM_STATUS_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getSystemStartUrl()
   {
     return sspSystemUrl + SYSTEM_START_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getSystemStopUrl()
   {
     return sspSystemUrl + SYSTEM_STOP_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getServerConfigServiceUrl()
   {
     return sspSystemUrl + SYSTEM_SERVER_CONFIG_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getTunnelConfigServiceUrl()
   {
     return sspSystemUrl + SYSTEM_TUNNEL_CONFIG_SERVICE_ADDRESS;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getSystemConfigMapServiceUrl()
   {
@@ -217,7 +217,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
    * @return the message with the system id
    */
   @VisibleForTesting
-  String generateSystemIdMessage(@NotNull String pSystemId)
+  String generateSystemIdMessage(@NonNull String pSystemId)
   {
     return SSPCheckoutProjectWizardIterator.getMessage(SSPFacadeImpl.class, "TXT.SSPFacadeImpl.systemId", pSystemId);
   }

@@ -1,7 +1,7 @@
 package de.adito.nbm.ssp;
 
 import de.adito.nbm.icons.IconManager;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -22,7 +22,7 @@ public class WarningPanel extends JPanel
     add(warningLabel, BorderLayout.CENTER);
   }
 
-  public void setMessage(@NotNull String pMessage)
+  public void setMessage(@NonNull String pMessage)
   {
     warningLabel.setText(pMessage);
   }

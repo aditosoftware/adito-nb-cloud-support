@@ -5,7 +5,7 @@ import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.HttpUtil;
 import de.adito.nbm.ssp.exceptions.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -26,7 +26,7 @@ public interface ISSPConfigRetriever
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  default String doGetServerConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId) throws UnirestException, AditoSSPException
+  default String doGetServerConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject systemDetailsBody = new JSONObject(Map.of("user", pUsername, "jwt", pJWT.getToken(), ISystemExplorer.SYSTEM_ID_KEY, pSystemId));
@@ -48,7 +48,7 @@ public interface ISSPConfigRetriever
    * @throws AditoSSPUnauthorizedException if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException             if the response of the server contains an error status other than the ones listed above
    */
-  default String doGetTunnelConfig(@NotNull String pUsername, @NotNull DecodedJWT pJWT, @NotNull String pSystemId) throws UnirestException, AditoSSPException
+  default String doGetTunnelConfig(@NonNull String pUsername, @NonNull DecodedJWT pJWT, @NonNull String pSystemId) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject systemDetailsBody = new JSONObject(Map.of("user", pUsername, "jwt", pJWT.getToken(), ISystemExplorer.SYSTEM_ID_KEY, pSystemId));
@@ -60,10 +60,10 @@ public interface ISSPConfigRetriever
     return tunnelConfigResponse.getBody();
   }
 
-  @NotNull
+  @NonNull
   String getServerConfigServiceUrl();
 
-  @NotNull
+  @NonNull
   String getTunnelConfigServiceUrl();
 
 }

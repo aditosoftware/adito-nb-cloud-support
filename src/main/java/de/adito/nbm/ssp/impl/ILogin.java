@@ -6,7 +6,7 @@ import com.mashape.unirest.http.*;
 import com.mashape.unirest.http.exceptions.UnirestException;
 import de.adito.nbm.ssp.HttpUtil;
 import de.adito.nbm.ssp.exceptions.*;
-import org.jetbrains.annotations.NotNull;
+import lombok.NonNull;
 import org.json.JSONObject;
 
 import java.nio.*;
@@ -29,8 +29,8 @@ interface ILogin
    * @throws AditoSSPUnauthorizedException               if the response of the server contains the 401 status, indicating lacking authorization
    * @throws AditoSSPException                           if the response of the server contains an error status other than the ones listed above
    */
-  @NotNull
-  default DecodedJWT login(@NotNull String pUsername, char[] pPassword) throws UnirestException, AditoSSPException
+  @NonNull
+  default DecodedJWT login(@NonNull String pUsername, char[] pPassword) throws UnirestException, AditoSSPException
   {
     Map<String, String> headers = HttpUtil.getDefaultHeader();
     JSONObject body = new JSONObject(Map.of("username", pUsername, "password", encodeBase64(pPassword)));
@@ -75,10 +75,10 @@ interface ILogin
     return getEncoder().encodeToString(bytes);
   }
 
-  @NotNull
+  @NonNull
   Base64.Encoder getEncoder();
 
-  @NotNull
+  @NonNull
   String getLoginServiceUrl();
 
 }

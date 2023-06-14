@@ -2,10 +2,10 @@ package de.adito.nbm.ssp.impl;
 
 import de.adito.nbm.ssp.exceptions.*;
 import de.adito.nbm.ssp.facade.*;
-import org.jetbrains.annotations.*;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.*;
 
-import java.util.List;
 import java.util.logging.*;
 
 /**
@@ -21,7 +21,7 @@ class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
   private final String gitBranch;
   private final String kernelVersion;
 
-  SSPSystemDetailsImpl(@NotNull ISSPSystem pSystem, @NotNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
+  SSPSystemDetailsImpl(@NonNull ISSPSystem pSystem, @NonNull JSONArray pJSONArray) throws MalformedInputException, AditoSSPParseException
   {
     super(pSystem.getName(), pSystem.getUrl(), pSystem.getClusterId(), pSystem.getSystemdId(), pSystem.getRanchRId(), pSystem.getCreationDate());
     if (pJSONArray.length() != 1 || !pJSONArray.getJSONObject(0).keySet().contains(KERNEL_VERSION_KEY))
@@ -55,7 +55,7 @@ class SSPSystemDetailsImpl extends SSPSystemImpl implements ISSPSystemDetails
     return gitBranch;
   }
 
-  @NotNull
+  @NonNull
   @Override
   public String getKernelVersion()
   {

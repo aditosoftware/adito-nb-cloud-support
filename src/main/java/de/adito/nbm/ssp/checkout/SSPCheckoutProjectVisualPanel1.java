@@ -13,8 +13,9 @@ import de.adito.nbm.ssp.facade.ISSPFacade;
 import de.adito.nbm.ssp.impl.SSPFacadeImpl;
 import de.adito.swing.NotificationPanel;
 import de.adito.swing.icon.IconAttributes;
+import lombok.NonNull;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.openide.util.Lookup;
 
 import javax.swing.*;
@@ -68,17 +69,17 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     add(urlLabel, BorderLayout.SOUTH);
   }
 
-  public void addStateChangeListener(@NotNull IStateChangeListener pListener)
+  public void addStateChangeListener(@NonNull IStateChangeListener pListener)
   {
     validListeners.add(pListener);
   }
 
-  public void removeStateChangeListener(@NotNull IStateChangeListener pListener)
+  public void removeStateChangeListener(@NonNull IStateChangeListener pListener)
   {
     validListeners.remove(pListener);
   }
 
-  private void fireStateChanged(@NotNull IStateChangeListener.State pState)
+  private void fireStateChanged(@NonNull IStateChangeListener.State pState)
   {
     validListeners.forEach(pListener -> pListener.changedValidity(pState));
   }
@@ -210,7 +211,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @throws UnirestException  if an error occurs during the rest call when loading the systems for the list
    * @throws AditoSSPException if the response of the server contains an error status when loading the systems for the list
    */
-  private void loadList(@NotNull DecodedJWT pToken) throws UnirestException, AditoSSPException
+  private void loadList(@NonNull DecodedJWT pToken) throws UnirestException, AditoSSPException
   {
     cList.fillListBasedOnURL(pToken);
     refreshShowPanel();
@@ -223,7 +224,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pSelected The object to set as selected
    * @param pDoScroll represents if the view should scroll to the CListObject
    */
-  private void setSelected(@NotNull CListObject pSelected, boolean pDoScroll)
+  private void setSelected(@NonNull CListObject pSelected, boolean pDoScroll)
   {
     cList.setSelected(pSelected);
     if (pDoScroll)
@@ -336,7 +337,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
    * @param pActionOnRetry ButtonAction in form of a Runnable. This action is assigned to the "Retry..." button
    *                       If NULL no "Retry..." is shown
    */
-  private void showErrorPanel(@NotNull NotificationPanel.NotificationType pType, @NotNull final Exception pException, @Nullable final Runnable pActionOnRetry)
+  private void showErrorPanel(@NonNull NotificationPanel.NotificationType pType, @NonNull final Exception pException, @Nullable final Runnable pActionOnRetry)
   {
     String errorMessage = ExceptionUtils.getRootCauseMessage(pException);
     if (pException instanceof AditoSSPAuthException)
@@ -548,13 +549,14 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
     JComponent getComponent();
 
-    void addOptions(@NotNull Map<String, Object> pOptionsMap);
+    void addOptions(@NonNull Map<String, Object> pOptionsMap);
 
   }
 
   /**
    * Filters the clistobjects and only shows the ones that match the given String. If filtered by a date, an empty String
    * will be handed over.
+   *
    * @param pSearchText The String that the clist needs to match.
    */
   private void _filter(String pSearchText)
@@ -564,20 +566,24 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     boolean matches;
     DatePicker dp = searchBox.getDatePicker();
 
-    if(searchBox.getComboBox().getSelectedItem() != null){
-      for(int i = 0; i < cList.getObjectList().size(); i++){
+    if (searchBox.getComboBox().getSelectedItem() != null)
+    {
+      for (int i = 0; i < cList.getObjectList().size(); i++)
+      {
         FilterBy filter = (FilterBy) searchBox.getComboBox().getSelectedItem();
-        if(filter.getClass() == FilterByAfterDate.class || filter.getClass() == FilterByBeforeDate.class)
+        if (filter.getClass() == FilterByAfterDate.class || filter.getClass() == FilterByBeforeDate.class)
           matches = filter.filterDate(dp.getCurrentDay(), dp.getCurrentMonth(), dp.getCurrentYear(),
                                       cList.getObjectList().get(i).getSystemDetails());
         else
           matches = filter.filter(pSearchText, cList.getObjectList().get(i).getSystemDetails());
-        if(!matches)
+        if (!matches)
           cList.getComponent(i).setVisible(false);
-        else{
+        else
+        {
           valid = true;
           cList.getComponent(i).setVisible(true);
-          if(isFirst){
+          if (isFirst)
+          {
             cList.setSelected(cList.getObjectList().get(i));
             isFirst = false;
           }
@@ -585,7 +591,7 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
       }
       cList.revalidate();
       cList.repaint();
-      if(valid)
+      if (valid)
         fireStateChanged(IStateChangeListener.State.ISVALID);
       else
         fireStateChanged(IStateChangeListener.State.ISINVALID);
@@ -617,26 +623,28 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
       //ItemListener for when a date is changed
       datePicker.getDayCombobox().addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED)
+        if (e.getStateChange() == ItemEvent.SELECTED)
           _filter("");
       });
       datePicker.getYearCombobox().addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED)
+        if (e.getStateChange() == ItemEvent.SELECTED)
           _filter("");
       });
       datePicker.getMonthCombobox().addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED){
+        if (e.getStateChange() == ItemEvent.SELECTED)
+        {
           boolean setSelected = false;
           Integer selectedOld = null;
-          if(datePicker.getDayCombobox().getSelectedItem() != null)
+          if (datePicker.getDayCombobox().getSelectedItem() != null)
             selectedOld = (Integer) datePicker.getDayCombobox().getSelectedItem();
-          if(datePicker.getYearCombobox().getSelectedItem() != null){
+          if (datePicker.getYearCombobox().getSelectedItem() != null)
+          {
             YearMonth yearMonthObject = YearMonth.of((Integer) datePicker.getYearCombobox().getSelectedItem(), (int) e.getItem());
             int daysInMonth = yearMonthObject.lengthOfMonth();
-            if(selectedOld != null && selectedOld > daysInMonth)
+            if (selectedOld != null && selectedOld > daysInMonth)
               setSelected = true;
             datePicker.getDayCombobox().setModel(intToArray.get(daysInMonth));
-            if(setSelected)
+            if (setSelected)
               datePicker.getDayCombobox().setSelectedItem(daysInMonth);
             else
               datePicker.getDayCombobox().setSelectedItem(selectedOld);
@@ -661,13 +669,16 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
 
       searchable.getDocument().addDocumentListener((SimpleDocumentListener) e -> _filter(searchable.getText()));
       comboBox.addItemListener(e -> {
-        if(e.getStateChange() == ItemEvent.SELECTED){
-          if(e.getItem().getClass() == FilterByAfterDate.class || e.getItem().getClass() == FilterByBeforeDate.class){
+        if (e.getStateChange() == ItemEvent.SELECTED)
+        {
+          if (e.getItem().getClass() == FilterByAfterDate.class || e.getItem().getClass() == FilterByBeforeDate.class)
+          {
             searchable.setVisible(false);
             datePicker.setVisible(true);
             _filter("");
           }
-          else{
+          else
+          {
             datePicker.setVisible(false);
             searchable.setVisible(true);
             _filter(searchable.getText());
@@ -679,20 +690,25 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     /**
      * Initializing the Defaultmodels, so that we can dynamically change the options for the combobox.
      */
-    private void _initializeModels(){
-      for(int i = 1; i <= 28; i++){
+    private void _initializeModels()
+    {
+      for (int i = 1; i <= 28; i++)
+      {
         nonLeapYearFeb.addElement(i);
       }
 
-      for(int i = 1; i <= 29; i++){
+      for (int i = 1; i <= 29; i++)
+      {
         leapYear.addElement(i);
       }
 
-      for(int i = 1; i <= 30; i++){
+      for (int i = 1; i <= 30; i++)
+      {
         thirtyDays.addElement(i);
       }
 
-      for(int i = 1; i <= 31; i++){
+      for (int i = 1; i <= 31; i++)
+      {
         thirtyOneDays.addElement(i);
       }
 
@@ -705,21 +721,26 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
       }};
     }
 
-    public JComboBox<FilterBy> getComboBox(){
+    public JComboBox<FilterBy> getComboBox()
+    {
       return comboBox;
     }
 
-    public DatePicker getDatePicker(){
+    public DatePicker getDatePicker()
+    {
       return datePicker;
     }
   }
 
   /**
    * Returns a ListCellRenderer for the Combobox used in the Searchbox.
+   *
    * @return ListCellRenderer
    */
-  private static ListCellRenderer<? super FilterBy> createListRenderer() {
-    return new DefaultListCellRenderer() {
+  private static ListCellRenderer<? super FilterBy> createListRenderer()
+  {
+    return new DefaultListCellRenderer()
+    {
 
       @Override
       public Component getListCellRendererComponent(JList<?> list, Object value, int index,
@@ -747,11 +768,13 @@ public class SSPCheckoutProjectVisualPanel1 extends JPanel
     {
       update(e);
     }
+
     @Override
     default void removeUpdate(DocumentEvent e)
     {
       update(e);
     }
+
     @Override
     default void changedUpdate(DocumentEvent e)
     {
