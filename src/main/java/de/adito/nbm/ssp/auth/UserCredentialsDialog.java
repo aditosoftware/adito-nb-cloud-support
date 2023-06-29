@@ -5,7 +5,7 @@ import de.adito.nbm.ssp.checkout.UsernameEmailDocumentListener;
 import de.adito.swing.TableLayoutUtil;
 import info.clearthought.layout.*;
 import lombok.NonNull;
-import org.jetbrains.annotations.*;
+import org.jetbrains.annotations.Nullable;
 import org.openide.util.NbBundle;
 
 import javax.swing.*;
@@ -25,7 +25,7 @@ public class UserCredentialsDialog extends JPanel
   private final JPasswordField passwordField = new JPasswordField(PW_FIELD_NUM_CHARS);
   private final JCheckBox rememberPasswordCheckbox = new JCheckBox(NbBundle.getMessage(UserCredentialsDialog.class, "LBL.UserCredentialsDialog.password.store"));
 
-  UserCredentialsDialog(@Nullable String pUsername, @NonNull char[] pPassword)
+  UserCredentialsDialog(@Nullable String pUsername, char @NonNull [] pPassword)
   {
     _initGui();
     if (pUsername != null)

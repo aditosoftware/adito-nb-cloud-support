@@ -25,7 +25,7 @@ public interface ISSPFacade
    * @return Java Web Token as String
    */
   @NonNull
-  DecodedJWT getJWT(@NonNull String pUsername, @NonNull char[] pPassword) throws AditoSSPException, UnirestException;
+  DecodedJWT getJWT(@NonNull String pUsername, char @NonNull [] pPassword) throws AditoSSPException, UnirestException;
 
   /**
    * @param pUsername name of the user for which the JWT was issued

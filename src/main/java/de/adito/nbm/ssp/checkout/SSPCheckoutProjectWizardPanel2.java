@@ -355,7 +355,7 @@ public class SSPCheckoutProjectWizardPanel2 implements WizardDescriptor.Panel<Wi
 
 
   @Nullable
-  private IRef getCurrentRef(@NonNull IRef[] pRefs)
+  private IRef getCurrentRef(IRef @NonNull [] pRefs)
   {
     CListObject cListObject = (CListObject) wd.getProperty(SSPCheckoutProjectWizardIterator.SELECTED);
     String gitBranch = cListObject.getSystemDetails().getGitBranch();

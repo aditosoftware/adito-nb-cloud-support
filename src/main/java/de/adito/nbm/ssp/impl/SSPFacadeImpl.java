@@ -57,7 +57,7 @@ public class SSPFacadeImpl implements ISSPFacade, ILogin, ISystemExplorer, ISyst
 
   @NonNull
   @Override
-  public DecodedJWT getJWT(@NonNull String pUsername, @NonNull char[] pPassword) throws AditoSSPException, UnirestException
+  public DecodedJWT getJWT(@NonNull String pUsername, char @NonNull [] pPassword) throws AditoSSPException, UnirestException
   {
     return login(pUsername, pPassword);
   }
